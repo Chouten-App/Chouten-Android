@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Chouten</string>
+    <string name="module_selection_header">Module Selection</string>
+    <string name="module_selection_description">elect one of the modules below to get provide this app with data</string>
 </resources>

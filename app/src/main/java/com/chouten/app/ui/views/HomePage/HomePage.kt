@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.AlignmentLine
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import com.chouten.app.R
@@ -35,14 +36,20 @@ fun HomePage() {
     ModalBottomSheetLayout(
         sheetState = sheetState, sheetContent = {
             LazyColumn(
-                horizontalAlignment = Alignment.CenterHorizontally,
+                horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(count = 3)
-                {
-                    ModuleChoice("Zoro", "Inumaki", "1.0.0")
+                modifier = Modifier.fillMaxWidth().padding(15.dp)) {
+                items(count = 1) {
+                    Text(
+                        stringResource(R.string.module_selection_header),
+                        style = MaterialTheme.typography.h6)
+                    Text(
+                        stringResource(R.string.module_selection_description),
+                        style = MaterialTheme.typography.subtitle1,
+                        modifier = Modifier.fillMaxWidth(.8F))
+                    Spacer(Modifier.height(20.dp))
                 }
+                items(count = 3) { ModuleChoice("Zoro", "Inumaki", "1.0.0") }
             }
         },
         sheetContentColor = MaterialTheme.colors.surface,
