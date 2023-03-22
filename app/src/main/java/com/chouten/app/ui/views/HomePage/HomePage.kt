@@ -30,8 +30,7 @@ import com.chouten.app.R
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun HomePage() {
   val sheetState =
@@ -88,7 +87,7 @@ fun HomePage() {
             }
       },
       sheetBackgroundColor = MaterialTheme.colorScheme.surface,
-      sheetShape = RoundedCornerShape(30.dp)) {
+      sheetShape = RoundedCornerShape(30.dp, 30.dp, 0.dp, 0.dp)) {
         Row(
             horizontalArrangement = Arrangement.End,
             modifier = Modifier.fillMaxWidth().padding(16.dp)) {
