@@ -9,6 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.chouten.app.ui.theme.ChoutenTheme
 import com.chouten.app.ui.views.HomePage.HomePage
+import com.chouten.app.ui.views.HomePage.HomePageViewModel
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,7 +18,7 @@ class MainActivity : ComponentActivity() {
       ChoutenTheme {
         // A surface container using the 'background' color from the theme
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-          HomePage()
+          HomePage(HomePageViewModel())
         }
       }
     }

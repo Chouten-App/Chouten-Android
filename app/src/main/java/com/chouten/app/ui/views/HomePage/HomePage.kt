@@ -1,19 +1,24 @@
 package com.chouten.app.ui.views.HomePage
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Help
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,42 +27,53 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.chouten.app.R
+import com.chouten.app.data.ModuleModel
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterialApi::class,
+    ExperimentalAnimationApi::class
+)
 @Composable
-fun HomePage() {
-  val sheetState =
-      androidx.compose.material.rememberModalBottomSheetState(
-          initialValue = ModalBottomSheetValue.Expanded,
-      )
+fun HomePage(provider: HomePageViewModel = viewModel()) {
+    val sheetState =
+        androidx.compose.material.rememberModalBottomSheetState(
+            initialValue = ModalBottomSheetValue.Hidden,
+        )
+    val coroutineScope = rememberCoroutineScope()
 
-  val coroutineScope = rememberCoroutineScope()
+    val noModuleSelected = stringResource(R.string.no_module_selected)
 
-  var selectedModule = "No Module"
-  ModalBottomSheetLayout(
-      sheetState = sheetState,
-      sheetContent = {
-        LazyColumn(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.fillMaxWidth().padding(15.dp, 0.dp, 15.dp, 10.dp)) {
-              items(count = 1) {
+    ModalBottomSheetLayout(
+        sheetState = sheetState,
+        sheetContent = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(15.dp, 0.dp, 15.dp, 25.dp),
+            ) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceAround,
-                    modifier = Modifier.fillMaxWidth()) {
-                      BottomSheetDefaults.DragHandle()
-                    }
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    BottomSheetDefaults.DragHandle()
+                }
                 Text(
                     stringResource(R.string.module_selection_header),
                     fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                    fontWeight = FontWeight.Bold)
+                    fontWeight = FontWeight.Bold
+                )
                 Spacer(Modifier.height(5.dp))
                 Text(
                     stringResource(R.string.module_selection_description),
@@ -66,43 +82,101 @@ fun HomePage() {
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface.copy(0.7F),
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(.8F))
+                    modifier = Modifier.fillMaxWidth(.8F)
+                )
                 Spacer(Modifier.height(20.dp))
-              }
-              items(count = 2) {
-                ModuleChoice(
-                    "Zoro",
-                    "Inumaki",
-                    "1.0.0",
-                    "https://res.cloudinary.com/crunchbase-production/image/upload/c_lpad,f_auto,q_auto:eco,dpr_1/qe7kzhh0bo1qt9ohrxwb",
-                    Color(0xFFffcb3d),
-                )
-                ModuleChoice(
-                    "GogoAnime",
-                    "Inumaki",
-                    "1.0.0",
-                    "https://res.cloudinary.com/crunchbase-production/image/upload/c_lpad,f_auto,q_auto:eco,dpr_1/qe7kzhh0bo1qt9ohrxwb",
-                )
-              }
+                LazyColumn(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                ) {
+                    // TODO: pass name, colour and id into modulechoice rather than everything
+                    items(items = provider.availableModules) { module ->
+                        ModuleChoice(
+                            module.name,
+                            module.author,
+                            module.version,
+                            module.js,
+                            module.image,
+                            module.usesExternalApi,
+                            module.website,
+                            module.backgroundColor?.let { Color(it) },
+                            module.foregroundColor?.let { Color(it) },
+                            onClick = {
+                                // TODO: Add overload to update by id
+                                provider.updateSelectedModule(
+                                    ModuleModel(
+                                        module.name,
+                                        module.author,
+                                        module.version,
+                                        module.js,
+                                        module.image,
+                                        module.usesExternalApi,
+                                        module.website,
+                                        module.backgroundColor,
+                                        module.foregroundColor
+                                    )
+                                )
+                                coroutineScope.launch { sheetState.hide() }
+                            },
+                        )
+                    }
+                }
             }
       },
       sheetBackgroundColor = MaterialTheme.colorScheme.surface,
       sheetShape = RoundedCornerShape(30.dp, 30.dp, 0.dp, 0.dp)) {
-        Row(
-            horizontalArrangement = Arrangement.End,
-            modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-              ElevatedButton(
-                  onClick = {
-                    coroutineScope.launch {
-                      if (sheetState.isVisible) {
-                        sheetState.hide()
-                      } else sheetState.show()
-                    }
-                  }) {
-                    Text(selectedModule.uppercase(), fontWeight = FontWeight.Bold)
-                  }
+        Column(
+            Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(Modifier.heightIn(TextFieldDefaults.MinHeight)) {
+                // For some reason we need the FQN
+                androidx.compose.animation.AnimatedVisibility(provider.selectedModule?.name != null) {
+                    ContentSearchBar(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                top = 24.dp,
+                                bottom = 16.dp,
+                                start = 16.dp,
+                                end = 16.dp
+                            )
+                            .background(
+                                MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                    5.dp
+                                ), CircleShape
+                            )
+                            .animateEnterExit(),
+                        provider.selectedModule!!.name
+                    )
+                }
             }
-      }
+            Row(
+                horizontalArrangement = Arrangement.End,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                ElevatedButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            if (sheetState.isVisible) {
+                                sheetState.hide()
+                            } else sheetState.show()
+                        }
+                    },
+                    shape = RoundedCornerShape(20),
+                ) {
+                    Text(
+                        provider.selectedModule?.name ?: noModuleSelected,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalGlideComposeApi::class)
@@ -110,34 +184,50 @@ fun HomePage() {
 fun ModuleChoice(
     name: String,
     author: String,
-    version: String? = "1.0.0",
-    image: String? = null,
-    color: Color? = null,
-    fgColor: Color? = null
+    version: String,
+    js: String,
+    image: String?,
+    usesExternalApi: Boolean?,
+    website: String,
+    backgroundColor: Color?,
+    foregroundColor: Color?,
+    onClick: () -> Unit
 ) {
   val iconSize = 40.dp
   Button(
-      modifier = Modifier.fillMaxWidth(1F).height(65.dp).padding(vertical = 4.dp),
+      modifier = Modifier
+          .fillMaxWidth(1F)
+          .height(65.dp)
+          .padding(vertical = 4.dp),
       colors =
-          if (color != null) {
-            ButtonDefaults.buttonColors(
-                containerColor = color,
-                contentColor = fgColor ?: MaterialTheme.colorScheme.onPrimaryContainer)
-          } else ButtonDefaults.buttonColors(),
+      if (backgroundColor != null) {
+          ButtonDefaults.buttonColors(
+              containerColor = backgroundColor,
+              contentColor = foregroundColor
+                  ?: MaterialTheme.colorScheme.onPrimaryContainer
+          )
+      } else ButtonDefaults.buttonColors(),
       shape = RoundedCornerShape(10.dp),
-      onClick = {},
+      onClick = onClick,
       content = {
-        Row(
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()) {
+          Row(
+              horizontalArrangement = Arrangement.Start,
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier.fillMaxWidth()
+          ) {
               if (image == null)
-                  Icon(Icons.Default.Help, "Question Mark", modifier = Modifier.size(iconSize))
+                  Icon(
+                      Icons.Default.Help,
+                      "Question Mark",
+                      modifier = Modifier.size(iconSize)
+                  )
               else
                   GlideImage(
                       model = image,
                       contentDescription = "Favicon for the $name module",
-                      modifier = Modifier.size(iconSize).clip(CircleShape),
+                      modifier = Modifier
+                          .size(iconSize)
+                          .clip(CircleShape),
                       contentScale = ContentScale.Fit,
                   )
 
@@ -146,24 +236,35 @@ fun ModuleChoice(
                 Text(
                     name,
                     fontWeight = FontWeight.Bold,
-                    color = fgColor ?: MaterialTheme.colorScheme.onSecondary)
+                    color = foregroundColor
+                        ?: MaterialTheme.colorScheme.onSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Row(horizontalArrangement = Arrangement.Start) {
                   Text(
                       author,
-                      color = fgColor?.copy(0.8F) ?: MaterialTheme.colorScheme.onSecondary,
+                      color = foregroundColor?.copy(0.8F)
+                          ?: MaterialTheme.colorScheme.onSecondary,
                       fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                      fontWeight = FontWeight.SemiBold)
+                      fontWeight = FontWeight.SemiBold,
+                      maxLines = 1,
+                      overflow = TextOverflow.Ellipsis
+                  )
                   Spacer(modifier = Modifier.width(4.dp))
                   Text(
                       "v$version",
-                      color = fgColor?.copy(0.8F) ?: MaterialTheme.colorScheme.onSecondary,
+                      color = foregroundColor?.copy(0.8F)
+                          ?: MaterialTheme.colorScheme.onSecondary,
                       fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                      fontWeight = FontWeight.SemiBold)
+                      fontWeight = FontWeight.SemiBold,
+                      maxLines = 1,
+                      overflow = TextOverflow.Ellipsis
+                  )
                 }
               }
             }
       },
-      //      contentPadding = PaddingValues(0.dp)
   )
 }
 
@@ -171,16 +272,28 @@ fun ModuleChoice(
 @Preview(name = "Module Choice Selector", showBackground = false)
 fun ModuleChoice(@PreviewParameter(ModuleChoiceProvider::class) params: ModuleChoiceParams) {
   return ModuleChoice(
-      params.name, params.author, params.version, params.imageUrl, params.color, params.fgColor)
+      params.name,
+      params.author,
+      params.version,
+      params.js,
+      params.image,
+      params.usesExternalApi,
+      params.website,
+      params.backgroundColor,
+      params.foregroundColor,
+      {})
 }
 
 data class ModuleChoiceParams(
     val name: String,
     val author: String,
     val version: String,
-    val imageUrl: String?,
-    val color: Color?,
-    val fgColor: Color?
+    val js: String,
+    val image: String?,
+    val usesExternalApi: Boolean?,
+    val website: String,
+    val backgroundColor: Color?,
+    val foregroundColor: Color?,
 )
 
 class ModuleChoiceProvider() : PreviewParameterProvider<ModuleChoiceParams> {
@@ -190,9 +303,41 @@ class ModuleChoiceProvider() : PreviewParameterProvider<ModuleChoiceParams> {
               "Zoro",
               "Inumaki",
               "1.0.0",
+              "",
               "https://zoro.to/images/favicon.png?v=01",
+              false,
+              "",
               Color(0xFFffcb3d),
-              null))
-  override val count: Int
-    get() = 1
+              null,
+          )
+      )
+    override val count: Int
+        get() = 1
+}
+
+@Composable
+fun ContentSearchBar(modifier: Modifier, activeModuleName: String) {
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = "Search for content",
+            modifier = Modifier.padding(start = 16.dp),
+            tint = MaterialTheme.colorScheme.outline
+        )
+        Text(
+            text = "Search using $activeModuleName",
+            modifier = Modifier
+                .weight(1f)
+                .padding(16.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.outline
+        )
+        IconButton(modifier = Modifier.padding(end = 16.dp), onClick = {}) {
+            Icon(
+                Icons.Default.AccountCircle,
+                "Your Profile",
+                tint = MaterialTheme.colorScheme.outline
+            )
+        }
+    }
 }
