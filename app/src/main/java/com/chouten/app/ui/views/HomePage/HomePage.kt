@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,10 +32,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
 import com.chouten.app.R
 import com.chouten.app.data.ModuleModel
+import com.skydoves.landscapist.ImageOptions
+import com.skydoves.landscapist.glide.GlideImage
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -122,9 +124,10 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                     }
                 }
             }
-      },
-      sheetBackgroundColor = MaterialTheme.colorScheme.surface,
-      sheetShape = RoundedCornerShape(30.dp, 30.dp, 0.dp, 0.dp)) {
+        },
+        sheetBackgroundColor = MaterialTheme.colorScheme.surface,
+        sheetShape = RoundedCornerShape(30.dp, 30.dp, 0.dp, 0.dp)
+    ) {
         Column(
             Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween
@@ -179,7 +182,6 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
     }
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun ModuleChoice(
     name: String,
@@ -193,43 +195,59 @@ fun ModuleChoice(
     foregroundColor: Color?,
     onClick: () -> Unit
 ) {
-  val iconSize = 40.dp
-  Button(
-      modifier = Modifier
-          .fillMaxWidth(1F)
-          .height(65.dp)
-          .padding(vertical = 4.dp),
-      colors =
-      if (backgroundColor != null) {
-          ButtonDefaults.buttonColors(
-              containerColor = backgroundColor,
-              contentColor = foregroundColor
-                  ?: MaterialTheme.colorScheme.onPrimaryContainer
-          )
-      } else ButtonDefaults.buttonColors(),
-      shape = RoundedCornerShape(10.dp),
-      onClick = onClick,
-      content = {
-          Row(
-              horizontalArrangement = Arrangement.Start,
-              verticalAlignment = Alignment.CenterVertically,
-              modifier = Modifier.fillMaxWidth()
-          ) {
-              if (image == null)
-                  Icon(
-                      Icons.Default.Help,
-                      "Question Mark",
-                      modifier = Modifier.size(iconSize)
-                  )
-              else
-                  GlideImage(
-                      model = image,
-                      contentDescription = "Favicon for the $name module",
-                      modifier = Modifier
-                          .size(iconSize)
-                          .clip(CircleShape),
-                      contentScale = ContentScale.Fit,
-                  )
+    val iconSize = 40
+    val iconSizePx: Int = iconSize * LocalDensity.current.density.roundToInt()
+
+    Button(
+        modifier = Modifier
+            .fillMaxWidth(1F)
+            .height(65.dp)
+            .padding(vertical = 4.dp),
+        colors =
+        if (backgroundColor != null) {
+            ButtonDefaults.buttonColors(
+                containerColor = backgroundColor,
+                contentColor = foregroundColor
+                    ?: MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        } else ButtonDefaults.buttonColors(),
+        shape = RoundedCornerShape(10.dp),
+        onClick = onClick,
+        content = {
+            Row(
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (image == null)
+                    Icon(
+                        Icons.Default.Help,
+                        "Question Mark",
+                        modifier = Modifier.size(iconSize.dp)
+                    )
+                else
+                    GlideImage(
+                        imageModel = { image },
+                        imageOptions =
+                        ImageOptions(
+                            contentScale = ContentScale.Fit,
+                            alignment = Alignment.Center,
+                            contentDescription = "Favicon for the $name module",
+                            requestSize = IntSize(iconSizePx, iconSizePx)
+                        ),
+                        loading = {
+                            Box(Modifier.matchParentSize()) {
+                                CircularProgressIndicator(
+                                    Modifier.align(
+                                        Alignment.Center
+                                    )
+                                )
+                            }
+                        },
+                        modifier = Modifier
+                            .size(iconSize.dp)
+                            .clip(CircleShape),
+                    )
 
               Spacer(modifier = Modifier.width(6.dp))
               Column {
