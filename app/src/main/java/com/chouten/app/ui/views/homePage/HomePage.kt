@@ -1,4 +1,4 @@
-package com.chouten.app.ui.views.HomePage
+package com.chouten.app.ui.views.homePage
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.*
@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,8 +35,8 @@ import com.chouten.app.R
 import com.chouten.app.data.ModuleModel
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
-import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(
@@ -101,8 +100,8 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                             module.image,
                             module.usesExternalApi,
                             module.website,
-                            module.backgroundColor?.let { Color(it) },
-                            module.foregroundColor?.let { Color(it) },
+                            if (module.backgroundColor.isNullOrBlank()) null else Color(module.backgroundColor.toLong(16)),
+                            if (module.foregroundColor.isNullOrBlank()) null else Color(module.foregroundColor.toLong(16)),
                             onClick = {
                                 // TODO: Add overload to update by id
                                 provider.updateSelectedModule(
@@ -249,57 +248,57 @@ fun ModuleChoice(
                             .clip(CircleShape),
                     )
 
-              Spacer(modifier = Modifier.width(6.dp))
-              Column {
-                Text(
-                    name,
-                    fontWeight = FontWeight.Bold,
-                    color = foregroundColor
-                        ?: MaterialTheme.colorScheme.onSecondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Row(horizontalArrangement = Arrangement.Start) {
-                  Text(
-                      author,
-                      color = foregroundColor?.copy(0.8F)
-                          ?: MaterialTheme.colorScheme.onSecondary,
-                      fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                      fontWeight = FontWeight.SemiBold,
-                      maxLines = 1,
-                      overflow = TextOverflow.Ellipsis
-                  )
-                  Spacer(modifier = Modifier.width(4.dp))
-                  Text(
-                      "v$version",
-                      color = foregroundColor?.copy(0.8F)
-                          ?: MaterialTheme.colorScheme.onSecondary,
-                      fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                      fontWeight = FontWeight.SemiBold,
-                      maxLines = 1,
-                      overflow = TextOverflow.Ellipsis
-                  )
+                Spacer(modifier = Modifier.width(6.dp))
+                Column {
+                    Text(
+                        name,
+                        fontWeight = FontWeight.Bold,
+                        color = foregroundColor
+                            ?: MaterialTheme.colorScheme.onSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Row(horizontalArrangement = Arrangement.Start) {
+                        Text(
+                            author,
+                            color = foregroundColor?.copy(0.8F)
+                                ?: MaterialTheme.colorScheme.onSecondary,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            "v$version",
+                            color = foregroundColor?.copy(0.8F)
+                                ?: MaterialTheme.colorScheme.onSecondary,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
-              }
             }
-      },
-  )
+        },
+    )
 }
 
 @Composable
 @Preview(name = "Module Choice Selector", showBackground = false)
 fun ModuleChoice(@PreviewParameter(ModuleChoiceProvider::class) params: ModuleChoiceParams) {
-  return ModuleChoice(
-      params.name,
-      params.author,
-      params.version,
-      params.js,
-      params.image,
-      params.usesExternalApi,
-      params.website,
-      params.backgroundColor,
-      params.foregroundColor,
-      {})
+    return ModuleChoice(
+        params.name,
+        params.author,
+        params.version,
+        params.js,
+        params.image,
+        params.usesExternalApi,
+        params.website,
+        params.backgroundColor,
+        params.foregroundColor,
+        {})
 }
 
 data class ModuleChoiceParams(
@@ -315,20 +314,20 @@ data class ModuleChoiceParams(
 )
 
 class ModuleChoiceProvider() : PreviewParameterProvider<ModuleChoiceParams> {
-  override val values =
-      sequenceOf(
-          ModuleChoiceParams(
-              "Zoro",
-              "Inumaki",
-              "1.0.0",
-              "",
-              "https://zoro.to/images/favicon.png?v=01",
-              false,
-              "",
-              Color(0xFFffcb3d),
-              null,
-          )
-      )
+    override val values =
+        sequenceOf(
+            ModuleChoiceParams(
+                "Zoro",
+                "Inumaki",
+                "1.0.0",
+                "",
+                "https://zoro.to/images/favicon.png?v=01",
+                false,
+                "",
+                Color(0xFFffcb3d),
+                null,
+            )
+        )
     override val count: Int
         get() = 1
 }

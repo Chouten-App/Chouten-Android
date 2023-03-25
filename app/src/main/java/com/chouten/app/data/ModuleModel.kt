@@ -12,6 +12,6 @@ data class ModuleModel(
     val image: String?,
     @SerialName("callsApi") val usesExternalApi: Boolean?,
     val website: String,
-    val backgroundColor: Long?,
-    val foregroundColor: Long?
+    val backgroundColor: String?,
+    val foregroundColor: String?
 )
