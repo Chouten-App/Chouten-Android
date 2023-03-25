@@ -3,4 +3,10 @@
     <string name="module_selection_header">Module Selection</string>
     <string name="module_selection_description">Select one of the modules below to provide this app with data</string>
     <string name="no_module_selected">No Module</string>
+    <string name="import_module_header">Import Module</string>
+    <string name="import_module_desc">Import Module from URL</string>
+    <string name="import_module_textfield_placeholder">Enter the Module URL</string>
+    <string name="import_module_button_confirm">Import Module</string>
+
+    <string name="cancel">Cancel</string>
 </resources>
