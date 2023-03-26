@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.chouten.app.ModuleLayer
 import com.chouten.app.R
 import com.chouten.app.data.ModuleModel
 import com.skydoves.landscapist.ImageOptions
@@ -66,7 +67,9 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.fillMaxWidth().padding(15.dp, 0.dp, 15.dp, 25.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(15.dp, 0.dp, 15.dp, 25.dp),
         ) {
           Row(horizontalArrangement = Arrangement.SpaceAround, modifier = Modifier.fillMaxWidth()) {
             BottomSheetDefaults.DragHandle()
@@ -90,34 +93,36 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
               horizontalAlignment = Alignment.CenterHorizontally,
               verticalArrangement = Arrangement.SpaceEvenly,
           ) {
-            // TODO: pass name, colour and id into modulechoice rather than everything
-            items(items = provider.availableModules) { module ->
-              ModuleChoice(
-                  module.name,
-                  module.author,
-                  module.version,
-                  module.js,
-                  module.image,
-                  module.usesExternalApi,
-                  module.website,
-                  if (module.backgroundColor.isNullOrBlank()) null
-                  else Color(module.backgroundColor.toLong(16)),
-                  if (module.foregroundColor.isNullOrBlank()) null
-                  else Color(module.foregroundColor.toLong(16)),
-                  onClick = {
-                    // TODO: Add overload to update by id
-                    provider.updateSelectedModule(
-                        ModuleModel(
-                            module.name,
-                            module.author,
-                            module.version,
-                            module.js,
-                            module.image,
-                            module.usesExternalApi,
-                            module.website,
-                            module.backgroundColor,
-                            module.foregroundColor))
-                    coroutineScope.launch { sheetState.hide() }
+              // TODO: pass name, colour and id into modulechoice rather than everything
+              items(items = ModuleLayer.availableModules) { module ->
+                  ModuleChoice(
+                      module.name,
+                      module.author,
+                      module.version,
+                      module.js,
+                      module.image,
+                      module.usesExternalApi,
+                      module.website,
+                      if (module.backgroundColor.isNullOrBlank()) null
+                      else Color(module.backgroundColor.toLong(16)),
+                      if (module.foregroundColor.isNullOrBlank()) null
+                      else Color(module.foregroundColor.toLong(16)),
+                      onClick = {
+                          // TODO: Add overload to update by id
+                          ModuleLayer.updateSelectedModule(
+                              ModuleModel(
+                                  module.name,
+                                  module.author,
+                                  module.version,
+                                  module.js,
+                                  module.image,
+                                  module.usesExternalApi,
+                                  module.website,
+                                  module.backgroundColor,
+                                  module.foregroundColor
+                              )
+                          )
+                          coroutineScope.launch { sheetState.hide() }
                   },
               )
             }
@@ -128,24 +133,37 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
       sheetShape = RoundedCornerShape(30.dp, 30.dp, 0.dp, 0.dp)) {
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
           Box(Modifier.heightIn(TextFieldDefaults.MinHeight)) {
-            // For some reason we need the FQN
-            androidx.compose.animation.AnimatedVisibility(provider.selectedModule?.name != null) {
-              ContentSearchBar(
-                  Modifier.fillMaxWidth()
-                      .padding(top = 24.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
-                      .background(
-                          MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp), CircleShape)
-                      .animateEnterExit(),
-                  provider.selectedModule!!.name)
-            }
+              // For some reason we need the FQN
+              androidx.compose.animation.AnimatedVisibility(ModuleLayer.selectedModule?.name != null) {
+                  ContentSearchBar(
+                      Modifier
+                          .fillMaxWidth()
+                          .padding(
+                              top = 24.dp,
+                              bottom = 16.dp,
+                              start = 16.dp,
+                              end = 16.dp
+                          )
+                          .background(
+                              MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                  5.dp
+                              ), CircleShape
+                          )
+                          .animateEnterExit(),
+                      ModuleLayer.selectedModule!!.name
+                  )
+              }
 
-            androidx.compose.animation.AnimatedVisibility(importPopupState.value) {
-              AlertDialog(
-                  onDismissRequest = { importPopupState.value = false },
-              ) {
-                Surface(
-                    modifier = Modifier.wrapContentSize().padding(28.dp),
-                    shape = RoundedCornerShape(28.dp)) {
+              androidx.compose.animation.AnimatedVisibility(importPopupState.value) {
+                  AlertDialog(
+                      onDismissRequest = { importPopupState.value = false },
+                  ) {
+                      Surface(
+                          modifier = Modifier
+                              .wrapContentSize()
+                              .padding(28.dp),
+                          shape = RoundedCornerShape(28.dp)
+                      ) {
                       Column(
                           verticalArrangement = Arrangement.SpaceAround,
                           horizontalAlignment = Alignment.Start,
@@ -159,31 +177,38 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                             value = importUrl,
                             onValueChange = { importUrl = it },
                             label = { Text(stringResource(R.string.import_module_desc)) },
-                            modifier = Modifier.padding(10.dp).fillMaxWidth(),
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                             keyboardActions =
-                                KeyboardActions(
-                                    onDone = {
-                                      coroutineScope.launch {
-                                        provider.import(importUrl.text)
+                            KeyboardActions(
+                                onDone = {
+                                    coroutineScope.launch {
+                                        ModuleLayer.enqueueRemoteInstall(
+                                            importUrl.text
+                                        )
                                         importUrl = TextFieldValue("")
-                                      }
+                                    }
                                       importPopupState.value = false
                                     }))
-                        Spacer(Modifier.height(24.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.End,
-                            modifier = Modifier.fillMaxWidth().padding(0.dp, 8.dp, 0.dp, 16.dp)) {
+                          Spacer(Modifier.height(24.dp))
+                          Row(
+                              horizontalArrangement = Arrangement.End,
+                              modifier = Modifier
+                                  .fillMaxWidth()
+                                  .padding(0.dp, 8.dp, 0.dp, 16.dp)
+                          ) {
                               TextButton(
                                   colors =
-                                      ButtonDefaults.buttonColors(
-                                          containerColor = Color.Transparent,
-                                          contentColor = MaterialTheme.colorScheme.onSurface,
-                                      ),
+                                  ButtonDefaults.buttonColors(
+                                      containerColor = Color.Transparent,
+                                      contentColor = MaterialTheme.colorScheme.onSurface,
+                                  ),
                                   onClick = {
-                                    importPopupState.value = false
-                                    importUrl = TextFieldValue("")
+                                      importPopupState.value = false
+                                      importUrl = TextFieldValue("")
                                   }) {
                                     Text(stringResource(R.string.cancel))
                                   }
@@ -198,37 +223,43 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                                       ),
                                   onClick = {
                                     coroutineScope.launch {
-                                      provider.import(importUrl.text)
-                                      importUrl = TextFieldValue("")
+                                        ModuleLayer.enqueueRemoteInstall(
+                                            importUrl.text
+                                        )
+                                        importUrl = TextFieldValue("")
                                     }
                                     importPopupState.value = false
                                   }) {
-                                    Text(stringResource(R.string.import_module_button_confirm))
-                                  }
-                            }
+                                  Text(stringResource(R.string.import_module_button_confirm))
+                              }
+                          }
                       }
-                    }
+                      }
+                  }
               }
-            }
           }
-          Row(
-              horizontalArrangement = Arrangement.End,
-              modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.End,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
                 ElevatedButton(
                     onClick = {
-                      coroutineScope.launch {
-                        if (sheetState.isVisible) {
-                          sheetState.hide()
-                        } else sheetState.show()
-                      }
+                        coroutineScope.launch {
+                            if (sheetState.isVisible) {
+                                sheetState.hide()
+                            } else sheetState.show()
+                        }
                     },
                     shape = RoundedCornerShape(20),
                 ) {
                   Text(
-                      provider.selectedModule?.name ?: noModuleSelected,
+                      ModuleLayer.selectedModule?.name ?: noModuleSelected,
                       fontWeight = FontWeight.Bold,
                       maxLines = 1,
-                      overflow = TextOverflow.Ellipsis)
+                      overflow = TextOverflow.Ellipsis
+                  )
                 }
               }
         }
@@ -252,17 +283,22 @@ fun ModuleChoice(
   val iconSizePx: Int = iconSize * LocalDensity.current.density.roundToInt()
 
   Button(
-      modifier = Modifier.fillMaxWidth(1F).height(65.dp).padding(vertical = 4.dp),
+      modifier = Modifier
+          .fillMaxWidth(1F)
+          .height(65.dp)
+          .padding(vertical = 4.dp),
       colors =
-          if (backgroundColor != null) {
-            ButtonDefaults.buttonColors(
-                containerColor = backgroundColor,
-                contentColor = foregroundColor ?: MaterialTheme.colorScheme.onPrimaryContainer)
-          } else ButtonDefaults.buttonColors(),
+      if (backgroundColor != null) {
+          ButtonDefaults.buttonColors(
+              containerColor = backgroundColor,
+              contentColor = foregroundColor
+                  ?: MaterialTheme.colorScheme.onPrimaryContainer
+          )
+      } else ButtonDefaults.buttonColors(),
       shape = RoundedCornerShape(10.dp),
       onClick = onClick,
       content = {
-        Row(
+          Row(
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()) {
@@ -272,17 +308,20 @@ fun ModuleChoice(
                   GlideImage(
                       imageModel = { image },
                       imageOptions =
-                          ImageOptions(
-                              contentScale = ContentScale.Fit,
-                              alignment = Alignment.Center,
-                              contentDescription = "Favicon for the $name module",
-                              requestSize = IntSize(iconSizePx, iconSizePx)),
+                      ImageOptions(
+                          contentScale = ContentScale.Fit,
+                          alignment = Alignment.Center,
+                          contentDescription = "Favicon for the $name module",
+                          requestSize = IntSize(iconSizePx, iconSizePx)
+                      ),
                       loading = {
-                        Box(Modifier.matchParentSize()) {
-                          CircularProgressIndicator(Modifier.align(Alignment.Center))
-                        }
+                          Box(Modifier.matchParentSize()) {
+                              CircularProgressIndicator(Modifier.align(Alignment.Center))
+                          }
                       },
-                      modifier = Modifier.size(iconSize.dp).clip(CircleShape),
+                      modifier = Modifier
+                          .size(iconSize.dp)
+                          .clip(CircleShape),
                   )
 
               Spacer(modifier = Modifier.width(6.dp))
@@ -368,24 +407,30 @@ fun ModuleImportButton(onClick: () -> Unit) {
 
   // TODO: Add dotted outline
   Button(
-      modifier = Modifier.fillMaxWidth(1F).height(65.dp).padding(vertical = 4.dp),
+      modifier = Modifier
+          .fillMaxWidth(1F)
+          .height(65.dp)
+          .padding(vertical = 4.dp),
       colors =
-          ButtonDefaults.buttonColors(
-              containerColor = Color.Transparent,
-              //                contentColor = foregroundColor
-          ),
+      ButtonDefaults.buttonColors(
+          containerColor = Color.Transparent,
+          //                contentColor = foregroundColor
+      ),
       shape = RoundedCornerShape(10.dp),
       onClick = onClick,
       content = {
-        Row(
-            horizontalArrangement = Arrangement.Start,
+          Row(
+              horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()) {
               Icon(
                   Icons.Default.Download,
                   "Import Module",
-                  modifier = Modifier.size(iconSize.dp).clip(CircleShape),
-                  tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                  modifier = Modifier
+                      .size(iconSize.dp)
+                      .clip(CircleShape),
+                  tint = MaterialTheme.colorScheme.onPrimaryContainer
+              )
               Spacer(modifier = Modifier.width(6.dp))
               Column {
                 Text(
@@ -417,9 +462,12 @@ fun ContentSearchBar(modifier: Modifier, activeModuleName: String) {
         tint = MaterialTheme.colorScheme.outline)
     Text(
         text = "Search using $activeModuleName",
-        modifier = Modifier.weight(1f).padding(16.dp),
+        modifier = Modifier
+            .weight(1f)
+            .padding(16.dp),
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.outline)
+        color = MaterialTheme.colorScheme.outline
+    )
     IconButton(modifier = Modifier.padding(end = 16.dp), onClick = {}) {
       Icon(Icons.Default.AccountCircle, "Your Profile", tint = MaterialTheme.colorScheme.outline)
     }
