@@ -155,14 +155,11 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(16.dp))
                         Spacer(Modifier.height(0.dp))
-                        TextField(
+                        OutlinedTextField(
                             value = importUrl,
-                            placeholder = {
-                              Text(stringResource(R.string.import_module_textfield_placeholder))
-                            },
                             onValueChange = { importUrl = it },
                             label = { Text(stringResource(R.string.import_module_desc)) },
-                            modifier = Modifier.padding(10.dp),
+                            modifier = Modifier.padding(10.dp).fillMaxWidth(),
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                             keyboardActions =
