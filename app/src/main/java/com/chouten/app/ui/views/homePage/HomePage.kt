@@ -37,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chouten.app.ModuleLayer
 import com.chouten.app.R
 import com.chouten.app.data.ModuleModel
+import com.chouten.app.ui.theme.dashedBorder
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import kotlin.math.roundToInt
@@ -48,6 +49,7 @@ import kotlinx.coroutines.launch
     ExperimentalMaterialApi::class,
     ExperimentalAnimationApi::class)
 @Composable
+@Preview
 fun HomePage(provider: HomePageViewModel = viewModel()) {
   val sheetState =
       androidx.compose.material.rememberModalBottomSheetState(
@@ -123,9 +125,9 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                               )
                           )
                           coroutineScope.launch { sheetState.hide() }
-                  },
-              )
-            }
+                      },
+                  )
+              }
           }
         }
       },
@@ -134,7 +136,9 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
           Box(Modifier.heightIn(TextFieldDefaults.MinHeight)) {
               // For some reason we need the FQN
-              androidx.compose.animation.AnimatedVisibility(ModuleLayer.selectedModule?.name != null) {
+              androidx.compose.animation.AnimatedVisibility(
+                  ModuleLayer.selectedModule?.name != null
+              ) {
                   ContentSearchBar(
                       Modifier
                           .fillMaxWidth()
@@ -164,52 +168,54 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                               .padding(28.dp),
                           shape = RoundedCornerShape(28.dp)
                       ) {
-                      Column(
-                          verticalArrangement = Arrangement.SpaceAround,
-                          horizontalAlignment = Alignment.Start,
-                      ) {
-                        Text(
-                            stringResource(R.string.import_module_header),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(16.dp))
-                        Spacer(Modifier.height(0.dp))
-                        OutlinedTextField(
-                            value = importUrl,
-                            onValueChange = { importUrl = it },
-                            label = { Text(stringResource(R.string.import_module_desc)) },
-                            modifier = Modifier
-                                .padding(10.dp)
-                                .fillMaxWidth(),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                            keyboardActions =
-                            KeyboardActions(
-                                onDone = {
-                                    coroutineScope.launch {
-                                        ModuleLayer.enqueueRemoteInstall(
-                                            importUrl.text
-                                        )
-                                        importUrl = TextFieldValue("")
-                                    }
-                                      importPopupState.value = false
-                                    }))
-                          Spacer(Modifier.height(24.dp))
-                          Row(
-                              horizontalArrangement = Arrangement.End,
-                              modifier = Modifier
-                                  .fillMaxWidth()
-                                  .padding(0.dp, 8.dp, 0.dp, 16.dp)
+                          Column(
+                              verticalArrangement = Arrangement.SpaceAround,
+                              horizontalAlignment = Alignment.Start,
                           ) {
-                              TextButton(
-                                  colors =
-                                  ButtonDefaults.buttonColors(
-                                      containerColor = Color.Transparent,
-                                      contentColor = MaterialTheme.colorScheme.onSurface,
-                                  ),
-                                  onClick = {
-                                      importPopupState.value = false
-                                      importUrl = TextFieldValue("")
-                                  }) {
+                              Text(
+                                  stringResource(R.string.import_module_header),
+                                  style = MaterialTheme.typography.titleMedium,
+                                  modifier = Modifier.padding(16.dp)
+                              )
+                              Spacer(Modifier.height(0.dp))
+                              OutlinedTextField(
+                                  value = importUrl,
+                                  onValueChange = { importUrl = it },
+                                  label = { Text(stringResource(R.string.import_module_desc)) },
+                                  modifier = Modifier
+                                      .padding(10.dp)
+                                      .fillMaxWidth(),
+                                  singleLine = true,
+                                  keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                  keyboardActions =
+                                  KeyboardActions(
+                                      onDone = {
+                                          coroutineScope.launch {
+                                              ModuleLayer.enqueueRemoteInstall(
+                                                  importUrl.text
+                                              )
+                                              importUrl = TextFieldValue("")
+                                          }
+                                          importPopupState.value = false
+                                      })
+                              )
+                              Spacer(Modifier.height(24.dp))
+                              Row(
+                                  horizontalArrangement = Arrangement.End,
+                                  modifier = Modifier
+                                      .fillMaxWidth()
+                                      .padding(0.dp, 8.dp, 0.dp, 16.dp)
+                              ) {
+                                  TextButton(
+                                      colors =
+                                      ButtonDefaults.buttonColors(
+                                          containerColor = Color.Transparent,
+                                          contentColor = MaterialTheme.colorScheme.onSurface,
+                                      ),
+                                      onClick = {
+                                          importPopupState.value = false
+                                          importUrl = TextFieldValue("")
+                                      }) {
                                     Text(stringResource(R.string.cancel))
                                   }
 
@@ -222,18 +228,18 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                                           contentColor = MaterialTheme.colorScheme.onPrimary,
                                       ),
                                   onClick = {
-                                    coroutineScope.launch {
-                                        ModuleLayer.enqueueRemoteInstall(
-                                            importUrl.text
-                                        )
-                                        importUrl = TextFieldValue("")
-                                    }
-                                    importPopupState.value = false
+                                      coroutineScope.launch {
+                                          ModuleLayer.enqueueRemoteInstall(
+                                              importUrl.text
+                                          )
+                                          importUrl = TextFieldValue("")
+                                      }
+                                      importPopupState.value = false
                                   }) {
                                   Text(stringResource(R.string.import_module_button_confirm))
                               }
+                              }
                           }
-                      }
                       }
                   }
               }
@@ -299,11 +305,16 @@ fun ModuleChoice(
       onClick = onClick,
       content = {
           Row(
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()) {
+              horizontalArrangement = Arrangement.Start,
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier.fillMaxWidth()
+          ) {
               if (image == null)
-                  Icon(Icons.Default.Help, "Question Mark", modifier = Modifier.size(iconSize.dp))
+                  Icon(
+                      Icons.Default.Help,
+                      "Question Mark",
+                      modifier = Modifier.size(iconSize.dp)
+                  )
               else
                   GlideImage(
                       imageModel = { image },
@@ -407,10 +418,16 @@ fun ModuleImportButton(onClick: () -> Unit) {
 
   // TODO: Add dotted outline
   Button(
-      modifier = Modifier
+      modifier =
+      Modifier
           .fillMaxWidth(1F)
           .height(65.dp)
-          .padding(vertical = 4.dp),
+          .padding(vertical = 4.dp)
+          .dashedBorder(
+              1.dp,
+              MaterialTheme.colorScheme.onPrimaryContainer,
+              10.dp
+          ),
       colors =
       ButtonDefaults.buttonColors(
           containerColor = Color.Transparent,
@@ -421,8 +438,9 @@ fun ModuleImportButton(onClick: () -> Unit) {
       content = {
           Row(
               horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()) {
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier.fillMaxWidth()
+          ) {
               Icon(
                   Icons.Default.Download,
                   "Import Module",
@@ -433,7 +451,7 @@ fun ModuleImportButton(onClick: () -> Unit) {
               )
               Spacer(modifier = Modifier.width(6.dp))
               Column {
-                Text(
+                  Text(
                     stringResource(R.string.import_module_header),
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     fontWeight = FontWeight.Bold,
