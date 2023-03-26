@@ -16,10 +16,9 @@ import com.chouten.app.client
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlinx.coroutines.runBlocking
-import okhttp3.Request
 
-class ModuleDataLayer(val context: Context) {
-  
+class ModuleDataLayer() {
+
     var selectedModule by mutableStateOf<ModuleModel?>(null)
         private set
     var availableModules = mutableStateListOf<ModuleModel>()
@@ -43,7 +42,7 @@ class ModuleDataLayer(val context: Context) {
         enqueueRemoteInstall(url)
     }
 
-    fun enqueueFileInstall(intent: Intent) {
+    fun enqueueFileInstall(intent: Intent, context: Context) {
 
         if (intent.clipData != null) {
             val clipdata: ClipData = intent.clipData!!

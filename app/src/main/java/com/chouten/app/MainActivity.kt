@@ -18,48 +18,48 @@ import com.chouten.app.ui.views.homePage.HomePageViewModel
 lateinit var ModuleLayer: ModuleDataLayer
 
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        initializeNetwork(applicationContext)
-        ModuleLayer = ModuleDataLayer(applicationContext)
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    initializeNetwork(applicationContext)
+    ModuleLayer = ModuleDataLayer()
 
-        when (ACTION_SEND) {
-            intent?.action -> {
-                Log.d("INTENT", "$intent")
-                // Enqueue the Resource
-                ModuleLayer.enqueueRemoteInstall(intent)
-            }
-        }
+    if (intent != null) handleSharedIntent(intent)
 
-        setContent {
-            ChoutenTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    HomePage(HomePageViewModel())
-                }
-            }
+    setContent {
+      ChoutenTheme {
+        // A surface container using the 'background' color from the theme
+        Surface(
+          modifier = Modifier.fillMaxSize(),
+          color = MaterialTheme.colorScheme.background
+        ) {
+          HomePage(HomePageViewModel())
         }
+      }
     }
+  }
 
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-
-        when (ACTION_SEND) {
-            intent?.action -> {
-                Log.d("INTENT", "$intent")
-                // Enqueue the Resource
-                when (intent.type) {
-                    "text/plain" -> ModuleLayer.enqueueRemoteInstall(intent)
-                    "application/json" -> ModuleLayer.enqueueFileInstall(intent)
-                    else -> Log.d(
-                        "IMPORT",
-                        "Import type `${intent.type}` not yet implemented"
-                    )
-                }
-            }
+  private fun handleSharedIntent(intent: Intent?) {
+    when (ACTION_SEND) {
+      intent?.action -> {
+        Log.d("INTENT", "$intent")
+        // Enqueue the Resource
+        when (intent.type) {
+          "text/plain" -> ModuleLayer.enqueueRemoteInstall(intent)
+          "application/json" -> ModuleLayer.enqueueFileInstall(
+            intent,
+            applicationContext
+          )
+          else -> Log.d(
+            "IMPORT",
+            "Import type `${intent.type}` not yet implemented"
+          )
         }
+      }
     }
+  }
+
+  override fun onNewIntent(intent: Intent?) {
+    super.onNewIntent(intent)
+    handleSharedIntent(intent)
+  }
 }
