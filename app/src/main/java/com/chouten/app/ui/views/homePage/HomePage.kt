@@ -169,7 +169,7 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                                 ), CircleShape
                             )
                             .animateEnterExit(),
-                        ModuleLayer.selectedModule!!.name
+                        ModuleLayer.selectedModule?.name
                     )
                 }
 
@@ -461,19 +461,13 @@ fun ModuleImportButton(onClick: () -> Unit) {
                 Spacer(modifier = Modifier.width(6.dp))
                 Column {
                     Text(
-                        stringResource(R.string.import_module_header),
+                        stringResource(R.string.import_module_desc),
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontWeight = FontWeight.Bold,
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    Row(horizontalArrangement = Arrangement.Start) {
-                        Text(
-                            stringResource(R.string.import_module_desc),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                    }
                 }
             }
         }
@@ -481,7 +475,7 @@ fun ModuleImportButton(onClick: () -> Unit) {
 }
 
 @Composable
-fun ContentSearchBar(modifier: Modifier, activeModuleName: String) {
+fun ContentSearchBar(modifier: Modifier, activeModuleName: String?) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         Icon(
             imageVector = Icons.Default.Search,
@@ -490,7 +484,7 @@ fun ContentSearchBar(modifier: Modifier, activeModuleName: String) {
             tint = MaterialTheme.colorScheme.outline
         )
         Text(
-            text = "Search using $activeModuleName",
+            text = if (activeModuleName != null) "Search using $activeModuleName" else "No Module Selected",
             modifier = Modifier
                 .weight(1f)
                 .padding(16.dp),
