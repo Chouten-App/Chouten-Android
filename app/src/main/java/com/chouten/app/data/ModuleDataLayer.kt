@@ -12,7 +12,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.chouten.app.Mapper
+import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.client
+import com.chouten.app.ui.theme.SnackbarVisualsWithError
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlinx.coroutines.runBlocking
@@ -30,7 +32,13 @@ class ModuleDataLayer() {
             try {
                 availableModules += client.get(url).parsed<ModuleModel>()
             } catch (e: Exception) {
-                // TODO: Display nice Snackbar error / custom stylised toast
+                PrimaryDataLayer.enqueueSnackbar(
+                    SnackbarVisualsWithError(
+                        "Could not download module",
+                        true,
+                        // TODO: Add more details on button click
+                    )
+                )
                 e.localizedMessage?.let { Log.e("MODULE INSTALL", it) }
             }
         }
@@ -59,16 +67,19 @@ class ModuleDataLayer() {
                     json.append(line)
                 }
 
+                inputStream?.close()
+
                 try {
                     availableModules += Mapper.parse<ModuleModel>(json.toString())
                 } catch (e: Exception) {
-                    // TODO: Nice stylised toast / something
+                    PrimaryDataLayer.enqueueSnackbar(
+                        SnackbarVisualsWithError(
+                            "Could not install module",
+                            true,
+                        )
+                    )
                     e.localizedMessage?.let { Log.e("IMPORT ERROR", it) }
                 }
-
-                inputStream?.close()
-
-                // Use the URI to access the shared file
             }
         }
     }

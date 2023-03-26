@@ -35,8 +35,10 @@ import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chouten.app.ModuleLayer
+import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.R
 import com.chouten.app.data.ModuleModel
+import com.chouten.app.ui.theme.SnackbarVisualsWithError
 import com.chouten.app.ui.theme.dashedBorder
 import com.chouten.app.ui.theme.shapes
 import com.skydoves.landscapist.ImageOptions
@@ -53,14 +55,16 @@ import kotlin.math.roundToInt
 @Composable
 @Preview
 fun HomePage(provider: HomePageViewModel = viewModel()) {
-    val sheetState =
-        androidx.compose.material.rememberModalBottomSheetState(
-            initialValue = ModalBottomSheetValue.Hidden,
-        )
+    val sheetState = androidx.compose.material.rememberModalBottomSheetState(
+        initialValue = ModalBottomSheetValue.Hidden,
+    )
 
     val importPopupState = remember { mutableStateOf(false) }
-    var importUrl by
-    rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue("")) }
+    var importUrl by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(
+            TextFieldValue("")
+        )
+    }
 
     val coroutineScope = rememberCoroutineScope()
     val noModuleSelected = stringResource(R.string.no_module_selected)
@@ -97,7 +101,9 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                     modifier = Modifier.fillMaxWidth(.8F)
                 )
                 Spacer(Modifier.height(20.dp))
-                ModuleImportButton { importPopupState.value = !importPopupState.value }
+                ModuleImportButton {
+                    importPopupState.value = !importPopupState.value
+                }
                 LazyColumn(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceEvenly,
@@ -141,7 +147,10 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
         sheetBackgroundColor = MaterialTheme.colorScheme.surface,
         sheetShape = RoundedCornerShape(28.dp, 28.dp, 0.dp, 0.dp)
     ) {
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+        Column(
+            Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
             Box(Modifier.heightIn(TextFieldDefaults.MinHeight)) {
                 // For some reason we need the FQN
                 androidx.compose.animation.AnimatedVisibility(ModuleLayer.selectedModule?.name != null) {
@@ -169,8 +178,7 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                         onDismissRequest = { importPopupState.value = false },
                     ) {
                         Surface(
-                            modifier = Modifier
-                                .wrapContentSize(),
+                            modifier = Modifier.wrapContentSize(),
                             shape = shapes.large
                         ) {
                             Column(
@@ -208,26 +216,20 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                                 Spacer(Modifier.height(24.dp))
                                 Row(
                                     horizontalArrangement = Arrangement.End,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    TextButton(
-                                        colors =
-                                        ButtonDefaults.buttonColors(
-                                            containerColor = Color.Transparent,
-                                            contentColor = MaterialTheme.colorScheme.onSurface,
-                                        ),
-                                        onClick = {
-                                            importPopupState.value = false
-                                            importUrl = TextFieldValue("")
-                                        }) {
+                                    TextButton(colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.Transparent,
+                                        contentColor = MaterialTheme.colorScheme.onSurface,
+                                    ), onClick = {
+                                        importPopupState.value = false
+                                        importUrl = TextFieldValue("")
+                                    }) {
                                         Text(stringResource(R.string.cancel))
                                     }
                                     Spacer(Modifier.width(8.dp))
-                                    ElevatedButton(
-                                        shape = RoundedCornerShape(5.dp),
-                                        colors =
-                                        ButtonDefaults.buttonColors(
+                                    ElevatedButton(shape = RoundedCornerShape(5.dp),
+                                        colors = ButtonDefaults.buttonColors(
                                             containerColor = MaterialTheme.colorScheme.primary,
                                             contentColor = MaterialTheme.colorScheme.onPrimary,
                                         ),
@@ -297,8 +299,7 @@ fun ModuleChoice(
             .fillMaxWidth(1F)
             .height(65.dp)
             .padding(vertical = 4.dp),
-        colors =
-        if (backgroundColor != null) {
+        colors = if (backgroundColor != null) {
             ButtonDefaults.buttonColors(
                 containerColor = backgroundColor,
                 contentColor = foregroundColor
@@ -313,34 +314,40 @@ fun ModuleChoice(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if (image == null)
-                    Icon(Icons.Default.Help, "Question Mark", modifier = Modifier.size(iconSize.dp))
-                else
-                    GlideImage(
-                        imageModel = { image },
-                        imageOptions =
-                        ImageOptions(
-                            contentScale = ContentScale.Fit,
-                            alignment = Alignment.Center,
-                            contentDescription = "Favicon for the $name module",
-                            requestSize = IntSize(iconSizePx, iconSizePx)
-                        ),
-                        loading = {
-                            Box(Modifier.matchParentSize()) {
-                                CircularProgressIndicator(Modifier.align(Alignment.Center))
-                            }
-                        },
-                        modifier = Modifier
-                            .size(iconSize.dp)
-                            .clip(CircleShape),
-                    )
+                if (image == null) Icon(
+                    Icons.Default.Help,
+                    "Question Mark",
+                    modifier = Modifier.size(iconSize.dp)
+                )
+                else GlideImage(
+                    imageModel = { image },
+                    imageOptions = ImageOptions(
+                        contentScale = ContentScale.Fit,
+                        alignment = Alignment.Center,
+                        contentDescription = "Favicon for the $name module",
+                        requestSize = IntSize(iconSizePx, iconSizePx)
+                    ),
+                    loading = {
+                        Box(Modifier.matchParentSize()) {
+                            CircularProgressIndicator(
+                                Modifier.align(
+                                    Alignment.Center
+                                )
+                            )
+                        }
+                    },
+                    modifier = Modifier
+                        .size(iconSize.dp)
+                        .clip(CircleShape),
+                )
 
                 Spacer(modifier = Modifier.width(6.dp))
                 Column {
                     Text(
                         name,
                         fontWeight = FontWeight.Bold,
-                        color = foregroundColor ?: MaterialTheme.colorScheme.onSecondary,
+                        color = foregroundColor
+                            ?: MaterialTheme.colorScheme.onSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -374,8 +381,7 @@ fun ModuleChoice(
 @Composable
 @Preview(name = "Module Choice Selector", showBackground = false)
 fun ModuleChoice(@PreviewParameter(ModuleChoiceProvider::class) params: ModuleChoiceParams) {
-    return ModuleChoice(
-        params.name,
+    return ModuleChoice(params.name,
         params.author,
         params.version,
         params.js,
@@ -400,20 +406,19 @@ data class ModuleChoiceParams(
 )
 
 class ModuleChoiceProvider() : PreviewParameterProvider<ModuleChoiceParams> {
-    override val values =
-        sequenceOf(
-            ModuleChoiceParams(
-                "Zoro",
-                "Inumaki",
-                "1.0.0",
-                "",
-                "https://zoro.to/images/favicon.png?v=01",
-                false,
-                "",
-                Color(0xFFffcb3d),
-                null,
-            )
+    override val values = sequenceOf(
+        ModuleChoiceParams(
+            "Zoro",
+            "Inumaki",
+            "1.0.0",
+            "",
+            "https://zoro.to/images/favicon.png?v=01",
+            false,
+            "",
+            Color(0xFFffcb3d),
+            null,
         )
+    )
     override val count: Int
         get() = 1
 }
@@ -422,67 +427,57 @@ class ModuleChoiceProvider() : PreviewParameterProvider<ModuleChoiceParams> {
 fun ModuleImportButton(onClick: () -> Unit) {
     val iconSize = 25
 
-  // TODO: Add dotted outline
-  Button(
-      modifier =
-      Modifier
-          .fillMaxWidth(1F)
-          .height(65.dp)
-          .padding(vertical = 4.dp)
-          .dashedBorder(
-              1.dp,
-              MaterialTheme.colorScheme.onPrimaryContainer,
-              10.dp
-          ),
-      colors =
-      ButtonDefaults.buttonColors(
-          containerColor = Color.Transparent,
-          //                contentColor = foregroundColor
-      ),
-      shape = RoundedCornerShape(10.dp),
-      onClick = onClick,
-      content = {
-          Row(
-              horizontalArrangement = Arrangement.Start,
-              verticalAlignment = Alignment.CenterVertically,
-              modifier = Modifier.fillMaxWidth()
-          ) {
-              Icon(
-                  Icons.Default.Download,
-                  "Import Module",
-                  modifier = Modifier
-                      .size(iconSize.dp)
-                      .clip(CircleShape),
-                  tint = MaterialTheme.colorScheme.onPrimaryContainer
-              )
-              Spacer(modifier = Modifier.width(6.dp))
-              Column {
-                  Text(
-                      stringResource(R.string.import_module_header),
-                      color = MaterialTheme.colorScheme.onPrimaryContainer,
-                      fontWeight = FontWeight.Bold,
-                  )
-                  Spacer(modifier = Modifier.width(6.dp))
-                  Column {
-                      Text(
-                          stringResource(R.string.import_module_header),
-                          color = MaterialTheme.colorScheme.onPrimaryContainer,
-                          fontWeight = FontWeight.Bold,
-                      )
-                      Row(horizontalArrangement = Arrangement.Start) {
-                          Text(
-                              stringResource(R.string.import_module_desc),
-                              color = MaterialTheme.colorScheme.onPrimaryContainer,
-                              fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                              fontWeight = FontWeight.SemiBold
-                          )
-                          Spacer(modifier = Modifier.width(4.dp))
-                      }
-                  }
-              }
-          }
-      }
-    )
+    // TODO: Add dotted outline
+    Button(modifier = Modifier
+        .fillMaxWidth(1F)
+        .height(65.dp)
+        .padding(vertical = 4.dp)
+        .dashedBorder(
+            1.dp, MaterialTheme.colorScheme.onPrimaryContainer, 10.dp
+        ), colors = ButtonDefaults.buttonColors(
+        containerColor = Color.Transparent,
+        //                contentColor = foregroundColor
+    ), shape = RoundedCornerShape(10.dp), onClick = onClick, content = {
+        Row(
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                Icons.Default.Download,
+                "Import Module",
+                modifier = Modifier
+                    .size(iconSize.dp)
+                    .clip(CircleShape),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Column {
+                Text(
+                    stringResource(R.string.import_module_header),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Column {
+                    Text(
+                        stringResource(R.string.import_module_header),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Row(horizontalArrangement = Arrangement.Start) {
+                        Text(
+                            stringResource(R.string.import_module_desc),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
+                }
+            }
+        }
+    })
 }
 
 @Composable
