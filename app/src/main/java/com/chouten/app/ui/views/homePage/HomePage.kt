@@ -174,80 +174,45 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                 }
 
                 androidx.compose.animation.AnimatedVisibility(importPopupState.value) {
-                    AlertDialog(
-                        onDismissRequest = { importPopupState.value = false },
-                    ) {
-                        Surface(
-                            modifier = Modifier.wrapContentSize(),
-                            shape = shapes.large
-                        ) {
-                            Column(
-                                verticalArrangement = Arrangement.SpaceAround,
-                                horizontalAlignment = Alignment.Start,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(24.dp)
-                            ) {
-                                Text(
-                                    stringResource(R.string.import_module_header),
-                                    style = MaterialTheme.typography.headlineSmall,
-                                )
-                                Spacer(Modifier.height(16.dp))
-                                OutlinedTextField(
-                                    value = importUrl,
-                                    onValueChange = { importUrl = it },
-                                    label = { Text(stringResource(R.string.import_module_desc)) },
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    singleLine = true,
-                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                                    keyboardActions =
-                                    KeyboardActions(
-                                        onDone = {
-                                            coroutineScope.launch {
-                                                ModuleLayer.enqueueRemoteInstall(
-                                                    importUrl.text
-                                                )
-                                                importUrl = TextFieldValue("")
-                                            }
-                                            importPopupState.value = false
-                                        })
-                                )
-                                Spacer(Modifier.height(24.dp))
-                                Row(
-                                    horizontalArrangement = Arrangement.End,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    TextButton(colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color.Transparent,
-                                        contentColor = MaterialTheme.colorScheme.onSurface,
-                                    ), onClick = {
-                                        importPopupState.value = false
+                    AlertDialog(onDismissRequest = {
+                        importPopupState.value = false
+                    },
+                        title = { Text(stringResource(R.string.import_module_header)) },
+                        text = {
+                            OutlinedTextField(
+                                value = importUrl,
+                                onValueChange = { importUrl = it },
+                                label = { Text(stringResource(R.string.import_module_desc)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(onDone = {
+                                    coroutineScope.launch {
+                                        ModuleLayer.enqueueRemoteInstall(
+                                            importUrl.text
+                                        )
                                         importUrl = TextFieldValue("")
-                                    }) {
-                                        Text(stringResource(R.string.cancel))
                                     }
-                                    Spacer(Modifier.width(8.dp))
-                                    ElevatedButton(shape = RoundedCornerShape(5.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.primary,
-                                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                                        ),
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                ModuleLayer.enqueueRemoteInstall(
-                                                    importUrl.text
-                                                )
-                                                importUrl = TextFieldValue("")
-                                            }
-                                            importPopupState.value = false
-                                        }) {
-                                        Text(stringResource(R.string.import_module_button_confirm))
-                                    }
+                                    importPopupState.value = false
+                                })
+                            )
+                        },
+                        confirmButton = {
+                            FilledTonalButton(colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                            ), onClick = {
+                                coroutineScope.launch {
+                                    ModuleLayer.enqueueRemoteInstall(
+                                        importUrl.text
+                                    )
+                                    importUrl = TextFieldValue("")
                                 }
+                                importPopupState.value = false
+                            }) {
+                                Text(stringResource(R.string.import_module_button_confirm))
                             }
-                        }
-                    }
+                        })
                 }
             }
             Row(
