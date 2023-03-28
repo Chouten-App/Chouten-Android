@@ -15,7 +15,7 @@ class DataLayer() {
             popSnackbarQueue(true)
         }
 
-        snackbarQueue.value = snackbarQueue.value?.plus(content)
+        snackbarQueue.postValue(snackbarQueue.value?.plus(content))
     }
 
     fun popSnackbarQueue(force: Boolean = false) {
