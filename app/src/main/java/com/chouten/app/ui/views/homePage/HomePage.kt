@@ -1,6 +1,7 @@
 package com.chouten.app.ui.views.homePage
 
 import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -35,12 +36,9 @@ import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chouten.app.ModuleLayer
-import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.R
 import com.chouten.app.data.ModuleModel
-import com.chouten.app.ui.theme.SnackbarVisualsWithError
 import com.chouten.app.ui.theme.dashedBorder
-import com.chouten.app.ui.theme.shapes
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
@@ -53,8 +51,7 @@ import kotlin.math.roundToInt
     ExperimentalAnimationApi::class
 )
 @Composable
-@Preview
-fun HomePage(provider: HomePageViewModel = viewModel()) {
+fun HomePage(context: Context, provider: HomePageViewModel = viewModel()) {
     val sheetState = androidx.compose.material.rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden,
     )
@@ -189,6 +186,7 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                                 keyboardActions = KeyboardActions(onDone = {
                                     coroutineScope.launch {
                                         ModuleLayer.enqueueRemoteInstall(
+                                            context,
                                             importUrl.text
                                         )
                                         importUrl = TextFieldValue("")
@@ -204,6 +202,7 @@ fun HomePage(provider: HomePageViewModel = viewModel()) {
                             ), onClick = {
                                 coroutineScope.launch {
                                     ModuleLayer.enqueueRemoteInstall(
+                                        context,
                                         importUrl.text
                                     )
                                     importUrl = TextFieldValue("")

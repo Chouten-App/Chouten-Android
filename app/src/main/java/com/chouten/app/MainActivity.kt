@@ -31,6 +31,9 @@ class MainActivity : ComponentActivity() {
         initializeNetwork(applicationContext)
         ModuleLayer = ModuleDataLayer()
 
+        createAppDirectory()
+        ModuleLayer.loadModules(applicationContext)
+
         val snackbarState = SnackbarHostState()
         val snackbarHost: @Composable () -> Unit = {
             SnackbarHost(hostState = snackbarState) { data ->
@@ -85,6 +88,7 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxSize()
                         ) {
                             HomePage(
+                                applicationContext,
                                 HomePageViewModel(),
                             )
                         }
@@ -108,7 +112,7 @@ class MainActivity : ComponentActivity() {
                 Log.d("INTENT", "$intent")
                 // Enqueue the Resource
                 when (intent.type) {
-                    "text/plain" -> ModuleLayer.enqueueRemoteInstall(intent)
+                    "text/plain" -> ModuleLayer.enqueueRemoteInstall(this, intent)
                     "application/json" -> ModuleLayer.enqueueFileInstall(
                         intent,
                         applicationContext
