@@ -16,6 +16,8 @@ import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import com.chouten.app.*
 import com.chouten.app.ui.theme.SnackbarVisualsWithError
+import com.google.common.hash.BloomFilter
+import com.google.common.hash.Funnels
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlinx.coroutines.runBlocking
@@ -30,17 +32,36 @@ class ModuleDataLayer() {
     var availableModules = mutableStateListOf<ModuleModel>()
         private set
 
+    private val bloomFilter = BloomFilter.create(
+        Funnels.integerFunnel(),
+        100,
+        0.05
+    )
+
+    fun isModuleExisting(module: ModuleModel): Boolean {
+        val doesNotExist = !bloomFilter.mightContain(module.hashCode())
+        if (doesNotExist) return doesNotExist
+
+        return availableModules.contains(module)
+    }
+
     fun enqueueRemoteInstall(context: Context, url: String) {
         // TODO: Make async / use seperate service
         runBlocking {
             try {
                 val module = client.get(url).parsed<ModuleModel>()
+
+                // At the moment we will not allow installs which are the same.
+                // In the future, we may allow modules which have different versions
+                // to be installed side by side.
+                if (isModuleExisting(module)) throw IOException("Module already installed")
+
                 saveModule(context, module)
                 availableModules += module
             } catch (e: Exception) {
                 PrimaryDataLayer.enqueueSnackbar(
                     SnackbarVisualsWithError(
-                        "Could not download module",
+                        e.localizedMessage ?: "Could not download module",
                         true,
                         // TODO: Add more details on button click
                     )
@@ -77,12 +98,18 @@ class ModuleDataLayer() {
 
                 try {
                     val module = Mapper.parse<ModuleModel>(json.toString())
+
+                    // At the moment we will not allow installs which are the same.
+                    // In the future, we may allow modules which have different versions
+                    // to be installed side by side.
+                    if (isModuleExisting(module)) throw IOException("Module already installed")
+
                     saveModule(context, module)
                     availableModules += module
                 } catch (e: Exception) {
                     PrimaryDataLayer.enqueueSnackbar(
                         SnackbarVisualsWithError(
-                            "Could not install module",
+                            e.localizedMessage ?: "Could not install module",
                             true,
                         )
                     )

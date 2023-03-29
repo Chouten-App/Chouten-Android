@@ -77,4 +77,6 @@ dependencies {
     // Network
     implementation 'com.github.brahmkshatriya:NiceHttp:1.1.0'
     implementation "org.jetbrains.kotlin:kotlin-reflect:1.8.10"
+
+    implementation "com.google.guava:guava:31.1-android"
 }
