@@ -7,5 +7,11 @@
     <string name="import_module_desc">Import Module from URL</string>
     <string name="import_module_button_confirm">Import Module</string>
 
+    <string name="search_bar_default">Search for Content</string>
+    <string name="search_bar_with">Search with</string>
+    <string name="search_bar_fallback">No Module Selected</string>
+
+    <string name="active_profile">Your Profile</string>
+
     <string name="cancel">Cancel</string>
 </resources>

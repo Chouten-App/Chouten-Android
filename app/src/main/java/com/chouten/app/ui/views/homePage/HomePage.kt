@@ -391,7 +391,6 @@ class ModuleChoiceProvider() : PreviewParameterProvider<ModuleChoiceParams> {
 fun ModuleImportButton(onClick: () -> Unit) {
     val iconSize = 25
 
-    // TODO: Add dotted outline
     Button(modifier = Modifier
         .fillMaxWidth(1F)
         .height(65.dp)
@@ -409,7 +408,7 @@ fun ModuleImportButton(onClick: () -> Unit) {
         ) {
             Icon(
                 Icons.Default.Download,
-                "Import Module",
+                stringResource(R.string.module_selection_header),
                 modifier = Modifier
                     .size(iconSize.dp)
                     .clip(CircleShape),
@@ -443,12 +442,16 @@ fun ContentSearchBar(modifier: Modifier, activeModuleName: String?) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         Icon(
             imageVector = Icons.Default.Search,
-            contentDescription = "Search for content",
+            contentDescription = stringResource(R.string.search_bar_default),
             modifier = Modifier.padding(start = 16.dp),
             tint = MaterialTheme.colorScheme.outline
         )
         Text(
-            text = if (activeModuleName != null) "Search using $activeModuleName" else "No Module Selected",
+            text = if (activeModuleName != null)
+                "${stringResource(R.string.search_bar_with)} $activeModuleName"
+            else stringResource(
+                R.string.search_bar_fallback
+            ),
             modifier = Modifier
                 .weight(1f)
                 .padding(16.dp),
@@ -458,7 +461,7 @@ fun ContentSearchBar(modifier: Modifier, activeModuleName: String?) {
         IconButton(modifier = Modifier.padding(end = 16.dp), onClick = {}) {
             Icon(
                 Icons.Default.AccountCircle,
-                "Your Profile",
+                stringResource(R.string.active_profile),
                 tint = MaterialTheme.colorScheme.outline
             )
         }
