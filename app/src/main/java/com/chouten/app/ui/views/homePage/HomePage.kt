@@ -438,33 +438,71 @@ fun ModuleImportButton(onClick: () -> Unit) {
     })
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContentSearchBar(modifier: Modifier, activeModuleName: String?) {
-    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            imageVector = Icons.Default.Search,
-            contentDescription = stringResource(R.string.search_bar_default),
-            modifier = Modifier.padding(start = 16.dp),
-            tint = MaterialTheme.colorScheme.outline
+fun ContentSearchBar(
+    modifier: Modifier,
+    activeModuleName: String?,
+) {
+    var searchQuery by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(
+            TextFieldValue("")
         )
-        Text(
-            text = if (activeModuleName != null)
-                "${stringResource(R.string.search_bar_with)} $activeModuleName"
-            else stringResource(
-                R.string.search_bar_fallback
-            ),
-            modifier = Modifier
-                .weight(1f)
-                .padding(16.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.outline
-        )
-        IconButton(modifier = Modifier.padding(end = 16.dp), onClick = {}) {
-            Icon(
-                Icons.Default.AccountCircle,
-                stringResource(R.string.active_profile),
-                tint = MaterialTheme.colorScheme.outline
+    }
+
+    val searchWith = stringResource(R.string.search_bar_with)
+    val searchFallback = stringResource(
+        R.string.search_bar_fallback
+    )
+
+    Row(
+        modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+
+        TextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = {
+                Text(
+                    if (activeModuleName != null)
+                        "$searchWith $activeModuleName"
+                    else searchFallback
+                )
+            },
+            leadingIcon = {
+                IconButton(
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .requiredWidth(IntrinsicSize.Max), onClick = {}) {
+                    Icon(
+                        Icons.Default.Search,
+                        stringResource(R.string.search_bar_default),
+                        tint = MaterialTheme.colorScheme.outline
+                    )
+                }
+            },
+            trailingIcon = {
+                IconButton(
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .requiredWidth(IntrinsicSize.Max), onClick = {}) {
+                    Icon(
+                        Icons.Default.AccountCircle,
+                        stringResource(R.string.active_profile),
+                        tint = MaterialTheme.colorScheme.outline
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            colors = TextFieldDefaults.textFieldColors(
+                containerColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent
             )
-        }
+        )
     }
 }
