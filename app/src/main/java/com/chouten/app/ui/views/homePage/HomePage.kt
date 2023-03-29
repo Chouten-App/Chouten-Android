@@ -181,6 +181,7 @@ fun HomePage(context: Context, provider: HomePageViewModel = viewModel()) {
                                 onValueChange = { importUrl = it },
                                 label = { Text(stringResource(R.string.import_module_desc)) },
                                 modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.medium,
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                                 keyboardActions = KeyboardActions(onDone = {
