@@ -39,10 +39,11 @@ class ModuleDataLayer() {
     )
 
     fun isModuleExisting(module: ModuleModel): Boolean {
-        val doesNotExist = !bloomFilter.mightContain(module.hashCode())
-        if (doesNotExist) return doesNotExist
+//        val doesNotExist = !bloomFilter.mightContain(module.hashCode())
+//        if (doesNotExist) return doesNotExist
 
-        return availableModules.contains(module)
+        availableModules.find { it.hashCode() == module.hashCode() } ?: return false
+        return true
     }
 
     fun enqueueRemoteInstall(context: Context, url: String) {
@@ -117,7 +118,8 @@ class ModuleDataLayer() {
         }
     }
 
-    fun updateSelectedModule(module: ModuleModel) {
+    fun updateSelectedModule(moduleId: Int) {
+        val module = availableModules[moduleId]
         println("Updating to ${module.name}")
         selectedModule = module
     }

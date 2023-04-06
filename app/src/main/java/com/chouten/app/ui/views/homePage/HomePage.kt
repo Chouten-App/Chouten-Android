@@ -105,7 +105,6 @@ fun HomePage(context: Context, provider: HomePageViewModel = viewModel()) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceEvenly,
                 ) {
-                    // TODO: pass name, colour and id into modulechoice rather than everything
                     items(items = ModuleLayer.availableModules) { module ->
                         ModuleChoice(
                             module.id ?: throw Exception("Module ID not set for ${module.name}"),
@@ -122,19 +121,8 @@ fun HomePage(context: Context, provider: HomePageViewModel = viewModel()) {
                                 Color(str.toLong(16))
                             },
                             onClick = {
-                                // TODO: Add overload to update by id
                                 ModuleLayer.updateSelectedModule(
-                                    ModuleModel(
-                                        module.name,
-                                        module.author,
-                                        module.version,
-                                        module.js,
-                                        module.image,
-                                        module.usesExternalApi,
-                                        module.website,
-                                        module.backgroundColor,
-                                        module.foregroundColor
-                                    )
+                                    module.id ?: throw Exception("Module ID not set for ${module.name}"),
                                 )
                                 coroutineScope.launch { sheetState.hide() }
                             },
