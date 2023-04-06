@@ -108,17 +108,19 @@ fun HomePage(context: Context, provider: HomePageViewModel = viewModel()) {
                     // TODO: pass name, colour and id into modulechoice rather than everything
                     items(items = ModuleLayer.availableModules) { module ->
                         ModuleChoice(
+                            module.id ?: throw Exception("Module ID not set for ${module.name}"),
                             module.name,
-                            module.author,
+                            module.meta.author,
                             module.version,
-                            module.js,
-                            module.image,
-                            module.usesExternalApi,
-                            module.website,
-                            if (module.backgroundColor.isNullOrBlank()) null
-                            else Color(module.backgroundColor.toLong(16)),
-                            if (module.foregroundColor.isNullOrBlank()) null
-                            else Color(module.foregroundColor.toLong(16)),
+                            module.meta.icon,
+                            module.meta.backgroundColor.let {
+                                val str = "FF" + it.removePrefix("#")
+                                Color(str.toLong(16))
+                            },
+                            module.meta.foregroundColor.let {
+                                val str = "FF" + it.removePrefix("#")
+                                Color(str.toLong(16))
+                            },
                             onClick = {
                                 // TODO: Add overload to update by id
                                 ModuleLayer.updateSelectedModule(
@@ -245,13 +247,11 @@ fun HomePage(context: Context, provider: HomePageViewModel = viewModel()) {
 
 @Composable
 fun ModuleChoice(
+    id: Int,
     name: String,
     author: String,
     version: String,
-    js: String,
-    image: String?,
-    usesExternalApi: Boolean?,
-    website: String,
+    icon: String?,
     backgroundColor: Color?,
     foregroundColor: Color?,
     onClick: () -> Unit
@@ -279,13 +279,13 @@ fun ModuleChoice(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if (image == null) Icon(
+                if (icon == null) Icon(
                     Icons.Default.Help,
                     "Question Mark",
                     modifier = Modifier.size(iconSize.dp)
                 )
                 else GlideImage(
-                    imageModel = { image },
+                    imageModel = { icon },
                     imageOptions = ImageOptions(
                         contentScale = ContentScale.Fit,
                         alignment = Alignment.Center,
@@ -341,51 +341,6 @@ fun ModuleChoice(
             }
         },
     )
-}
-
-@Composable
-@Preview(name = "Module Choice Selector", showBackground = false)
-fun ModuleChoice(@PreviewParameter(ModuleChoiceProvider::class) params: ModuleChoiceParams) {
-    return ModuleChoice(params.name,
-        params.author,
-        params.version,
-        params.js,
-        params.image,
-        params.usesExternalApi,
-        params.website,
-        params.backgroundColor,
-        params.foregroundColor,
-        {})
-}
-
-data class ModuleChoiceParams(
-    val name: String,
-    val author: String,
-    val version: String,
-    val js: String,
-    val image: String?,
-    val usesExternalApi: Boolean?,
-    val website: String,
-    val backgroundColor: Color?,
-    val foregroundColor: Color?,
-)
-
-class ModuleChoiceProvider() : PreviewParameterProvider<ModuleChoiceParams> {
-    override val values = sequenceOf(
-        ModuleChoiceParams(
-            "Zoro",
-            "Inumaki",
-            "1.0.0",
-            "",
-            "https://zoro.to/images/favicon.png?v=01",
-            false,
-            "",
-            Color(0xFFffcb3d),
-            null,
-        )
-    )
-    override val count: Int
-        get() = 1
 }
 
 @Composable

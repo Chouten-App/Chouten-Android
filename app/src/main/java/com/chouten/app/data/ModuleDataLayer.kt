@@ -207,7 +207,7 @@ class ModuleDataLayer() {
 
             val moduleFile = File(
                 modulesDir,
-                "${module.name}_${module.author}.${module.version}.json"
+                "${module.name}_${module.meta.author}.${module.version}.json"
             )
 
             context.contentResolver.openOutputStream(moduleFile.toUri()).use {
