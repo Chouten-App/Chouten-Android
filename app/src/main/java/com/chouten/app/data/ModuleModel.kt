@@ -37,4 +37,16 @@ data class ModuleModel(
         val js: String,
         @SerialName("mediaJs") val mediaJS: String?
     )
+
+    override fun hashCode(): Int {
+        return (
+            this.type.hashCode()
+            + this.subtypes.hashCode()
+            + this.name.hashCode()
+            + this.version.hashCode()
+            + this.updateUrl.hashCode()
+            + this.meta.hashCode()
+            + this.code.hashCode()
+        )
+    }
 }

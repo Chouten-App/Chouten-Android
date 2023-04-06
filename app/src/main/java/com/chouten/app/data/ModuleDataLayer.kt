@@ -56,8 +56,7 @@ class ModuleDataLayer() {
                 // to be installed side by side.
                 if (isModuleExisting(module)) throw IOException("Module already installed")
 
-                saveModule(context, module)
-                availableModules += module
+                addModule(context, module)
             } catch (e: Exception) {
                 PrimaryDataLayer.enqueueSnackbar(
                     SnackbarVisualsWithError(
@@ -104,8 +103,7 @@ class ModuleDataLayer() {
                     // to be installed side by side.
                     if (isModuleExisting(module)) throw IOException("Module already installed")
 
-                    saveModule(context, module)
-                    availableModules += module
+                    addModule(context, module)
                 } catch (e: Exception) {
                     PrimaryDataLayer.enqueueSnackbar(
                         SnackbarVisualsWithError(
@@ -179,7 +177,10 @@ class ModuleDataLayer() {
                         json.append(line)
                     }
 
-                    loadedModules += Mapper.parse<ModuleModel>(json.toString())
+                    val module = Mapper.parse<ModuleModel>(json.toString())
+                    module.id = availableModules.count() + loadedModules.count()
+                    bloomFilter.put(module.hashCode())
+                    loadedModules += module
                 }
             }
 
@@ -239,5 +240,12 @@ class ModuleDataLayer() {
             e.localizedMessage?.let { Log.e("CHOUTEN", it) }
             e.printStackTrace()
         }
+    }
+
+    fun addModule(context: Context, module: ModuleModel) {
+        saveModule(context, module)
+        module.id = availableModules.count()
+        bloomFilter.put(module.hashCode())
+        availableModules += module
     }
 }
