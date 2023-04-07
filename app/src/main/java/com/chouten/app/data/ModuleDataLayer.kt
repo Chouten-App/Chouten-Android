@@ -38,16 +38,19 @@ class ModuleDataLayer() {
         0.05
     )
 
-    fun isModuleExisting(module: ModuleModel): Boolean {
-//        val doesNotExist = !bloomFilter.mightContain(module.hashCode())
-//        if (doesNotExist) return doesNotExist
+    private fun isModuleExisting(module: ModuleModel): Boolean {
+        // TODO: Fix bloom filter
+        // Android Studio also gives some weird warning about `doesNotExist`
+        // always being true which doesn't make much sense.
+        // val doesNotExist = !bloomFilter.mightContain(module.hashCode())
+        // if (doesNotExist) return doesNotExist
 
         availableModules.find { it.hashCode() == module.hashCode() } ?: return false
         return true
     }
 
     fun enqueueRemoteInstall(context: Context, url: String) {
-        // TODO: Make async / use seperate service
+        // TODO: Make async / use separate service
         runBlocking {
             try {
                 val module = client.get(url).parsed<ModuleModel>()
@@ -171,7 +174,7 @@ class ModuleDataLayer() {
                         modulesDir,
                         file
                     ).toUri()
-                ).use {
+                ).use { it ->
                     val reader = BufferedReader(InputStreamReader(it))
                     val json = StringBuilder()
                     var line: String?
@@ -213,16 +216,18 @@ class ModuleDataLayer() {
                 "${module.name}_${module.meta.author}.${module.version}.json"
             )
 
+            Log.d("CHOUTEN/IO", "$moduleFile")
+
             context.contentResolver.openOutputStream(moduleFile.toUri()).use {
                 it?.write(Mapper.json.encodeToString(module).toByteArray())
             }
 
-            // Add the MetaData to the MediaStore
+            // Add the Metadata to the MediaStore
             MediaScannerConnection.scanFile(
                 context,
                 arrayOf(moduleFile.path),
                 arrayOf("application/json")
-            ) { _, uri ->
+            ) { _, _ ->
                 PrimaryDataLayer.enqueueSnackbar(
                     SnackbarVisualsWithError(
                         "Successfully saved Module",
