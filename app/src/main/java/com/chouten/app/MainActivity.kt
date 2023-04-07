@@ -11,15 +11,20 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import com.chouten.app.data.DataLayer
 import com.chouten.app.data.ModuleDataLayer
 import com.chouten.app.ui.theme.ChoutenTheme
 import com.chouten.app.ui.theme.SnackbarVisualsWithError
+import com.chouten.app.ui.theme.shapes
 import com.chouten.app.ui.views.homePage.HomePage
 import com.chouten.app.ui.views.homePage.HomePageViewModel
 import kotlinx.coroutines.launch
@@ -53,11 +58,12 @@ class MainActivity : ComponentActivity() {
                 val buttonColor = if (isError) {
                     ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.error
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
                     )
                 } else {
                     ButtonDefaults.buttonColors(
-                        contentColor = MaterialTheme.colorScheme.inversePrimary
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.primary
                     )
                 }
 
@@ -68,9 +74,9 @@ class MainActivity : ComponentActivity() {
                     ),
                     contentColor = MaterialTheme.colorScheme.onSurface,
                     action = {
-                        TextButton(
+                        FilledTonalButton(
                             onClick = { if (isError) data.dismiss() else data.performAction() },
-                            shape = MaterialTheme.shapes.small,
+                            shape = shapes.extraSmall,
                             colors = buttonColor
                         ) { Text(extendedVisuals?.buttonText ?: "Dismiss") }
                     }
@@ -88,7 +94,37 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = { },
-                    bottomBar = { },
+                    bottomBar = {
+                        NavigationBar {
+                            NavigationBarItem(
+                                selected = true,
+                                onClick = {
+                                    PrimaryDataLayer.enqueueSnackbar(
+                                        SnackbarVisualsWithError(
+                                            "This is item 1",
+                                            false,
+                                        )
+                                    )
+                                          },
+                                label = { Text("Home") },
+                                icon = { Icon(Icons.Rounded.Home, null) }
+                            )
+                            NavigationBarItem(
+                                selected = false,
+                                onClick = {
+                                          // change the selected item
+                                          PrimaryDataLayer.enqueueSnackbar(
+                                              SnackbarVisualsWithError(
+                                                  "This is item 2",
+                                                  true,
+                                              )
+                                          )
+                                },
+                                label = { Text("Settings") },
+                                icon = { Icon(Icons.Outlined.Settings, null) }
+                            )
+                        }
+                    },
                     snackbarHost = snackbarHost,
                     content = { padding ->
                         Box(

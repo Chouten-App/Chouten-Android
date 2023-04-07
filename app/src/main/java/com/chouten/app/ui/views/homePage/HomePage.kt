@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chouten.app.ModuleLayer
 import com.chouten.app.R
-import com.chouten.app.data.ModuleModel
 import com.chouten.app.ui.theme.dashedBorder
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
@@ -130,8 +129,9 @@ fun HomePage(context: Context, provider: HomePageViewModel = viewModel()) {
                     }
                 }
             }
+            Divider()
         },
-        sheetBackgroundColor = MaterialTheme.colorScheme.surface,
+        sheetBackgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp), //TODO: Replace with something else, cuz deprecated soon
         sheetShape = RoundedCornerShape(28.dp, 28.dp, 0.dp, 0.dp)
     ) {
         Column(
