@@ -2,6 +2,8 @@ package com.chouten.app
 
 import android.content.Intent
 import android.content.Intent.ACTION_SEND
+import android.content.SharedPreferences
+import android.content.SharedPreferences.Editor
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -25,10 +27,17 @@ import kotlinx.coroutines.launch
 lateinit var ModuleLayer: ModuleDataLayer
 val PrimaryDataLayer = DataLayer()
 
+const val PREFERENCE_FILE = "CHOUTEN_PREFS"
+
+lateinit var preferenceHandler: SharedPreferences
+lateinit var preferenceEditor: Editor
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initializeNetwork(applicationContext)
+        preferenceHandler = applicationContext.getSharedPreferences(PREFERENCE_FILE, 0)
+        preferenceEditor = preferenceHandler.edit()
         ModuleLayer = ModuleDataLayer()
 
         createAppDirectory()

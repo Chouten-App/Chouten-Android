@@ -125,6 +125,7 @@ class ModuleDataLayer() {
         val module = availableModules[moduleId]
         println("Updating to ${module.name}")
         selectedModule = module
+        preferenceEditor.putInt(Preferences.SelectedModule, selectedModule.hashCode()).commit()
     }
 
     fun loadModules(context: Context) {
@@ -184,6 +185,11 @@ class ModuleDataLayer() {
 
                     val module = Mapper.parse<ModuleModel>(json.toString())
                     module.id = availableModules.count() + loadedModules.count()
+                    if (selectedModule == null &&
+                        module.hashCode() == preferenceHandler.getInt(Preferences.SelectedModule, -1)
+                    ) {
+                        selectedModule = module
+                    }
                     bloomFilter.put(module.hashCode())
                     loadedModules += module
                 }

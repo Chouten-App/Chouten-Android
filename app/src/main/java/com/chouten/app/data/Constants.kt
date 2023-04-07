@@ -9,3 +9,7 @@ object AppPaths {
     val _toCreate = listOf("Modules", "Themes")
     val addedDirs = mutableMapOf<String, File>()
 }
+
+object Preferences {
+    const val SelectedModule = "SelectedModule"
+}
