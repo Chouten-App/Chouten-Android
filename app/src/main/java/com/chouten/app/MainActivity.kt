@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import com.chouten.app.data.DataLayer
 import com.chouten.app.data.ModuleDataLayer
@@ -81,7 +82,7 @@ class MainActivity : ComponentActivity() {
         }
 
         if (intent != null) handleSharedIntent(intent)
-
+        installSplashScreen()
         setContent {
             ChoutenTheme {
                 // A surface container using the 'background' color from the theme
