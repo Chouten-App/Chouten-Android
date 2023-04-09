@@ -2,7 +2,6 @@ package com.chouten.app.ui.theme
 
 import android.app.Activity
 import android.os.Build
-import android.view.WindowManager
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -102,7 +101,7 @@ fun ChoutenTheme(
     if (!view.isInEditMode) {
         SideEffect {
             (view.context as Activity).window.navigationBarColor =
-                colorScheme.surfaceColorAtElevation(2.dp).toArgb()
+                colorScheme.surfaceColorAtElevation(3.dp).toArgb() // TODO: replace with new elevation system
             (view.context as Activity).window.statusBarColor =
                 colorScheme.primary.copy(alpha = 0.4f).compositeOver(colorScheme.surface.copy()).toArgb()
             ViewCompat.getWindowInsetsController(view)?.isAppearanceLightStatusBars =

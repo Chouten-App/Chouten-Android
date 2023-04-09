@@ -20,13 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.rememberNavController
 import com.chouten.app.data.DataLayer
 import com.chouten.app.data.ModuleDataLayer
 import com.chouten.app.ui.theme.ChoutenTheme
 import com.chouten.app.ui.theme.SnackbarVisualsWithError
 import com.chouten.app.ui.theme.shapes
 import com.chouten.app.ui.views.homePage.HomePage
-import com.chouten.app.ui.views.homePage.HomePageViewModel
 import kotlinx.coroutines.launch
 
 lateinit var ModuleLayer: ModuleDataLayer
@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
                     topBar = { },
                     bottomBar = {
                         NavigationBar {
-                            NavigationBarItem(
+                            NavigationBarItem( // TODO: replace with array of items https://www.youtube.com/watch?v=6DQQceGHxC4
                                 selected = true,
                                 onClick = {
                                     PrimaryDataLayer.enqueueSnackbar(
@@ -112,13 +112,13 @@ class MainActivity : ComponentActivity() {
                             NavigationBarItem(
                                 selected = false,
                                 onClick = {
-                                          // change the selected item
-                                          PrimaryDataLayer.enqueueSnackbar(
-                                              SnackbarVisualsWithError(
-                                                  "This is item 2",
-                                                  true,
-                                              )
-                                          )
+                                    // change the selected item
+                                    PrimaryDataLayer.enqueueSnackbar(
+                                        SnackbarVisualsWithError(
+                                            "This is item 2",
+                                            true,
+                                        )
+                                    )
                                 },
                                 label = { Text("Settings") },
                                 icon = { Icon(Icons.Outlined.Settings, null) }
@@ -133,8 +133,8 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxSize()
                         ) {
                             HomePage(
-                                applicationContext,
-                                HomePageViewModel(),
+                                navController = rememberNavController(),
+                                context = applicationContext,
                             )
                         }
                     }
