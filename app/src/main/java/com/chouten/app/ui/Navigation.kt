@@ -3,6 +3,7 @@ package com.chouten.app.ui
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material.*
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -12,9 +13,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -77,7 +80,8 @@ fun BottomNavigationBar(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         if (item.badgeCount > 0) {
                             BadgedBox(badge = {
-                                Badge(containerColor = MaterialTheme.colorScheme.error) {
+                                Badge(
+                                    modifier = Modifier.offset((-2).dp, 2.dp),
                                     val count =
                                         if (item.badgeCount > 99) "99+" else item.badgeCount.toString()
                                     Text(
