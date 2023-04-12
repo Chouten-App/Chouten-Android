@@ -14,15 +14,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.rememberNavController
 import com.chouten.app.data.DataLayer
 import com.chouten.app.data.ModuleDataLayer
+import com.chouten.app.data.NavigationItems
+import com.chouten.app.ui.BottomNavigationBar
+import com.chouten.app.ui.Navigation
 import com.chouten.app.ui.theme.ChoutenTheme
 import com.chouten.app.ui.theme.SnackbarVisualsWithError
-import com.chouten.app.ui.views.homePage.HomePage
-import com.chouten.app.ui.views.homePage.HomePageViewModel
+import com.chouten.app.ui.theme.shapes
 import kotlinx.coroutines.launch
 
 lateinit var ModuleLayer: ModuleDataLayer
@@ -54,11 +58,12 @@ class MainActivity : ComponentActivity() {
                 val buttonColor = if (isError) {
                     ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.error
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
                     )
                 } else {
                     ButtonDefaults.buttonColors(
-                        contentColor = MaterialTheme.colorScheme.inversePrimary
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.primary
                     )
                 }
 
@@ -69,9 +74,9 @@ class MainActivity : ComponentActivity() {
                     ),
                     contentColor = MaterialTheme.colorScheme.onSurface,
                     action = {
-                        TextButton(
+                        FilledTonalButton(
                             onClick = { if (isError) data.dismiss() else data.performAction() },
-                            shape = MaterialTheme.shapes.small,
+                            shape = shapes.extraSmall,
                             colors = buttonColor
                         ) { Text(extendedVisuals?.buttonText ?: "Dismiss") }
                     }
@@ -85,11 +90,22 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         setContent {
             ChoutenTheme {
-                // A surface container using the 'background' color from the theme
+                val navController = rememberNavController()
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = { },
-                    bottomBar = { },
+                    bottomBar = {
+                        BottomNavigationBar(
+                            navController = navController,
+                            items = listOf(
+                                NavigationItems.HomePage,
+                                NavigationItems.SettingsPage,
+                            ),
+                            onItemClick = {
+                                navController.navigate(route = it.route)
+                            }
+                        )
+                    },
                     snackbarHost = snackbarHost,
                     content = { padding ->
                         Box(
@@ -97,10 +113,7 @@ class MainActivity : ComponentActivity() {
                                 .padding(padding)
                                 .fillMaxSize()
                         ) {
-                            HomePage(
-                                applicationContext,
-                                HomePageViewModel(),
-                            )
+                            Navigation(navController)
                         }
                     }
                 )

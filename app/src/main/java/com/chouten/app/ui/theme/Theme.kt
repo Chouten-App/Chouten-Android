@@ -6,12 +6,14 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
 
-private val DarkColorScheme =
+private val darkColorScheme =
     darkColorScheme(
         primary = md_dark_primary,
         onPrimary = md_dark_onPrimary,
@@ -44,7 +46,7 @@ private val DarkColorScheme =
         scrim = md_dark_scrim,
     )
 
-private val LightColorScheme =
+private val lightColorScheme =
     lightColorScheme(
         primary = md_light_primary,
         onPrimary = md_light_onPrimary,
@@ -92,19 +94,20 @@ fun ChoutenTheme(
                     context
                 )
             }
-            darkTheme -> DarkColorScheme
-            else -> LightColorScheme
+            darkTheme -> darkColorScheme
+            else -> lightColorScheme
         }
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
+            (view.context as Activity).window.navigationBarColor =
+                colorScheme.surfaceColorAtElevation(3.dp).toArgb() // TODO: replace with new elevation system
             (view.context as Activity).window.statusBarColor =
-                colorScheme.primary.toArgb()
+                colorScheme.primary.copy(alpha = 0.4f).compositeOver(colorScheme.surface.copy()).toArgb()
             ViewCompat.getWindowInsetsController(view)?.isAppearanceLightStatusBars =
                 darkTheme
         }
     }
-
 
     MaterialTheme(
         colorScheme = colorScheme,

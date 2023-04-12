@@ -34,10 +34,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.chouten.app.ModuleLayer
 import com.chouten.app.R
-import com.chouten.app.data.ModuleModel
 import com.chouten.app.ui.theme.dashedBorder
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
@@ -51,7 +50,7 @@ import kotlin.math.roundToInt
     ExperimentalAnimationApi::class
 )
 @Composable
-fun HomePage(context: Context, provider: HomePageViewModel = viewModel()) {
+fun HomePage(context: Context, /*provider: HomePageViewModel = viewModel(),*/) {
     val sheetState = androidx.compose.material.rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden,
     )
@@ -130,8 +129,11 @@ fun HomePage(context: Context, provider: HomePageViewModel = viewModel()) {
                     }
                 }
             }
+            Divider(
+                modifier = Modifier.padding(16.dp, 0.dp),
+            )
         },
-        sheetBackgroundColor = MaterialTheme.colorScheme.surface,
+        sheetBackgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp), //TODO: Replace with something else, cuz deprecated soon (elevation lv 2)
         sheetShape = RoundedCornerShape(28.dp, 28.dp, 0.dp, 0.dp)
     ) {
         Column(
