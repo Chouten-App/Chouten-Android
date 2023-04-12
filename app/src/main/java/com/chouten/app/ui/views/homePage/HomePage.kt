@@ -50,7 +50,7 @@ import kotlin.math.roundToInt
     ExperimentalAnimationApi::class
 )
 @Composable
-fun HomePage(context: Context, /*provider: HomePageViewModel = viewModel(),*/ navController: NavHostController) {
+fun HomePage(context: Context, /*provider: HomePageViewModel = viewModel(),*/) {
     val sheetState = androidx.compose.material.rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden,
     )

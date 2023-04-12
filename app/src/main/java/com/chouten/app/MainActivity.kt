@@ -11,9 +11,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -23,10 +20,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.chouten.app.data.DataLayer
 import com.chouten.app.data.ModuleDataLayer
+import com.chouten.app.data.NavigationItems
+import com.chouten.app.ui.BottomNavigationBar
+import com.chouten.app.ui.Navigation
 import com.chouten.app.ui.theme.ChoutenTheme
 import com.chouten.app.ui.theme.SnackbarVisualsWithError
 import com.chouten.app.ui.theme.shapes
-import com.chouten.app.ui.views.homePage.HomePage
 import kotlinx.coroutines.launch
 
 lateinit var ModuleLayer: ModuleDataLayer
@@ -90,40 +89,21 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ChoutenTheme {
-                // A surface container using the 'background' color from the theme
+                val navController = rememberNavController()
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = { },
                     bottomBar = {
-                        NavigationBar {
-                            NavigationBarItem( // TODO: replace with array of items https://www.youtube.com/watch?v=6DQQceGHxC4
-                                selected = true,
-                                onClick = {
-                                    PrimaryDataLayer.enqueueSnackbar(
-                                        SnackbarVisualsWithError(
-                                            "This is item 1",
-                                            false,
-                                        )
-                                    )
-                                          },
-                                label = { Text("Home") },
-                                icon = { Icon(Icons.Rounded.Home, null) }
-                            )
-                            NavigationBarItem(
-                                selected = false,
-                                onClick = {
-                                    // change the selected item
-                                    PrimaryDataLayer.enqueueSnackbar(
-                                        SnackbarVisualsWithError(
-                                            "This is item 2",
-                                            true,
-                                        )
-                                    )
-                                },
-                                label = { Text("Settings") },
-                                icon = { Icon(Icons.Outlined.Settings, null) }
-                            )
-                        }
+                        BottomNavigationBar(
+                            navController = navController,
+                            items = listOf(
+                                NavigationItems.HomePage,
+                                NavigationItems.SettingsPage,
+                            ),
+                            onItemClick = {
+                                navController.navigate(route = it.route)
+                            }
+                        )
                     },
                     snackbarHost = snackbarHost,
                     content = { padding ->
@@ -132,10 +112,7 @@ class MainActivity : ComponentActivity() {
                                 .padding(padding)
                                 .fillMaxSize()
                         ) {
-                            HomePage(
-                                navController = rememberNavController(),
-                                context = applicationContext,
-                            )
+                            Navigation(navController)
                         }
                     }
                 )

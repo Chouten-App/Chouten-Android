@@ -14,4 +14,8 @@
     <string name="active_profile">Your Profile</string>
 
     <string name="cancel">Cancel</string>
+
+    <!-- Navigation Bar Titles -->
+    <string name="navbar_home">Home</string>
+    <string name="navbar_settings">Settings</string>
 </resources>
