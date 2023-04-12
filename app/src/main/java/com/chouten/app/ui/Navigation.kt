@@ -16,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -82,12 +84,17 @@ fun BottomNavigationBar(
                             BadgedBox(badge = {
                                 Badge(
                                     modifier = Modifier.offset((-2).dp, 2.dp),
+                                    containerColor = MaterialTheme.colorScheme.error) {
                                     val count =
                                         if (item.badgeCount > 99) "99+" else item.badgeCount.toString()
                                     Text(
                                         text = count,
                                         color = MaterialTheme.colorScheme.onError,
-                                        style = MaterialTheme.typography.labelSmall
+                                        style = MaterialTheme.typography.labelSmall,
+                                        modifier = Modifier.semantics {
+                                            contentDescription =
+                                                "$count new notifications"
+                                        }
                                     )
                                 }
                             }) {
