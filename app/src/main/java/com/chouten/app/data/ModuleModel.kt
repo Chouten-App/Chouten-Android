@@ -13,7 +13,7 @@ data class ModuleModel(
     val version: String,
     val updateUrl: String,
     @SerialName("metadata") val meta: ModuleMetaData,
-    val code: Map<String, Map<String, ModuleCode>>
+    val code: Map<String, ModuleCode>
 ) {
 
     @Serializable
@@ -29,14 +29,36 @@ data class ModuleModel(
 
     @Serializable
     data class ModuleCode(
-        val url: String,
-        val mediaUrl: String?,
-        val usesApi: Boolean?,
-        val allowExternalScripts: Boolean,
-        val removeScripts: Boolean,
-        val js: String,
-        @SerialName("mediaJs") val mediaJS: String?
-    )
+        val search: List<ModuleCodeblock>,
+        val info: List<ModuleCodeblock>
+    ) {
+        @Serializable
+        data class ModuleCodeblock(
+            val request: ModuleRequest,
+            val javascript: ModuleJavascriptOpts
+        ) {
+            @Serializable
+            data class ModuleRequest(
+                val url: String, // Left blank if we wish to reuse the last url
+                val type: String, // "POST", "GET", "PUT" and "DELETE"
+                val headers: List<ModuleKVPair>,
+                val body: String? // The body of the Request
+            )
+
+            @Serializable
+            data class ModuleJavascriptOpts(
+                val code: String,
+                val removeScripts: Boolean,
+                val allowExternalScripts: Boolean
+            )
+
+            @Serializable
+            data class ModuleKVPair(
+                val key: String,
+                val value: String
+            )
+        }
+    }
 
     override fun hashCode(): Int {
         return (
@@ -50,3 +72,13 @@ data class ModuleModel(
         )
     }
 }
+
+@Serializable
+data class SearchResult(
+    val id: String,
+    val img: String,
+    val title: String,
+    val indicatorText: String? = "",
+    val currentCount: Int?,
+    val totalCount: Int?
+)
