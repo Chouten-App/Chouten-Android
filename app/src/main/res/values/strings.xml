@@ -18,4 +18,8 @@
     <!-- Navigation Bar Titles -->
     <string name="navbar_home">Home</string>
     <string name="navbar_settings">Settings</string>
+
+    <!-- Settings Options -->
+    <string name="dynamic_colour_toggle__title">Dynamic Theming</string>
+    <string name="dynamic_colour_toggle__desc">Use Material You Dynamic Theming</string>
 </resources>

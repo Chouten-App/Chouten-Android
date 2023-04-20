@@ -12,6 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
+import com.chouten.app.data.Preferences
+import com.chouten.app.preferenceHandler
 
 private val darkColorScheme =
     darkColorScheme(
@@ -88,7 +90,9 @@ fun ChoutenTheme(
 ) {
     val colorScheme =
         when {
-            dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            preferenceHandler.getBoolean(
+                Preferences.Settings.dynamicColor.preference.first, true
+            ) && dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                 val context = LocalContext.current
                 if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(
                     context

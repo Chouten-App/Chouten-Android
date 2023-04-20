@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.Intent.ACTION_SEND
 import android.content.SharedPreferences
 import android.content.SharedPreferences.Editor
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -37,9 +38,12 @@ const val PREFERENCE_FILE = "CHOUTEN_PREFS"
 lateinit var preferenceHandler: SharedPreferences
 lateinit var preferenceEditor: Editor
 
+lateinit var App: MainActivity
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        App = this@MainActivity
         initializeNetwork(applicationContext)
         preferenceHandler = applicationContext.getSharedPreferences(PREFERENCE_FILE, 0)
         preferenceEditor = preferenceHandler.edit()
@@ -160,5 +164,15 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         handleSharedIntent(intent)
+    }
+
+    fun restart() {
+        val packageManager: PackageManager = applicationContext.packageManager
+        val intent =
+            packageManager.getLaunchIntentForPackage(applicationContext.packageName)
+        val componentName = intent!!.component
+        val mainIntent = Intent.makeRestartActivityTask(componentName)
+        applicationContext.startActivity(mainIntent)
+        Runtime.getRuntime().exit(0)
     }
 }
