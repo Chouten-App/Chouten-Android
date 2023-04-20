@@ -15,7 +15,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import com.chouten.app.*
-import com.chouten.app.ui.theme.SnackbarVisualsWithError
 import com.google.common.hash.BloomFilter
 import com.google.common.hash.Funnels
 import java.io.BufferedReader

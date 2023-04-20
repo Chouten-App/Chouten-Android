@@ -25,7 +25,7 @@ import com.chouten.app.data.NavigationItems
 import com.chouten.app.ui.BottomNavigationBar
 import com.chouten.app.ui.Navigation
 import com.chouten.app.ui.theme.ChoutenTheme
-import com.chouten.app.ui.theme.SnackbarVisualsWithError
+import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.ui.theme.shapes
 import kotlinx.coroutines.launch
 
@@ -75,10 +75,18 @@ class MainActivity : ComponentActivity() {
                     contentColor = MaterialTheme.colorScheme.onSurface,
                     action = {
                         FilledTonalButton(
-                            onClick = { if (isError) data.dismiss() else data.performAction() },
+                            onClick = {
+                                extendedVisuals?.customButton?.action?.invoke()
+                                    ?: if (isError) data.dismiss() else data.performAction()
+                            },
                             shape = shapes.extraSmall,
                             colors = buttonColor
-                        ) { Text(extendedVisuals?.buttonText ?: "Dismiss") }
+                        ) {
+                            Text(
+                                extendedVisuals?.customButton?.actionText
+                                    ?: extendedVisuals?.buttonText ?: "Dismiss"
+                            )
+                        }
                     }
                 ) {
                     Text("${if (isError) "Error" else "Info"}: ${data.visuals.message}")

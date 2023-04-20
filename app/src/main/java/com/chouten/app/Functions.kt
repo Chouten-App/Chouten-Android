@@ -9,7 +9,7 @@ import android.view.animation.*
 import android.widget.*
 import androidx.core.view.*
 import com.chouten.app.data.AppPaths
-import com.chouten.app.ui.theme.SnackbarVisualsWithError
+import com.chouten.app.data.SnackbarVisualsWithError
 import java.io.*
 import java.util.*
 import kotlin.math.*

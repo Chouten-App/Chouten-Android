@@ -2,7 +2,6 @@ package com.chouten.app.data
 
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
-import com.chouten.app.ui.theme.SnackbarVisualsWithError
 
 class DataLayer() {
     var snackbarQueue: MutableLiveData<List<SnackbarVisualsWithError>> =

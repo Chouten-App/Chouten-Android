@@ -115,18 +115,3 @@ fun ChoutenTheme(
         content = content
     )
 }
-
-class SnackbarVisualsWithError(
-    override val message: String,
-    val isError: Boolean,
-    val shouldShowButton: Boolean = false,
-    val buttonText: String = "Dismiss",
-    val extraInfo: String = ""
-) : SnackbarVisuals {
-    override val actionLabel: String
-        get() = if (isError) "Error" else "OK"
-    override val withDismissAction: Boolean
-        get() = false
-    override val duration: SnackbarDuration
-        get() = if(!shouldShowButton) SnackbarDuration.Indefinite else SnackbarDuration.Short
-}
