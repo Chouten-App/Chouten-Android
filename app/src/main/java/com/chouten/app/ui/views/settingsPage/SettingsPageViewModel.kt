@@ -1,20 +1,12 @@
 package com.chouten.app.ui.views.settingsPage
 
-import android.util.Log
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.SnapshotStateMap
-import androidx.core.os.toPersistableBundle
 import androidx.lifecycle.ViewModel
 import com.chouten.app.data.ChoutenSetting
 import com.chouten.app.data.Preferences
 import com.chouten.app.preferenceEditor
 import com.chouten.app.preferenceHandler
-import kotlin.reflect.KParameter
 import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.full.declaredMembers
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.valueParameters
-import kotlin.reflect.typeOf
 
 enum class SettingType {
     ENUM,

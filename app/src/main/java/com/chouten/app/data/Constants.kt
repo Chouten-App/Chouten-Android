@@ -12,7 +12,6 @@ import androidx.compose.material.icons.outlined.Settings
 import com.chouten.app.App
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.R
-import com.chouten.app.data.ChoutenSetting
 
 object AppPaths {
     val baseDir =
@@ -28,7 +27,7 @@ object Preferences {
             R.string.dynamic_colour_toggle__title,
             R.string.dynamic_colour_toggle__desc,
             preference = Pair("dynamicColor", Boolean),
-            constraints = { Build.VERSION.SDK_INT > 31 }  // Disable if not Android 12 <=
+            constraints = { Build.VERSION.SDK_INT >= 31 }  // Disable if not on Android 12+
         )
         {
             PrimaryDataLayer.enqueueSnackbar(
