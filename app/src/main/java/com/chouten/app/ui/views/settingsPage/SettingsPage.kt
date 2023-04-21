@@ -40,6 +40,7 @@ fun SettingsToggle(
     onCheckedChange: ((Boolean) -> Unit)? = { provider.toggleSetting(preference.preference.first) }
 ) {
     SettingsItem(modifier.clickable {
+        preference.onToggle?.invoke()
         provider.toggleSetting(
             preference.preference.first, SettingType.TOGGLE
         )
