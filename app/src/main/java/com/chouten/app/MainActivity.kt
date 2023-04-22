@@ -35,8 +35,7 @@ val PrimaryDataLayer = DataLayer()
 
 const val PREFERENCE_FILE = "CHOUTEN_PREFS"
 
-lateinit var preferenceHandler: SharedPreferences
-lateinit var preferenceEditor: Editor
+lateinit var preferenceHandler: PreferenceManager
 
 lateinit var App: MainActivity
 
@@ -45,8 +44,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         App = this@MainActivity
         initializeNetwork(applicationContext)
-        preferenceHandler = applicationContext.getSharedPreferences(PREFERENCE_FILE, 0)
-        preferenceEditor = preferenceHandler.edit()
+        preferenceHandler = PreferenceManager(this)
         ModuleLayer = ModuleDataLayer()
 
         createAppDirectory()

@@ -9,8 +9,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
-import com.chouten.app.App
-import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.R
 
 object AppPaths {
@@ -29,19 +27,6 @@ object Preferences {
             preference = Pair("dynamicColor", Boolean),
             constraints = { Build.VERSION.SDK_INT >= 31 }  // Disable if not on Android 12+
         )
-        {
-            PrimaryDataLayer.enqueueSnackbar(
-                SnackbarVisualsWithError(
-                    "Restart for Changes to take Effect",
-                    false,
-                    customButton = SnackbarAction(
-                        "Restart"
-                    ) {
-                        App.restart()
-                    }
-                )
-            )
-        }
     }
 }
 

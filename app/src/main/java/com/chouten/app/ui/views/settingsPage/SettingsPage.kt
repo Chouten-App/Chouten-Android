@@ -10,7 +10,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,12 +23,13 @@ import androidx.compose.ui.platform.LocalContext
 import com.chouten.app.R
 import com.chouten.app.data.ChoutenSetting
 import com.chouten.app.data.Preferences
+import com.chouten.app.preferenceHandler
 import kotlin.reflect.full.declaredMemberProperties
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun SettingsPage(provider: SettingsPageViewModel = SettingsPageViewModel()) {
+fun SettingsPage() {
     val context = LocalContext.current
     val themes =
         Pair(dynamicLightColorScheme(context), dynamicDarkColorScheme(context))
@@ -55,7 +59,14 @@ fun SettingsPage(provider: SettingsPageViewModel = SettingsPageViewModel()) {
                 .padding(it),
         ) {
             SettingsToggle(
-                provider, preference = Preferences.Settings.dynamicColor
+                preference = Preferences.Settings.dynamicColor,
+                defaultValue = preferenceHandler.getBoolean(
+                    Preferences.Settings.dynamicColor.preference.first,
+                    true
+                ),
+                onCheckedChange = { toggle ->
+                    preferenceHandler.isDynamicColor = toggle
+                }
             )
             SettingsItem(modifier = Modifier
                 .clickable {
@@ -82,27 +93,27 @@ fun SettingsPage(provider: SettingsPageViewModel = SettingsPageViewModel()) {
 
 @Composable
 fun SettingsToggle(
-    provider: SettingsPageViewModel,
-    modifier: Modifier = Modifier,
     preference: ChoutenSetting,
-    onCheckedChange: ((Boolean) -> Unit)? = { provider.toggleSetting(preference.preference.first) }
+    modifier: Modifier = Modifier,
+    onCheckedChange: ((Boolean) -> Unit),
+    defaultValue: Boolean = false
 ) {
+    var toggleState by remember { mutableStateOf(defaultValue) }
     SettingsItem(modifier.clickable {
-        preference.onToggle?.invoke()
-        provider.toggleSetting(
-            preference.preference.first, SettingType.TOGGLE
-        )
+        preference.onToggle?.invoke(toggleState)
+        onCheckedChange.invoke(toggleState)
+        toggleState = !toggleState
     },
         { preference.icon?.let { Icon(it, stringResource(preference.text)) } },
         { Text(stringResource(preference.text)) },
         { preference.secondaryText?.let { Text(stringResource(it)) } }) {
         Switch(
             enabled = preference.constraints?.let { it() } ?: true,
-            checked = provider.settings[preference.preference.first] as? Boolean
-                ?: false,
+            checked = toggleState,
             onCheckedChange = {
-                preference.onToggle?.invoke()
-                onCheckedChange?.invoke(it)
+                preference.onToggle?.invoke(toggleState)
+                onCheckedChange.invoke(it)
+                toggleState = !toggleState
             }
         )
     }
