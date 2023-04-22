@@ -15,12 +15,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.chouten.app.R
 import com.chouten.app.data.AppThemeType
 import com.chouten.app.data.ChoutenSetting
@@ -175,17 +177,18 @@ inline fun <reified T : Enum<T>> SettingsChoicePopup(
                             .clickable {
                                 selected = e
                             },
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = e.name)
                         RadioButton(
                             selected = e == selected, onClick = { selected = e }
                         )
+                        Spacer(Modifier.width(8.dp))
+                        Text(e.toString(), style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }
         }, confirmButton = {
-            FilledTonalButton(onClick = { onClose(); onSelection(selected) }) {
+            TextButton(onClick = { onClose(); onSelection(selected) }) {
                 Text(stringResource(R.string.confirm))
             }
         })

@@ -50,8 +50,12 @@ object NavigationItems {
     )
 }
 
-enum class AppThemeType {
-    LIGHT,
-    DARK,
-    SYSTEM
+enum class AppThemeType(val printable: String) {
+    LIGHT("Light"),
+    DARK("Dark"),
+    SYSTEM("System");
+
+    override fun toString(): String {
+        return this.printable
+    }
 }
