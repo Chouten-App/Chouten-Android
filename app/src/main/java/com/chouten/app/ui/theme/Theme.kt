@@ -1,6 +1,8 @@
 package com.chouten.app.ui.theme
 
 import android.app.Activity
+import android.content.Context
+import android.content.res.Configuration
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
@@ -12,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
+import com.chouten.app.data.AppThemeType
 import com.chouten.app.data.Preferences
 import com.chouten.app.preferenceHandler
 
@@ -81,9 +84,19 @@ private val lightColorScheme =
         scrim = md_light_scrim,
     )
 
+fun isDarkTheme(context: Context): Boolean {
+    val uiMode = context.applicationContext.resources.configuration.uiMode
+    val uiDark = Configuration.UI_MODE_NIGHT_YES
+    return when (preferenceHandler.themeType) {
+        AppThemeType.SYSTEM -> uiMode.and(Configuration.UI_MODE_NIGHT_MASK) == uiDark
+        AppThemeType.DARK -> true
+        else -> false
+    }
+}
+
 @Composable
 fun ChoutenTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = isDarkTheme(LocalContext.current),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
     content: @Composable () -> Unit
@@ -96,6 +109,7 @@ fun ChoutenTheme(
                     context
                 )
             }
+
             darkTheme -> darkColorScheme
             else -> lightColorScheme
         }
@@ -103,9 +117,11 @@ fun ChoutenTheme(
     if (!view.isInEditMode) {
         SideEffect {
             (view.context as Activity).window.navigationBarColor =
-                colorScheme.surfaceColorAtElevation(3.dp).toArgb() // TODO: replace with new elevation system
+                colorScheme.surfaceColorAtElevation(3.dp)
+                    .toArgb() // TODO: replace with new elevation system
             (view.context as Activity).window.statusBarColor =
-                colorScheme.primary.copy(alpha = 0.4f).compositeOver(colorScheme.surface.copy()).toArgb()
+                colorScheme.primary.copy(alpha = 0.4f)
+                    .compositeOver(colorScheme.surface.copy()).toArgb()
             ViewCompat.getWindowInsetsController(view)?.isAppearanceLightStatusBars =
                 darkTheme
         }

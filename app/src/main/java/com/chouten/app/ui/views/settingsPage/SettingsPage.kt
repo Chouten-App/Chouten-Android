@@ -3,6 +3,7 @@ package com.chouten.app.ui.views.settingsPage
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material3.Text
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import com.chouten.app.R
+import com.chouten.app.data.AppThemeType
 import com.chouten.app.data.ChoutenSetting
 import com.chouten.app.data.Preferences
 import com.chouten.app.preferenceHandler
@@ -87,6 +89,16 @@ fun SettingsPage() {
                     stringResource(R.string.export_theme__desc)
                 )
             }
+            SettingsChoice(
+                preference = Preferences.Settings.themeType,
+                onPreferenceChange = { updated ->
+                    preferenceHandler.themeType = updated
+                },
+                defaultValue = preferenceHandler.getEnum(
+                    Preferences.Settings.themeType.preference.first,
+                    AppThemeType.SYSTEM
+                )
+            )
         }
     }
 }
@@ -116,6 +128,67 @@ fun SettingsToggle(
                 toggleState = !toggleState
             }
         )
+    }
+}
+
+@Composable
+inline fun <reified T : Enum<T>> SettingsChoice(
+    preference: ChoutenSetting,
+    modifier: Modifier = Modifier,
+    crossinline onPreferenceChange: (T) -> Unit,
+    defaultValue: T
+) {
+    var isOpen by remember {
+        mutableStateOf(false)
+    }
+
+    SettingsItem(modifier.clickable {
+        isOpen = true
+    },
+        { preference.icon?.let { Icon(it, stringResource(preference.text)) } },
+        { Text(stringResource(preference.text)) },
+        { preference.secondaryText?.let { Text(stringResource(it)) } }) {
+        SettingsChoicePopup(visible = isOpen,
+            title = { Text(text = stringResource(preference.text)) },
+            defaultValue = defaultValue,
+            onClose = { isOpen = false },
+            onSelection = { onPreferenceChange(it); isOpen = false })
+    }
+}
+
+@Composable
+inline fun <reified T : Enum<T>> SettingsChoicePopup(
+    visible: Boolean,
+    noinline title: @Composable () -> Unit,
+    defaultValue: T,
+    noinline onClose: () -> Unit,
+    noinline onSelection: (T) -> Unit
+) {
+    var selected by remember { mutableStateOf(defaultValue) }
+    AnimatedVisibility(visible = visible) {
+        AlertDialog(onDismissRequest = onClose, title = title, text = {
+            Column {
+                enumValues<T>().forEach { e ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                selected = e
+                            },
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = e.name)
+                        RadioButton(
+                            selected = e == selected, onClick = { selected = e }
+                        )
+                    }
+                }
+            }
+        }, confirmButton = {
+            FilledTonalButton(onClick = { onClose(); onSelection(selected) }) {
+                Text(stringResource(R.string.confirm))
+            }
+        })
     }
 }
 

@@ -27,6 +27,11 @@ object Preferences {
             preference = Pair("dynamicColor", Boolean),
             constraints = { Build.VERSION.SDK_INT >= 31 }  // Disable if not on Android 12+
         )
+        val themeType = ChoutenSetting(
+            R.string.appearance__title,
+            R.string.appearance__desc,
+            preference = Pair("themeType", Enum),
+        )
     }
 }
 
@@ -43,4 +48,10 @@ object NavigationItems {
         activeIcon = Icons.Filled.Settings,
         inactiveIcon = Icons.Outlined.Settings
     )
+}
+
+enum class AppThemeType {
+    LIGHT,
+    DARK,
+    SYSTEM
 }

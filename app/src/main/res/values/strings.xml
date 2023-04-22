@@ -13,6 +13,8 @@
 
     <string name="active_profile">Your Profile</string>
 
+    <string name="confirm">Confirm</string>
+    <string name="confirm_selection">Confirm Selection</string>
     <string name="cancel">Cancel</string>
 
     <!-- Navigation Bar Titles -->
@@ -25,4 +27,7 @@
 
     <string name="export_theme__title">Export Theme to JSON</string>
     <string name="export_theme__desc">Copy your theme in JSON format</string>
+
+    <string name="appearance__title">Appearance</string>
+    <string name="appearance__desc">Light/Dark/System</string>
 </resources>

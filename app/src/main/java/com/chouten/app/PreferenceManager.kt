@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
+import com.chouten.app.data.AppThemeType
 import com.chouten.app.data.Preferences
 import kotlin.reflect.KProperty
 
@@ -26,6 +27,8 @@ class PreferenceManager(context: Context) :
         Preferences.SelectedModule,
         -1
     )
+
+    var themeType by enumPreference(Preferences.Settings.themeType.preference.first, AppThemeType.SYSTEM)
 }
 
 abstract class BasePreferenceManager(private val handler: SharedPreferences) {
@@ -59,6 +62,12 @@ abstract class BasePreferenceManager(private val handler: SharedPreferences) {
 
     fun putLong(key: String, value: Long): Unit =
         handler.edit { putLong(key, value) }
+
+    inline fun <reified T: Enum<T>> getEnum(key: String, defaultValue: T): T =
+        enumValueOf(getString(key, defaultValue.name)!!)
+
+    inline fun<reified T: Enum<T>> putEnum(key: String, value: T) =
+        putString(key, value.name)
 
     protected class Preference<T>(
         private val key: String,
@@ -128,5 +137,15 @@ abstract class BasePreferenceManager(private val handler: SharedPreferences) {
         defaultValue = defaultValue,
         getter = ::getLong,
         setter = ::putLong
+    )
+
+    protected inline fun <reified T : Enum<T>> enumPreference(
+        key: String,
+        defaultValue: T
+    ) = Preference(
+        key = key,
+        defaultValue = defaultValue,
+        getter = ::getEnum,
+        setter = ::putEnum
     )
 }
