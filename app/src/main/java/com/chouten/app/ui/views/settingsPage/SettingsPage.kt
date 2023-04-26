@@ -99,7 +99,10 @@ fun SettingsPage() {
                 defaultValue = preferenceHandler.getEnum(
                     Preferences.Settings.themeType.preference.first,
                     AppThemeType.SYSTEM
-                )
+                ),
+                onPreviewSelectionChange = { theme ->
+                    preferenceHandler.themeType = theme
+                }
             )
         }
     }
@@ -138,6 +141,7 @@ inline fun <reified T : Enum<T>> SettingsChoice(
     preference: ChoutenSetting,
     modifier: Modifier = Modifier,
     crossinline onPreferenceChange: (T) -> Unit,
+    crossinline onPreviewSelectionChange: (T) -> Unit = {},
     defaultValue: T
 ) {
     var isOpen by remember {
@@ -154,7 +158,9 @@ inline fun <reified T : Enum<T>> SettingsChoice(
             title = { Text(text = stringResource(preference.text)) },
             defaultValue = defaultValue,
             onClose = { isOpen = false },
-            onSelection = { onPreferenceChange(it); isOpen = false })
+            onSelection = { onPreferenceChange(it); isOpen = false },
+            onPreviewSelection = { onPreviewSelectionChange(it) }
+        )
     }
 }
 
@@ -164,11 +170,18 @@ inline fun <reified T : Enum<T>> SettingsChoicePopup(
     noinline title: @Composable () -> Unit,
     defaultValue: T,
     noinline onClose: () -> Unit,
-    noinline onSelection: (T) -> Unit
+    noinline onSelection: (T) -> Unit,
+    noinline onPreviewSelection: (T) -> Unit = {},
 ) {
     var selected by remember { mutableStateOf(defaultValue) }
     AnimatedVisibility(visible = visible) {
-        AlertDialog(onDismissRequest = onClose, title = title, text = {
+        AlertDialog(onDismissRequest = {
+            onClose()
+            if (selected != defaultValue) {
+                selected = defaultValue
+                onSelection(defaultValue)
+            }
+        }, title = title, text = {
             Column {
                 enumValues<T>().forEach { e ->
                     Row(
@@ -176,11 +189,15 @@ inline fun <reified T : Enum<T>> SettingsChoicePopup(
                             .fillMaxWidth()
                             .clickable {
                                 selected = e
+                                onPreviewSelection(e)
                             },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
-                            selected = e == selected, onClick = { selected = e }
+                            selected = e == selected, onClick = {
+                                selected = e
+                                onPreviewSelection(e)
+                            }
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(e.toString(), style = MaterialTheme.typography.bodyLarge)
