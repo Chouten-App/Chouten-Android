@@ -163,14 +163,4 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         handleSharedIntent(intent)
     }
-
-    fun restart() {
-        val packageManager: PackageManager = applicationContext.packageManager
-        val intent =
-            packageManager.getLaunchIntentForPackage(applicationContext.packageName)
-        val componentName = intent!!.component
-        val mainIntent = Intent.makeRestartActivityTask(componentName)
-        applicationContext.startActivity(mainIntent)
-        Runtime.getRuntime().exit(0)
-    }
 }
