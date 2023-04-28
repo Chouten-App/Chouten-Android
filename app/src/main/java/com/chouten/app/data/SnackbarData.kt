@@ -12,7 +12,7 @@ class SnackbarVisualsWithError (
     override val message: String,
     val isError: Boolean,
     val shouldShowButton: Boolean = false,
-    val buttonText: String = "Dismiss",
+    val buttonText: String? = null,
     val customButton: SnackbarAction? = null
 ) : SnackbarVisuals {
     override val actionLabel: String

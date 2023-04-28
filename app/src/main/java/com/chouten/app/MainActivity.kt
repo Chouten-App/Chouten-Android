@@ -12,6 +12,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -76,7 +78,7 @@ class MainActivity : ComponentActivity() {
                     ),
                     contentColor = MaterialTheme.colorScheme.onSurface,
                     action = {
-                        FilledTonalButton(
+                        TextButton(
                             onClick = {
                                 extendedVisuals?.customButton?.action?.invoke()
                                     ?: if (isError) data.dismiss() else data.performAction()
@@ -84,14 +86,22 @@ class MainActivity : ComponentActivity() {
                             shape = shapes.extraSmall,
                             colors = buttonColor
                         ) {
-                            Text(
-                                extendedVisuals?.customButton?.actionText
-                                    ?: extendedVisuals?.buttonText ?: "Dismiss"
-                            )
+                            extendedVisuals?.customButton?.actionText?.let {
+                                Text(
+                                    it
+                                )
+                            } ?: extendedVisuals?.buttonText?.let {
+                                Text(
+                                    it
+                                )
+                            } ?: Icon(Icons.Default.Close, "Dismiss")
                         }
                     }
                 ) {
-                    Text("${if (isError) "Error" else "Info"}: ${data.visuals.message}")
+                    Text(
+                        text = data.visuals.message,
+                        maxLines = 8
+                    )
                 }
             }
         }
