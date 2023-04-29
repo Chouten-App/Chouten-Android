@@ -74,11 +74,15 @@ data class ModuleModel(
 }
 
 @Serializable
+data class ModuleResponse<T>(
+    val data: T, val nextUrl: String? = ""
+)
+@Serializable
 data class SearchResult(
-    val id: String,
+    val url: String,
     val img: String,
     val title: String,
-    val indicatorText: String? = "",
+    val indicatorText: String?,
     val currentCount: Int?,
-    val totalCount: Int?
+    val totalCount: Int?,
 )
