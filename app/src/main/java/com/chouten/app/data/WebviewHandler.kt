@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Base64
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.client
 import kotlinx.coroutines.sync.Mutex
 
@@ -38,7 +39,7 @@ class WebviewHandler() {
     /**
      * Load the webview with data from the given url
      */
-    suspend fun load(request: ModuleModel.ModuleCode.ModuleCodeblock.ModuleRequest) {
+    suspend fun load(request: ModuleModel.ModuleCode.ModuleCodeblock.ModuleRequest): Boolean {
         // Use the client to get the data from the url
         // and then inject it into the webview.
         val headers = request.headers.mapNotNull {
@@ -50,13 +51,23 @@ class WebviewHandler() {
             if (it) request.url else nextUrl
         }
 
-        val data = when (request.type) {
-            "GET" -> client.get(url, headers)
-            "POST" -> client.post(url, headers, request.body)
-            "PUT" -> client.put(url, headers, request.body)
-            "DELETE" -> client.delete(url, headers)
-            else -> throw Exception("Invalid request type ${request.type}")
-        }.body.bytes()
+        val data: ByteArray = try {
+            when (request.type) {
+                "GET" -> client.get(url, headers)
+                "POST" -> client.post(url, headers, request.body)
+                "PUT" -> client.put(url, headers, request.body)
+                "DELETE" -> client.delete(url, headers)
+                else -> throw Exception("Invalid request type ${request.type}")
+            }.body.bytes()
+        } catch (e: Exception) {
+            PrimaryDataLayer.enqueueSnackbar(
+                SnackbarVisualsWithError(
+                    "Failed to load data from ${request.url}",
+                    true
+                )
+            )
+            return false
+        }
 
         // The webview expects a Base64 encoded string
         // This allows us to inject data which may not be
@@ -84,6 +95,7 @@ class WebviewHandler() {
             }
         }
 
+        return true
     }
 
     /**
@@ -103,13 +115,16 @@ class WebviewHandler() {
                     el.remove();
                 });
                 """.trimIndent()
-            ) {}
-        }
+            ) {
+                injectionLock.unlock()
+            }
+        } else { injectionLock.unlock() }
 
         // TODO: allowExternalScripts
 
         // We need to inject the javascript into the webview
         // and then wait for the results to be returned.
+        injectionLock.lock()
         webview.evaluateJavascript(javascript.code) {
             injectionLock.unlock()
         }

@@ -6,8 +6,10 @@ import java.io.File
 import com.chouten.app.ui.BottomNavItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import com.chouten.app.R
 
@@ -41,6 +43,12 @@ object NavigationItems {
         route = "home",
         activeIcon = Icons.Filled.Home,
         inactiveIcon = Icons.Outlined.Home,
+    )
+    val SearchPage = BottomNavItem(
+        name = R.string.navbar_search,
+        route = "search",
+        activeIcon = Icons.Filled.Search,
+        inactiveIcon = Icons.Outlined.Search,
     )
     val SettingsPage = BottomNavItem(
         name = R.string.navbar_settings,

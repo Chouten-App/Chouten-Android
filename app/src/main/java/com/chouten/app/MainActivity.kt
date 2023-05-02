@@ -119,6 +119,7 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             items = listOf(
                                 NavigationItems.HomePage,
+                                NavigationItems.SearchPage,
                                 NavigationItems.SettingsPage,
                             ),
                             onItemClick = {

@@ -25,7 +25,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.chouten.app.data.WebviewHandler
 import com.chouten.app.ui.views.homePage.HomePage
+import com.chouten.app.ui.views.searchPage.SearchPage
+import com.chouten.app.ui.views.searchPage.SearchPageViewModel
 import com.chouten.app.ui.views.settingsPage.SettingsPage
 
 @Composable
@@ -33,12 +36,16 @@ fun Navigation(navController: NavHostController) {
     NavHost(
         navController = navController, startDestination = Screen.HomePage.route
     ) {
+        val searchPageViewModel = SearchPageViewModel(navController.context, WebviewHandler())
         composable(
             route = Screen.HomePage.route,
         ) {
-            HomePage(
-                context = navController.context,
-            )
+            HomePage(navController.context)
+        }
+        composable(
+            route = Screen.SearchPage.route
+        ) {
+            SearchPage(navController.context, searchPageViewModel)
         }
         composable(
             route = Screen.SettingsPage.route,
