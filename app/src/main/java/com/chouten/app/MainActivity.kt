@@ -2,9 +2,6 @@ package com.chouten.app
 
 import android.content.Intent
 import android.content.Intent.ACTION_SEND
-import android.content.SharedPreferences
-import android.content.SharedPreferences.Editor
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
