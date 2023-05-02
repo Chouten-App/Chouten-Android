@@ -28,7 +28,11 @@ import com.chouten.app.data.AppThemeType
 import com.chouten.app.data.ChoutenSetting
 import com.chouten.app.data.Preferences
 import com.chouten.app.preferenceHandler
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlin.reflect.full.declaredMemberProperties
+
+val json = Json { prettyPrint = true }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
@@ -38,18 +42,18 @@ fun SettingsPage() {
     val themes =
         Pair(dynamicLightColorScheme(context), dynamicDarkColorScheme(context))
     val exportJson = remember {
-        val getColours: ((ColorScheme) -> String) = { theme ->
-            theme::class.declaredMemberProperties.joinToString(",\n") { member ->
+        val getColours: ((ColorScheme) -> Map<String, String>) = { theme ->
+            theme::class.declaredMemberProperties.associate { member ->
                 val hexColor =
                     Integer.toHexString((member.getter.call(theme) as Color).toArgb())
                         .drop(2)
-                "\t\t\"${member.name}\": \"#$hexColor\""
+                member.name to "#$hexColor"
             }
         }
 
         val lightPairs = getColours(themes.first)
         val darkPairs = getColours(themes.second)
-        "{\n\t\"light\": {\n$lightPairs\n\t},\n\t\"dark\": {\n$darkPairs\n\t}\n}"
+        json.encodeToString(mapOf("light" to lightPairs, "dark" to darkPairs))
     }
 
     Scaffold(topBar = {
