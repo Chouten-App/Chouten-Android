@@ -30,6 +30,7 @@ import com.chouten.app.ui.Navigation
 import com.chouten.app.ui.theme.ChoutenTheme
 import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.ui.theme.shapes
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 lateinit var ModuleLayer: ModuleDataLayer
@@ -50,7 +51,9 @@ class MainActivity : ComponentActivity() {
         ModuleLayer = ModuleDataLayer()
 
         createAppDirectory()
-        ModuleLayer.loadModules(applicationContext)
+        lifecycleScope.launch(Dispatchers.IO) {
+            ModuleLayer.loadModules(applicationContext)
+        }
 
         val snackbarState = SnackbarHostState()
         val snackbarHost: @Composable () -> Unit = {
