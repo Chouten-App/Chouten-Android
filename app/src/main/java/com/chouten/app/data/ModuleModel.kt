@@ -75,7 +75,7 @@ data class ModuleModel(
 
 @Serializable
 data class ModuleResponse<T>(
-    val data: T, val nextUrl: String? = ""
+    val result: T, val nextUrl: String? = ""
 )
 @Serializable
 data class SearchResult(

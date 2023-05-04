@@ -71,7 +71,7 @@ class SearchPageViewModel(context: Context, private val webview: WebviewHandler 
                         res.substring(2..res.length - 3).replace("\\\"", "\"")
                     _searchResults.clear()
                     val results = Json.decodeFromString<ModuleResponse<List<SearchResult>>>(json)
-                    _searchResults.addAll(results.data)
+                    _searchResults.addAll(results.result)
                     isSearching = false
                     webview.updateNextUrl(results.nextUrl)
                 }
