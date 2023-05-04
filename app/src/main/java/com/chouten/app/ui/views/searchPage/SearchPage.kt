@@ -58,76 +58,71 @@ fun SearchPage(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        AnimatedVisibility(
-            ModuleLayer.selectedModule?.name != null,
-            modifier = Modifier.heightIn(TextFieldDefaults.MinHeight)
-        ) {
-            ContentSearchBar(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        top = 24.dp,
-                        bottom = 16.dp,
-                        start = 16.dp,
-                        end = 16.dp
-                    )
-                    .background(
-                        MaterialTheme.colorScheme.surfaceColorAtElevation(
-                            6.dp
-                        ), CircleShape
-                    )
-//                .animateEnterExit(),
-                ,
-                ModuleLayer.selectedModule?.name,
-                provider
-            )
-        }
-
-        ModuleSelectorContainer(
-            context = context,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            AnimatedVisibility(
-                provider.isSearching
+        Box {
+            androidx.compose.animation.AnimatedVisibility(
+                ModuleLayer.selectedModule?.name != null,
+                modifier = Modifier
+                    .heightIn(TextFieldDefaults.MinHeight)
+                    .zIndex(2F)
             ) {
-                Box(
+                ContentSearchBar(
                     Modifier
-                        .fillMaxSize()
-                        .background(
-                            // We want a gradient from transparent to surfaceColorAtElevation
-                            // to make it look like the search bar is fading into the background
-                            Brush.verticalGradient(
-                                0F to MaterialTheme.colorScheme.surfaceColorAtElevation(
-                                    0.dp
-                                ),
-                                0.5F to MaterialTheme.colorScheme.surfaceColorAtElevation(
-                                    3.dp
-                                ),
-                                1F to MaterialTheme.colorScheme.surfaceColorAtElevation(
-                                    3.dp
-                                ),
-                            )
+                        .fillMaxWidth()
+                        .padding(
+                            top = 24.dp,
+                            bottom = 16.dp,
+                            start = 16.dp,
+                            end = 16.dp
                         )
-                        .zIndex(2F)
-                ) {
-                    CircularProgressIndicator(
-                        Modifier.align(Alignment.Center)
-                    )
-                }
+                        .background(
+                            MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                6.dp
+                            ), CircleShape
+                        ),
+                    ModuleLayer.selectedModule?.name,
+                    provider
+                )
             }
 
-            LazyVerticalGrid(
-                modifier = Modifier.zIndex(1F),
-                columns = GridCells.Adaptive(100.dp),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.Center,
-                state = lazygridScroll
+            ModuleSelectorContainer(
+                context = context,
+                modifier = Modifier
+                    .fillMaxSize()
             ) {
-                items(items = provider.searchResults) { res ->
-                    SearchResultItem(
-                        item = res
-                    )
+                androidx.compose.animation.AnimatedVisibility(
+                    provider.isSearching,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .zIndex(2F),
+                    enter = slideInVertically {
+                        -it
+                    } + fadeIn(),
+                    exit = ExitTransition.None
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                    ) {
+                        CircularProgressIndicator(Modifier.align(Alignment.Center))
+                    }
+                }
+
+                LazyVerticalGrid(
+                    modifier = Modifier
+                        .zIndex(1F)
+                        .padding(top = TextFieldDefaults.MinHeight + 14.dp),
+                    columns = GridCells.Adaptive(100.dp),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    state = lazygridScroll
+                ) {
+                    items(items = provider.searchResults) { res ->
+                        SearchResultItem(
+                            item = res
+                        )
+                    }
                 }
             }
         }
