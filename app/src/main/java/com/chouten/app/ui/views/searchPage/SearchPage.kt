@@ -316,7 +316,7 @@ fun ContentSearchBar(
             leadingIcon = {
                 IconButton(
                     modifier = Modifier
-                        .padding(start = 16.dp)
+                        .padding(start = 8.dp)
                         .requiredWidth(IntrinsicSize.Max), onClick = {}) {
                     Icon(
                         Icons.Default.Search,
@@ -328,7 +328,7 @@ fun ContentSearchBar(
             trailingIcon = {
                 IconButton(
                     modifier = Modifier
-                        .padding(end = 16.dp)
+                        .padding(end = 8.dp)
                         .requiredWidth(IntrinsicSize.Max), onClick = {}) {
                     Icon(
                         Icons.Default.AccountCircle,
