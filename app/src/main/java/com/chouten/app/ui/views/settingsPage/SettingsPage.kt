@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,18 +42,33 @@ fun SettingsPage() {
     val context = LocalContext.current
     val themes =
         Pair(dynamicLightColorScheme(context), dynamicDarkColorScheme(context))
-    val exportJson = remember {
+    val surfaceContainer =
+        MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+    val exportJson = rememberSaveable {
         val getColours: ((ColorScheme) -> Map<String, String>) = { theme ->
             theme::class.declaredMemberProperties.associate { member ->
                 val hexColor =
                     Integer.toHexString((member.getter.call(theme) as Color).toArgb())
                         .drop(2)
-                member.name to "#$hexColor"
+                if (member.name.startsWith("on")) {
+                    member.name to "#$hexColor"
+                } else {
+                    member.name.replaceFirstChar { it.uppercase() } to "#$hexColor"
+                }
             }
         }
 
-        val lightPairs = getColours(themes.first)
-        val darkPairs = getColours(themes.second)
+        val lightPairs = getColours(themes.first).toMutableMap().apply {
+            this["SurfaceContainer"] =
+                Integer.toHexString(surfaceContainer.toArgb())
+                    .drop(2)
+        }
+        val darkPairs = getColours(themes.second).toMutableMap().apply {
+            this["SurfaceContainer"] =
+                Integer.toHexString(surfaceContainer.toArgb())
+                    .drop(2)
+        }
+
         json.encodeToString(mapOf("light" to lightPairs, "dark" to darkPairs))
     }
 
@@ -119,7 +135,7 @@ fun SettingsToggle(
     onCheckedChange: ((Boolean) -> Unit),
     defaultValue: Boolean = false
 ) {
-    var toggleState by remember { mutableStateOf(defaultValue) }
+    var toggleState by rememberSaveable { mutableStateOf(defaultValue) }
     SettingsItem(modifier.clickable {
         preference.onToggle?.invoke(toggleState)
         onCheckedChange.invoke(toggleState)
@@ -148,7 +164,7 @@ inline fun <reified T : Enum<T>> SettingsChoice(
     crossinline onPreviewSelectionChange: (T) -> Unit = {},
     defaultValue: T
 ) {
-    var isOpen by remember {
+    var isOpen by rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -177,7 +193,7 @@ inline fun <reified T : Enum<T>> SettingsChoicePopup(
     noinline onSelection: (T) -> Unit,
     noinline onPreviewSelection: (T) -> Unit = {},
 ) {
-    var selected by remember { mutableStateOf(defaultValue) }
+    var selected by rememberSaveable { mutableStateOf(defaultValue) }
     AnimatedVisibility(visible = visible) {
         AlertDialog(onDismissRequest = {
             onClose()

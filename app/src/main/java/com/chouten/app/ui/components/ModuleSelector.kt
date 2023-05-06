@@ -34,7 +34,6 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -67,7 +66,7 @@ fun ModuleSelectorContainer(
         initialValue = ModalBottomSheetValue.Hidden,
     )
 
-    val importPopupState = remember { mutableStateOf(false) }
+    var importPopupState by rememberSaveable { mutableStateOf(false) }
     var importUrl by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(
             TextFieldValue("")
@@ -111,7 +110,7 @@ fun ModuleSelectorContainer(
                 )
                 Spacer(Modifier.height(20.dp))
                 ModuleImportButton {
-                    importPopupState.value = !importPopupState.value
+                    importPopupState = !importPopupState
                 }
                 LazyColumn(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -157,37 +156,21 @@ fun ModuleSelectorContainer(
             Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            AnimatedVisibility(importPopupState.value) {
-                    AlertDialog(onDismissRequest = {
-                        importPopupState.value = false
-                    },
-                        title = { Text(stringResource(R.string.import_module_header)) },
-                        text = {
-                            OutlinedTextField(
-                                value = importUrl,
-                                onValueChange = { importUrl = it },
-                                label = { Text(stringResource(R.string.import_module_desc)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = MaterialTheme.shapes.medium,
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                                keyboardActions = KeyboardActions(onDone = {
-                                    coroutineScope.launch {
-                                        ModuleLayer.enqueueRemoteInstall(
-                                            context,
-                                            importUrl.text
-                                        )
-                                        importUrl = TextFieldValue("")
-                                    }
-                                    importPopupState.value = false
-                                })
-                            )
-                        },
-                        confirmButton = {
-                            FilledTonalButton(colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary,
-                            ), onClick = {
+            AnimatedVisibility(importPopupState) {
+                AlertDialog(onDismissRequest = {
+                    importPopupState = false
+                },
+                    title = { Text(stringResource(R.string.import_module_header)) },
+                    text = {
+                        OutlinedTextField(
+                            value = importUrl,
+                            onValueChange = { importUrl = it },
+                            label = { Text(stringResource(R.string.import_module_desc)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.medium,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = {
                                 coroutineScope.launch {
                                     ModuleLayer.enqueueRemoteInstall(
                                         context,
@@ -195,12 +178,28 @@ fun ModuleSelectorContainer(
                                     )
                                     importUrl = TextFieldValue("")
                                 }
-                                importPopupState.value = false
-                            }) {
-                                Text(stringResource(R.string.import_module_button_confirm))
+                                importPopupState = false
+                            })
+                        )
+                    },
+                    confirmButton = {
+                        FilledTonalButton(colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        ), onClick = {
+                            coroutineScope.launch {
+                                ModuleLayer.enqueueRemoteInstall(
+                                    context,
+                                    importUrl.text
+                                )
+                                importUrl = TextFieldValue("")
                             }
-                        })
-                }
+                            importPopupState = false
+                        }) {
+                            Text(stringResource(R.string.import_module_button_confirm))
+                        }
+                    })
+            }
 
             Box(
                 modifier = Modifier
@@ -212,8 +211,7 @@ fun ModuleSelectorContainer(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(16.dp)
-                        .zIndex(Float.MAX_VALUE)
-                    ,
+                        .zIndex(Float.MAX_VALUE),
                     onClick = {
                         coroutineScope.launch {
                             if (sheetState.isVisible) {
