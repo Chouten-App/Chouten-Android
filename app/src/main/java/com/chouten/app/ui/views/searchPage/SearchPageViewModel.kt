@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.chouten.app.Mapper
 import com.chouten.app.ModuleLayer
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.data.ModuleResponse
@@ -16,8 +17,12 @@ import com.chouten.app.data.WebviewHandler
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import java.net.URLEncoder
 
-class SearchPageViewModel(context: Context, private val webview: WebviewHandler = WebviewHandler()) : ViewModel() {
+class SearchPageViewModel(
+    context: Context,
+    private val webview: WebviewHandler = WebviewHandler()
+) : ViewModel() {
     var isSearching by mutableStateOf(false)
         private set
     var searchQuery by mutableStateOf("")
@@ -45,12 +50,16 @@ class SearchPageViewModel(context: Context, private val webview: WebviewHandler 
                 // be executed synchronously.
                 viewModelScope.launch {
                     if (!webview.load(
-                        searchFn.request.copy(
-                            url = searchFn.request.url.replace(
-                                "<query>", query
+                            searchFn.copy(
+                                request = searchFn.request.copy(
+                                    url = searchFn.request.url.replace(
+                                        "<query>",
+                                        URLEncoder.encode(query, "UTF-8")
+                                    )
+                                )
                             )
                         )
-                    )) {
+                    ) {
                         isSearching = false
                         return@launch
                     }
@@ -67,10 +76,16 @@ class SearchPageViewModel(context: Context, private val webview: WebviewHandler 
                         return@launch
                     }
 
-                    val json =
-                        res.substring(2..res.length - 3).replace("\\\"", "\"")
+                    val json = res.substring(2..res.length - 3).replace(
+                        "\\\"",
+                        "\""
+                    ).replace(
+                        "\\\\",
+                        "\\"
+                    )
                     _searchResults.clear()
-                    val results = Json.decodeFromString<ModuleResponse<List<SearchResult>>>(json)
+                    val results =
+                        Mapper.parse<ModuleResponse<List<SearchResult>>>(json)
                     _searchResults.addAll(results.result)
                     isSearching = false
                     webview.updateNextUrl(results.nextUrl)

@@ -32,7 +32,8 @@ fun HomePage(context: Context) {
                             indicatorText = null,
                             currentCount = null,
                             totalCount = null
-                        )
+                        ),
+                        onClick = { _, _ -> }
                     )
                 }
             }

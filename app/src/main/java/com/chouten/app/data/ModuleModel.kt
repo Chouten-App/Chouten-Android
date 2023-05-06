@@ -49,7 +49,8 @@ data class ModuleModel(
             data class ModuleJavascriptOpts(
                 val code: String,
                 val removeScripts: Boolean,
-                val allowExternalScripts: Boolean
+                val allowExternalScripts: Boolean,
+                val usesApi: Boolean? = false,
             )
 
             @Serializable
@@ -86,3 +87,33 @@ data class SearchResult(
     val currentCount: Int?,
     val totalCount: Int?,
 )
+
+@Serializable
+data class InfoResult(
+    val id: String,
+    val titles: Titles,
+    val altTitles: List<String>,
+    val description: String,
+    val poster: String,
+    val banner: String?,
+    val status: String?,
+    val totalMediaCount: Int?,
+    val mediaType: String,
+    val seasons: List<String>,
+    val mediaList: List<List<MediaItem>>
+) {
+    @Serializable
+    data class Titles(
+        val primary: String,
+        val secondary: String?
+    )
+
+    @Serializable
+    data class MediaItem(
+        val url: String,
+        val number: Double,
+        val title: String?,
+        val description: String?,
+        val image: String?,
+    )
+}

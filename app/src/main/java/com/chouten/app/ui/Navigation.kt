@@ -22,35 +22,72 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import com.chouten.app.data.WebviewHandler
 import com.chouten.app.ui.views.homePage.HomePage
+import com.chouten.app.ui.views.infoPage.InfoPage
+import com.chouten.app.ui.views.infoPage.InfoPageViewModel
 import com.chouten.app.ui.views.searchPage.SearchPage
 import com.chouten.app.ui.views.searchPage.SearchPageViewModel
 import com.chouten.app.ui.views.settingsPage.SettingsPage
 
+
 @Composable
 fun Navigation(navController: NavHostController) {
     NavHost(
-        navController = navController, startDestination = Screen.HomePage.route
+        navController = navController,
+        startDestination = Screen.HomePage.route
     ) {
-        val searchPageViewModel = SearchPageViewModel(navController.context, WebviewHandler())
+        val searchPageViewModel =
+            SearchPageViewModel(navController.context, WebviewHandler())
+        var infoVm: InfoPageViewModel? = null
+
         composable(
             route = Screen.HomePage.route,
         ) {
             HomePage(navController.context)
+            infoVm = null
         }
         composable(
             route = Screen.SearchPage.route
         ) {
-            SearchPage(navController.context, searchPageViewModel)
+            SearchPage(navController, searchPageViewModel)
+            infoVm = null
+        }
+        composable(
+            // The route will be dynamic, with params:
+            // - title: String
+            // - url: String
+            route = "info/{title}/{url}",
+            arguments = listOf(
+                navArgument("title") { type = NavType.StringType },
+                navArgument("url") { type = NavType.StringType }
+            )
+        ) {
+            // We want to pass the title to the InfoPageViewModel
+            // so that it can load the correct page.
+
+            val title = it.arguments?.getString("title") ?: ""
+            val url = it.arguments?.getString("url") ?: ""
+
+            if (infoVm == null)
+            {
+                infoVm = InfoPageViewModel(navController.context, url, title)
+            }
+
+            infoVm?.let { viewModel ->
+                InfoPage(viewModel)
+            }
         }
         composable(
             route = Screen.SettingsPage.route,
         ) {
             SettingsPage()
+            infoVm = null
         }
     }
 }

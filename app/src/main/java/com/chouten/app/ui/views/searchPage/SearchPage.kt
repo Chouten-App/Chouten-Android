@@ -1,10 +1,10 @@
 package com.chouten.app.ui.views.searchPage
 
 import android.annotation.SuppressLint
-import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavController
 import com.chouten.app.ModuleLayer
 import com.chouten.app.R
 import com.chouten.app.data.SearchResult
@@ -43,86 +44,86 @@ import com.chouten.app.ui.theme.dashedBorder
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import com.valentinilk.shimmer.shimmer
+import java.net.URLEncoder
 import kotlin.math.roundToInt
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun SearchPage(
-    context: Context,
+    navController: NavController,
     provider: SearchPageViewModel = SearchPageViewModel(
-        context,
+        navController.context,
         WebviewHandler()
     )
 ) {
     val lazygridScroll = rememberLazyGridState()
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Box {
-            androidx.compose.animation.AnimatedVisibility(
-                ModuleLayer.selectedModule?.name != null,
-                modifier = Modifier
-                    .heightIn(TextFieldDefaults.MinHeight)
-                    .zIndex(2F)
-            ) {
-                ContentSearchBar(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            top = 24.dp,
-                            bottom = 16.dp,
-                            start = 16.dp,
-                            end = 16.dp
-                        )
-                        .background(
-                            MaterialTheme.colorScheme.surfaceColorAtElevation(
-                                6.dp
-                            ), CircleShape
-                        ),
-                    ModuleLayer.selectedModule?.name,
-                    provider
-                )
-            }
+    Box {
+        AnimatedVisibility(
+            ModuleLayer.selectedModule?.name != null,
+            modifier = Modifier
+                .heightIn(TextFieldDefaults.MinHeight)
+                .zIndex(2F)
+        ) {
+            ContentSearchBar(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        top = 24.dp,
+                        bottom = 16.dp,
+                        start = 16.dp,
+                        end = 16.dp
+                    )
+                    .background(
+                        MaterialTheme.colorScheme.surfaceColorAtElevation(
+                            6.dp
+                        ), CircleShape
+                    ),
+                ModuleLayer.selectedModule?.name,
+                provider
+            )
+        }
 
-            ModuleSelectorContainer(
-                context = context,
+        ModuleSelectorContainer(
+            context = navController.context,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            AnimatedVisibility(
+                provider.isSearching,
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .zIndex(2F),
+                enter = slideInVertically {
+                    -it
+                } + fadeIn(),
+                exit = ExitTransition.None
             ) {
-                androidx.compose.animation.AnimatedVisibility(
-                    provider.isSearching,
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface)
-                        .zIndex(2F),
-                    enter = slideInVertically {
-                        -it
-                    } + fadeIn(),
-                    exit = ExitTransition.None
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                    ) {
-                        CircularProgressIndicator(Modifier.align(Alignment.Center))
-                    }
+                    CircularProgressIndicator(Modifier.align(Alignment.Center))
                 }
+            }
 
-                LazyVerticalGrid(
-                    modifier = Modifier
-                        .zIndex(1F)
-                        .padding(top = TextFieldDefaults.MinHeight + 14.dp),
-                    columns = GridCells.Adaptive(100.dp),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    state = lazygridScroll
-                ) {
-                    items(items = provider.searchResults) { res ->
-                        SearchResultItem(
-                            item = res
-                        )
-                    }
+            LazyVerticalGrid(
+                modifier = Modifier
+                    .zIndex(1F)
+                    .padding(top = TextFieldDefaults.MinHeight + 14.dp)
+                ,
+                columns = GridCells.Adaptive(100.dp),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.Center,
+                state = lazygridScroll
+            ) {
+                items(items = provider.searchResults) { res ->
+                    SearchResultItem(
+                        item = res,
+                        onClick = { title, url ->
+                            navController.navigate("info/$title/$url")
+                        }
+                    )
                 }
             }
         }
@@ -155,7 +156,7 @@ fun ModuleChoice(
                     ?: MaterialTheme.colorScheme.onPrimaryContainer
             )
         } else ButtonDefaults.buttonColors(),
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(12.dp),
         onClick = onClick,
         content = {
             Row(
@@ -240,7 +241,7 @@ fun ModuleImportButton(onClick: () -> Unit) {
         ), colors = ButtonDefaults.buttonColors(
         containerColor = Color.Transparent,
         //                contentColor = foregroundColor
-    ), shape = RoundedCornerShape(10.dp), onClick = onClick, content = {
+    ), shape = RoundedCornerShape(12.dp), onClick = onClick, content = {
         Row(
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically,
@@ -358,9 +359,17 @@ fun ContentSearchBar(
 fun SearchResultItem(
     modifier: Modifier = Modifier,
     item: SearchResult,
+    onClick: (title: String, url: String) -> Unit
 ) {
     Column(
-        modifier.padding(0.dp, 6.dp),
+        modifier
+            .padding(0.dp, 6.dp)
+            .clickable {
+                val title = URLEncoder.encode(item.title, "UTF-8")
+                val url = URLEncoder.encode(item.url, "UTF-8")
+                println("WE RUN THE CLICAKBLE TIHNGYMAGIGY")
+                onClick(title, url)
+            },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
@@ -400,9 +409,9 @@ fun SearchResultItem(
                 loading = {
                     Box(
                         Modifier
+                            .shimmer()
                             .matchParentSize()
                             .background(MaterialTheme.colorScheme.onSurface)
-                            .shimmer()
                     )
                 },
             )
