@@ -27,6 +27,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.data.WebviewHandler
 import com.chouten.app.ui.views.homePage.HomePage
 import com.chouten.app.ui.views.infoPage.InfoPage
@@ -38,10 +39,18 @@ import com.chouten.app.ui.views.settingsPage.SettingsPage
 
 @Composable
 fun Navigation(navController: NavHostController) {
+    val backStack by navController.currentBackStackEntryAsState()
+    val currentRoute = backStack?.destination?.route
+
     NavHost(
         navController = navController,
         startDestination = Screen.HomePage.route
     ) {
+        PrimaryDataLayer.isNavigationShown = when (currentRoute) {
+            "info/{title}/{url}" -> false
+            else -> true
+        }
+
         val searchPageViewModel =
             SearchPageViewModel(navController.context, WebviewHandler())
         var infoVm: InfoPageViewModel? = null

@@ -1,6 +1,9 @@
 package com.chouten.app.data
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.MutableLiveData
 
 class DataLayer() {
@@ -8,6 +11,8 @@ class DataLayer() {
         MutableLiveData(listOf())
         private set
     private var _snackbarDeleteBuffer = 0
+
+    var isNavigationShown by mutableStateOf(true)
 
     fun enqueueSnackbar(content: SnackbarVisualsWithError) {
         if (_snackbarDeleteBuffer > 0) {

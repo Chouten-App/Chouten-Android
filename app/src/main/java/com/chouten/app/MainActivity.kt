@@ -6,6 +6,9 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -115,17 +118,24 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     topBar = { },
                     bottomBar = {
-                        BottomNavigationBar(
-                            navController = navController,
-                            items = listOf(
-                                NavigationItems.HomePage,
-                                NavigationItems.SearchPage,
-                                NavigationItems.SettingsPage,
-                            ),
-                            onItemClick = {
-                                navController.navigate(route = it.route)
-                            }
+                        AnimatedVisibility(
+                            visible = PrimaryDataLayer.isNavigationShown,
+                            enter = expandVertically(),
+                            exit = shrinkVertically()
                         )
+                        {
+                            BottomNavigationBar(
+                                navController = navController,
+                                items = listOf(
+                                    NavigationItems.HomePage,
+                                    NavigationItems.SearchPage,
+                                    NavigationItems.SettingsPage,
+                                ),
+                                onItemClick = {
+                                    navController.navigate(route = it.route)
+                                }
+                            )
+                        }
                     },
                     snackbarHost = snackbarHost,
                     content = { padding ->
