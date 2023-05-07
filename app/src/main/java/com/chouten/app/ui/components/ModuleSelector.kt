@@ -20,13 +20,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -207,7 +210,7 @@ fun ModuleSelectorContainer(
             ) {
                 // We want the elevated button
                 // to "float" above the rest of the content
-                ElevatedButton(
+                ExtendedFloatingActionButton(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(16.dp)
@@ -219,15 +222,24 @@ fun ModuleSelectorContainer(
                             } else sheetState.show()
                         }
                     },
-                    shape = RoundedCornerShape(20),
-                ) {
-                    Text(
-                        ModuleLayer.selectedModule?.name ?: noModuleSelected,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+                    icon = {
+                           Icon(
+                               Icons.Default.ExpandMore,
+                               contentDescription = stringResource(R.string.module_selection_header),
+                               tint = MaterialTheme.colorScheme.onPrimaryContainer
+                           )
+                    },
+                    text = {
+                        Text(
+                            text = ModuleLayer.selectedModule?.name
+                                ?: noModuleSelected,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    },
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                )
                 children()
             }
         }
