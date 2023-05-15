@@ -27,6 +27,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.chouten.app.LogLayer
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.data.WebviewHandler
 import com.chouten.app.ui.views.homePage.HomePage
@@ -35,6 +36,7 @@ import com.chouten.app.ui.views.infoPage.InfoPageViewModel
 import com.chouten.app.ui.views.searchPage.SearchPage
 import com.chouten.app.ui.views.searchPage.SearchPageViewModel
 import com.chouten.app.ui.views.settingsPage.SettingsPage
+import com.chouten.app.ui.views.settingsPage.screens.LogPage
 
 
 @Composable
@@ -95,8 +97,15 @@ fun Navigation(navController: NavHostController) {
         composable(
             route = Screen.SettingsPage.route,
         ) {
-            SettingsPage()
+            SettingsPage(
+                navController
+            )
             infoVm = null
+        }
+        composable(
+            route = Screen.LogPage.route
+        ) {
+            LogPage(provider = LogLayer, navController = navController)
         }
     }
 }

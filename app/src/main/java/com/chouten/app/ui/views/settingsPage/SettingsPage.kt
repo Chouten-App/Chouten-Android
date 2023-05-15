@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.chouten.app.R
 import com.chouten.app.data.AppThemeType
 import com.chouten.app.data.ChoutenSetting
@@ -36,9 +38,10 @@ import kotlin.reflect.full.declaredMemberProperties
 val json = Json { prettyPrint = true }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
 @Composable
-fun SettingsPage() {
+fun SettingsPage(
+    navHost: NavController
+) {
     val context = LocalContext.current
     val themes =
         Pair(dynamicLightColorScheme(context), dynamicDarkColorScheme(context))
@@ -122,7 +125,21 @@ fun SettingsPage() {
                 ),
                 onPreviewSelectionChange = { theme ->
                     preferenceHandler.themeType = theme
-                }
+                })
+
+            SettingsItem(
+                modifier = Modifier.clickable {
+                    navHost.navigate("settings/log")
+                },
+                icon = {},
+                text = { Text(stringResource(R.string.log__title)) },
+                secondaryText = { Text(stringResource(R.string.log__desc)) },
+                trailing = {
+                    Icon(
+                        Icons.Default.ChevronRight,
+                        stringResource(R.string.log__title)
+                    )
+                },
             )
         }
     }

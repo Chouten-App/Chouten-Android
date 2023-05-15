@@ -56,6 +56,12 @@ object NavigationItems {
         activeIcon = Icons.Filled.Settings,
         inactiveIcon = Icons.Outlined.Settings
     )
+    val LogPage = BottomNavItem(
+        name = R.string.settings_submenu_log,
+        route = "settings/log",
+        activeIcon = Icons.Filled.Settings,
+        inactiveIcon = Icons.Outlined.Settings
+    )
 }
 
 enum class AppThemeType(val printable: String) {

@@ -3,8 +3,12 @@ package com.chouten.app.data
 import android.content.Context
 import android.util.Base64
 import android.util.Log
+import android.webkit.ConsoleMessage
+import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.chouten.app.LogLayer
+import com.chouten.app.ModuleLayer
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.client
 import kotlinx.coroutines.sync.Mutex
@@ -90,6 +94,14 @@ class WebviewHandler() {
                     true
                 )
             )
+            LogLayer.addLogEntry(
+                LogEntry(
+                    title = "Failed to load data from ${request.url}",
+                    message = e.stackTraceToString(),
+                    isError = true
+                )
+            )
+
             e.printStackTrace()
             return false
         }
@@ -164,6 +176,29 @@ class WebviewHandler() {
             }
         }
 
+        webview.webChromeClient = object : WebChromeClient() {
+            override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+                val level = consoleMessage?.messageLevel()
+                val (logType, isError) = if (level == ConsoleMessage.MessageLevel.ERROR) {
+                    Pair("Error", true)
+                } else {
+                    Pair("Info", false)
+                }
+
+                LogLayer.addLogEntry(
+                    LogEntry(
+                        title = logType,
+                        module = ModuleLayer.selectedModule
+                            ?: throw Exception("No module selected"),
+                        message = consoleMessage?.message() ?: "No message",
+                        isError = isError,
+                    )
+                )
+
+                return true
+            }
+        }
+
         return true
     }
 
@@ -197,7 +232,13 @@ class WebviewHandler() {
         // We need to inject the javascript into the webview
         // and then wait for the results to be returned.
         callLock.lock()
-        webview.evaluateJavascript(javascript.code) {
+        webview.evaluateJavascript("""
+            try {
+                ${javascript.code}
+            } catch (e) {
+                console.error(e);
+            }
+        """.trimIndent()) {
             callLock.unlock()
         }
 
@@ -213,6 +254,9 @@ class WebviewHandler() {
             });
             // Clear the chouten div
             document.getElementById("chouten").innerHTML = "";
+            if (results == null || results.length == 0) {
+                results = [[{result: [], nextUrl: ""}]];
+            }
             results
         """.trimIndent()
 
@@ -220,7 +264,7 @@ class WebviewHandler() {
         webview.evaluateJavascript(retrieveInjection) {
             // it is a JSON Array of strings
             // so we need to parse it.
-            results = it ?: "[{}]"
+            results = it ?: "[[{result: [], nextUrl: \"\"}]]"
             Log.d("WebviewHandler", "Returning $results")
             callLock.unlock()
         }

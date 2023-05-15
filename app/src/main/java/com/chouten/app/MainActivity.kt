@@ -23,6 +23,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.chouten.app.data.DataLayer
+import com.chouten.app.data.LogDataLayer
 import com.chouten.app.data.ModuleDataLayer
 import com.chouten.app.data.NavigationItems
 import com.chouten.app.ui.BottomNavigationBar
@@ -34,6 +35,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 lateinit var ModuleLayer: ModuleDataLayer
+lateinit var LogLayer: LogDataLayer
 val PrimaryDataLayer = DataLayer()
 
 const val PREFERENCE_FILE = "CHOUTEN_PREFS"
@@ -49,6 +51,7 @@ class MainActivity : ComponentActivity() {
         initializeNetwork(applicationContext)
         preferenceHandler = PreferenceManager(this)
         ModuleLayer = ModuleDataLayer()
+        LogLayer = LogDataLayer()
 
         createAppDirectory()
         lifecycleScope.launch(Dispatchers.IO) {

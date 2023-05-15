@@ -22,6 +22,10 @@
     <string name="navbar_search">Search</string>
     <string name="navbar_settings">Settings</string>
 
+    <string name="settings_submenu_log">App Logs</string>
+
+    <string name="back">Back</string>
+
     <!-- Settings Options -->
     <string name="dynamic_colour_toggle__title">Dynamic Theming</string>
     <string name="dynamic_colour_toggle__desc">Use Material You Dynamic Theming</string>
@@ -31,4 +35,10 @@
 
     <string name="appearance__title">Appearance</string>
     <string name="appearance__desc">Light/Dark/System</string>
+
+    <string name="log__title">View Logs</string>
+    <string name="log__desc">View module logs</string>
+    <string name="log__action_clear">Clear Logs</string>
+    <string name="log__placeholder">No logs... Yay?</string>
+
 </resources>
