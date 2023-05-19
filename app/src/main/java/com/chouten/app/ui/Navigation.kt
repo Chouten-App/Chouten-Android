@@ -27,17 +27,20 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
 import com.chouten.app.LogLayer
 import com.chouten.app.PrimaryDataLayer
+import com.chouten.app.data.NavigationItems
 import com.chouten.app.data.WebviewHandler
+import com.chouten.app.ui.components.Subpage
 import com.chouten.app.ui.views.homePage.HomePage
 import com.chouten.app.ui.views.infoPage.InfoPage
 import com.chouten.app.ui.views.infoPage.InfoPageViewModel
 import com.chouten.app.ui.views.searchPage.SearchPage
 import com.chouten.app.ui.views.searchPage.SearchPageViewModel
-import com.chouten.app.ui.views.settingsPage.SettingsPage
+import com.chouten.app.ui.views.settingsPage.MorePage
+import com.chouten.app.ui.views.settingsPage.screens.AppearancePage
 import com.chouten.app.ui.views.settingsPage.screens.LogPage
-
 
 @Composable
 fun Navigation(navController: NavHostController) {
@@ -94,18 +97,40 @@ fun Navigation(navController: NavHostController) {
                 InfoPage(viewModel)
             }
         }
-        composable(
-            route = Screen.SettingsPage.route,
+        navigation(
+            route = Screen.MorePage.route,
+            startDestination = "more/default"
         ) {
-            SettingsPage(
-                navController
-            )
-            infoVm = null
-        }
-        composable(
-            route = Screen.LogPage.route
-        ) {
-            LogPage(provider = LogLayer, navController = navController)
+            composable(
+                route = "more/default"
+            ) {
+                MorePage(
+                    navController
+                )
+                infoVm = null
+            }
+
+            composable(
+                route = Screen.AppearancePage.route
+            ) {
+                Subpage(
+                    title = stringResource(NavigationItems.AppearancePage.name),
+                    navController = navController
+                ) {
+                    AppearancePage()
+                }
+            }
+
+            composable(
+                route = Screen.LogPage.route
+            ) {
+                Subpage(
+                    title = stringResource(NavigationItems.LogPage.name),
+                    navController = navController
+                ) {
+                    LogPage(provider = LogLayer)
+                }
+            }
         }
     }
 }
@@ -113,8 +138,8 @@ fun Navigation(navController: NavHostController) {
 data class BottomNavItem(
     @StringRes val name: Int,
     val route: String,
-    val activeIcon: ImageVector,
-    val inactiveIcon: ImageVector = activeIcon,
+    val activeIcon: ImageVector? = null,
+    val inactiveIcon: ImageVector? = activeIcon,
     val badgeCount: Int = 0
 )
 
@@ -128,10 +153,13 @@ fun BottomNavigationBar(
     val backStackEntry by navController.currentBackStackEntryAsState()
     NavigationBar {
         items.forEach { item ->
-            val selected = backStackEntry?.destination?.route == item.route
+            // If the item is a subroute of the current route, we consider it selected
+            val selected =
+                backStackEntry?.destination?.route?.startsWith(item.route) == true
             val icon: @Composable () -> Unit = {
                 Icon(
-                    imageVector = if (selected) item.activeIcon else item.inactiveIcon,
+                    // Note: If the icon is not provided, the app will crash
+                    imageVector = if (selected) item.activeIcon!! else item.inactiveIcon!!,
                     contentDescription = stringResource(item.name),
                     tint = if (selected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                 )

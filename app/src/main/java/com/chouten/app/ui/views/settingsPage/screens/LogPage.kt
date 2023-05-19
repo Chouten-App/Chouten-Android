@@ -15,19 +15,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,98 +36,78 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.chouten.app.R
 import com.chouten.app.data.LogDataLayer
 import com.chouten.app.data.LogEntry
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LogPage(
-    provider: LogDataLayer, navController: NavController
+    provider: LogDataLayer
 ) {
 
     val logs = remember {
         provider.logEntries.asReversed()
     }
 
-    Scaffold(topBar = {
-        TopAppBar(title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+    Column(
+        modifier = Modifier.animateContentSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // TODO: Not cut off the results horribly - floating bar?
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp, 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            FilledTonalButton(
+                onClick = { provider.clearLogs() },
+                enabled = logs.isNotEmpty()
             ) {
-                IconButton(onClick = {
-                    navController.popBackStack()
-                }) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Icon(
-                        imageVector = Icons.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.back)
+                        imageVector = Icons.Filled.Clear,
+                        contentDescription = stringResource(R.string.log__action_clear),
+                    )
+                    Text(
+                        text = stringResource(R.string.log__action_clear),
+                        fontWeight = FontWeight.Bold
                     )
                 }
-                Text(stringResource(R.string.settings_submenu_log))
             }
-        })
-    }) { scaffoldPadding ->
-        Column(
+        }
+
+        if (logs.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp, 0.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.log__placeholder)
+                )
+            }
+        } else LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(scaffoldPadding)
-                .animateContentSize(),
+                .padding(bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // TODO: Not cut off the results horribly - floating bar?
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp, 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            items(
+                logs
             ) {
-                FilledTonalButton(
-                    onClick = { provider.clearLogs() },
-                    enabled = logs.isNotEmpty()
+                BoxWithConstraints(
+                    modifier = Modifier.padding(16.dp, 0.dp)
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Clear,
-                            contentDescription = stringResource(R.string.log__action_clear),
-                        )
-                        Text(
-                            text = stringResource(R.string.log__action_clear), fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            if (logs.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp, 0.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.log__placeholder)
-                    )
-                }
-            } else LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(bottom = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(
-                    logs
-                ) {
-                    BoxWithConstraints(
-                        modifier = Modifier.padding(16.dp, 0.dp)
-                    ) {
-                        LogEntryCard(it)
-                    }
+                    LogEntryCard(it)
                 }
             }
         }

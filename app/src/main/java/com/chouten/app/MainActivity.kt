@@ -132,7 +132,7 @@ class MainActivity : ComponentActivity() {
                                 items = listOf(
                                     NavigationItems.HomePage,
                                     NavigationItems.SearchPage,
-                                    NavigationItems.SettingsPage,
+                                    NavigationItems.MorePage,
                                 ),
                                 onItemClick = {
                                     navController.navigate(route = it.route)

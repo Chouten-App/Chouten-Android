@@ -6,11 +6,11 @@ import java.io.File
 import com.chouten.app.ui.BottomNavItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Settings
 import com.chouten.app.R
 
 object AppPaths {
@@ -40,27 +40,29 @@ object Preferences {
 object NavigationItems {
     val HomePage = BottomNavItem(
         name = R.string.navbar_home,
-        route = "home",
+        route = "home/",
         activeIcon = Icons.Filled.Home,
         inactiveIcon = Icons.Outlined.Home,
     )
     val SearchPage = BottomNavItem(
         name = R.string.navbar_search,
-        route = "search",
+        route = "search/",
         activeIcon = Icons.Filled.Search,
         inactiveIcon = Icons.Outlined.Search,
     )
-    val SettingsPage = BottomNavItem(
-        name = R.string.navbar_settings,
-        route = "settings",
-        activeIcon = Icons.Filled.Settings,
-        inactiveIcon = Icons.Outlined.Settings
+    val MorePage = BottomNavItem(
+        name = R.string.navbar_more,
+        route = "more/",
+        activeIcon = Icons.Filled.MoreHoriz,
+        inactiveIcon = Icons.Outlined.MoreHoriz
     )
     val LogPage = BottomNavItem(
         name = R.string.settings_submenu_log,
-        route = "settings/log",
-        activeIcon = Icons.Filled.Settings,
-        inactiveIcon = Icons.Outlined.Settings
+        route = "more/log",
+    )
+    val AppearancePage = BottomNavItem(
+        name = R.string.appearance__title,
+        route = "more/appearance",
     )
 }
 

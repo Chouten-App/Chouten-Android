@@ -20,7 +20,7 @@
     <!-- Navigation Bar Titles -->
     <string name="navbar_home">Home</string>
     <string name="navbar_search">Search</string>
-    <string name="navbar_settings">Settings</string>
+    <string name="navbar_more">More</string>
 
     <string name="settings_submenu_log">App Logs</string>
 
