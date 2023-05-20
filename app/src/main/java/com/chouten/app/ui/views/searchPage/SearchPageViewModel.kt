@@ -14,9 +14,15 @@ import com.chouten.app.data.ModuleResponse
 import com.chouten.app.data.SearchResult
 import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.data.WebviewHandler
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
+import kotlinx.coroutines.withContext
 import java.net.URLEncoder
 
 class SearchPageViewModel(
@@ -25,7 +31,39 @@ class SearchPageViewModel(
 ) : ViewModel() {
     var isSearching by mutableStateOf(false)
         private set
-    var searchQuery by mutableStateOf("")
+
+    // We want to keep track of the search job so that
+    // we can cancel it if the search query changes.
+    private var searchJob: Job? = null
+
+    // We want to use a flow for this so that we
+    // can have a debounce on the search.
+    // Every time the search query changes, we want to
+    // wait 500ms before actually searching.
+    private var _searchQuery = MutableStateFlow("")
+
+    @OptIn(FlowPreview::class)
+    var searchQuery: String = _searchQuery.value
+        set(value) {
+            field = value
+            _searchQuery.value = value
+            searchJob?.cancel()
+            searchJob = viewModelScope.launch {
+                _searchQuery.debounce(500).distinctUntilChanged()
+                    .collectLatest {
+                        isSearching = true
+                        if (it.isBlank()) {
+                            _searchResults.clear()
+                            isSearching = false
+                            return@collectLatest
+                        }
+                        println("Searching for $it")
+                        _searchQuery.value = it
+                        search(it)
+                    }
+            }
+        }
+    
     var previousSearchQuery by mutableStateOf("")
         private set // We don't want to be able to set this from outside the class.
 
@@ -37,8 +75,12 @@ class SearchPageViewModel(
     val searchResults: List<SearchResult>
         get() = _searchResults
 
-    fun search(query: String) {
-        previousSearchQuery = searchQuery
+    private suspend fun search(query: String) {
+        // Update the previous search query.
+        // By setting it to the searchQuery value,
+        // we can ensure that it is always up to date.
+        previousSearchQuery = _searchQuery.value
+
         // We want to get the currently selected module and then
         // search for the query within that module.
         isSearching = true
@@ -54,7 +96,9 @@ class SearchPageViewModel(
                                 request = searchFn.request.copy(
                                     url = searchFn.request.url.replace(
                                         "<query>",
-                                        URLEncoder.encode(query, "UTF-8")
+                                        withContext(Dispatchers.IO) {
+                                            URLEncoder.encode(query, "UTF-8")
+                                        }
                                     )
                                 )
                             )

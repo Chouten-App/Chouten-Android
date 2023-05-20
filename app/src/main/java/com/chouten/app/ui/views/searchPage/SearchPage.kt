@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -151,9 +152,15 @@ fun ContentSearchBar(
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
 
+        // We need to store our own copy of the search query, because the value
+        // in the ViewModel is updated asynchronously
+        var searchQuery by rememberSaveable { mutableStateOf(provider.searchQuery) }
+
         TextField(
-            value = provider.searchQuery,
-            onValueChange = { provider.searchQuery = it },
+            value = searchQuery,
+            onValueChange = {
+                searchQuery = it; provider.searchQuery = searchQuery
+            },
             placeholder = {
                 Text(
                     if (activeModuleName != null)
@@ -190,10 +197,6 @@ fun ContentSearchBar(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(
                 onSearch = {
-                    if (provider.searchQuery.isBlank() ||
-                        provider.previousSearchQuery.trim() == provider.searchQuery.trim()
-                    ) return@KeyboardActions
-                    provider.search(provider.searchQuery)
                     // Close keyboard
                     focusManager.clearFocus()
                 }
