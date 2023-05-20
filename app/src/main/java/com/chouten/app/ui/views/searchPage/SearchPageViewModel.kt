@@ -128,11 +128,22 @@ class SearchPageViewModel(
                         "\\"
                     )
                     _searchResults.clear()
-                    val results =
-                        Mapper.parse<ModuleResponse<List<SearchResult>>>(json)
-                    _searchResults.addAll(results.result)
-                    isSearching = false
-                    webview.updateNextUrl(results.nextUrl)
+                    try {
+                        val results =
+                            Mapper.parse<ModuleResponse<List<SearchResult>>>(
+                                json
+                            )
+                        _searchResults.addAll(results.result)
+                        isSearching = false
+                        webview.updateNextUrl(results.nextUrl)
+                    } catch (e: Exception) {
+                        PrimaryDataLayer.enqueueSnackbar(
+                            SnackbarVisualsWithError(
+                                "Error parsing search results for $query", true
+                            )
+                        )
+                        isSearching = false
+                    }
                 }
             }
         }
