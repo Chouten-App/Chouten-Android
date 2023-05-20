@@ -11,9 +11,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,10 +24,14 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Help
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -42,22 +49,29 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.chouten.app.ModuleLayer
 import com.chouten.app.R
-import com.chouten.app.ui.views.searchPage.ModuleChoice
-import com.chouten.app.ui.views.searchPage.ModuleImportButton
+import com.chouten.app.ui.theme.dashedBorder
+import com.skydoves.landscapist.ImageOptions
+import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class
+@OptIn(
+    ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class
 )
 @Composable
 fun ModuleSelectorContainer(
@@ -244,4 +258,152 @@ fun ModuleSelectorContainer(
             }
         }
     }
+}
+
+@Composable
+fun ModuleChoice(
+    id: Int,
+    name: String,
+    author: String,
+    version: String,
+    icon: String?,
+    backgroundColor: Color?,
+    foregroundColor: Color?,
+    onClick: () -> Unit
+) {
+    val iconSize = 40
+    val iconSizePx: Int = iconSize * LocalDensity.current.density.roundToInt()
+
+    Button(
+        modifier = Modifier
+            .fillMaxWidth(1F)
+            .height(65.dp)
+            .padding(vertical = 4.dp),
+        colors = if (backgroundColor != null) {
+            ButtonDefaults.buttonColors(
+                containerColor = backgroundColor,
+                contentColor = foregroundColor
+                    ?: MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        } else ButtonDefaults.buttonColors(),
+        shape = RoundedCornerShape(12.dp),
+        onClick = onClick,
+        content = {
+            Row(
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (icon == null) Icon(
+                    Icons.Default.Help,
+                    "Question Mark",
+                    modifier = Modifier.size(iconSize.dp)
+                )
+                else GlideImage(
+                    imageModel = { icon },
+                    imageOptions = ImageOptions(
+                        contentScale = ContentScale.Fit,
+                        alignment = Alignment.Center,
+                        contentDescription = "Favicon for the $name module",
+                        requestSize = IntSize(iconSizePx, iconSizePx)
+                    ),
+                    loading = {
+                        Box(Modifier.matchParentSize()) {
+                            CircularProgressIndicator(
+                                Modifier.align(
+                                    Alignment.Center
+                                )
+                            )
+                        }
+                    },
+                    modifier = Modifier
+                        .size(iconSize.dp)
+                        .clip(CircleShape),
+                )
+
+                Spacer(modifier = Modifier.width(6.dp))
+                Column {
+                    Text(
+                        name,
+                        fontWeight = FontWeight.Bold,
+                        color = foregroundColor
+                            ?: MaterialTheme.colorScheme.onSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Row(horizontalArrangement = Arrangement.Start) {
+                        Text(
+                            author,
+                            color = foregroundColor?.copy(0.8F)
+                                ?: MaterialTheme.colorScheme.onSecondary,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            "v$version",
+                            color = foregroundColor?.copy(0.8F)
+                                ?: MaterialTheme.colorScheme.onSecondary,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        },
+    )
+}
+
+@Composable
+fun ModuleImportButton(onClick: () -> Unit) {
+    val iconSize = 25
+
+    Button(modifier = Modifier
+        .fillMaxWidth(1F)
+        .height(65.dp)
+        .padding(vertical = 4.dp)
+        .dashedBorder(
+            1.dp, MaterialTheme.colorScheme.onPrimaryContainer, 10.dp
+        ), colors = ButtonDefaults.buttonColors(
+        containerColor = Color.Transparent,
+        //                contentColor = foregroundColor
+    ), shape = RoundedCornerShape(12.dp), onClick = onClick, content = {
+        Row(
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                Icons.Default.Download,
+                stringResource(R.string.module_selection_header),
+                modifier = Modifier
+                    .size(iconSize.dp)
+                    .clip(CircleShape),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Column {
+                Text(
+                    stringResource(R.string.import_module_header),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Column {
+                    Text(
+                        stringResource(R.string.import_module_desc),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+    })
 }
