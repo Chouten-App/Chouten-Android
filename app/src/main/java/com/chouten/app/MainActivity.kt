@@ -67,8 +67,8 @@ class MainActivity : ComponentActivity() {
                         ?: false
                 val buttonColor = if (isError) {
                     ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
                     )
                 } else {
                     ButtonDefaults.buttonColors(
@@ -79,10 +79,18 @@ class MainActivity : ComponentActivity() {
 
                 Snackbar(
                     modifier = Modifier.padding(12.dp),
-                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
-                        10.dp
-                    ),
-                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    containerColor = if (!isError) {
+                        MaterialTheme.colorScheme.surfaceColorAtElevation(
+                            10.dp
+                        )
+                    } else {
+                        MaterialTheme.colorScheme.error
+                    },
+                    contentColor = if (!isError) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.onError
+                    },
                     action = {
                         TextButton(
                             onClick = {
