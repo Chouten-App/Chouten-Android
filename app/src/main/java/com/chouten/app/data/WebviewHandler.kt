@@ -106,6 +106,14 @@ class WebviewHandler() {
             return false
         }
 
+        LogLayer.addLogEntry(
+            LogEntry(
+                title = "Loading data from ${request.url}",
+                message = "Request Type: ${request.type}\nUses API? ${js.usesApi}",
+                isError = false
+            )
+        )
+
         // The webview expects a Base64 encoded string
         val encodedData = Base64.encodeToString(data, Base64.DEFAULT)
         if (js.usesApi != true) {
@@ -278,6 +286,16 @@ class WebviewHandler() {
     }
 
     fun updateNextUrl(url: String?) {
+        if (url?.isNotBlank() == true) {
+            LogLayer.addLogEntry(
+                LogEntry(
+                    title = "Setting NextURL to $url",
+                    message = "Previous NextURL: $nextUrl",
+                    isError = false
+                )
+            )
+        }
+        
         println("Setting NextURL to $url")
         nextUrl = url ?: nextUrl
     }
