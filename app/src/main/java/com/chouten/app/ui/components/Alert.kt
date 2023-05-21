@@ -3,6 +3,7 @@ package com.chouten.app.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,35 +35,40 @@ fun ChoutenAlert(alert: AlertData) {
         AlertDialog(onDismissRequest = {
             alert.cancelButtonAction?.invoke()
             defaultDismiss()
-        }, title = {
-            Text(text = alert.title)
-        }, text = {
-            Text(text = alert.message)
-        }, confirmButton = {
-            FilledTonalButton(
-                onClick = {
-                    alert.confirmButtonAction?.invoke()
-                    defaultDismiss()
-                },
-            ) {
-                Text(
-                    text = alert.confirmButtonText
-                        ?: stringResource(id = R.string.ok)
-                )
+        }, icon = {
+            if (alert.icon != null) {
+                Icon(imageVector = alert.icon, contentDescription = null)
             }
-        }, dismissButton = {
-            if (alert.cancelButtonText != null && alert.cancelButtonAction != null) {
-                TextButton(
+        },
+            title = {
+                Text(text = alert.title)
+            }, text = {
+                Text(text = alert.message)
+            }, confirmButton = {
+                FilledTonalButton(
                     onClick = {
-                        owner.lifecycleScope.launch {
-                            alert.cancelButtonAction.invoke()
-                            defaultDismiss()
-                        }
+                        alert.confirmButtonAction?.invoke()
+                        defaultDismiss()
                     },
                 ) {
-                    Text(text = alert.cancelButtonText)
+                    Text(
+                        text = alert.confirmButtonText
+                            ?: stringResource(id = R.string.ok)
+                    )
                 }
-            }
-        })
+            }, dismissButton = {
+                if (alert.cancelButtonText != null && alert.cancelButtonAction != null) {
+                    TextButton(
+                        onClick = {
+                            owner.lifecycleScope.launch {
+                                alert.cancelButtonAction.invoke()
+                                defaultDismiss()
+                            }
+                        },
+                    ) {
+                        Text(text = alert.cancelButtonText)
+                    }
+                }
+            })
     }
 }
