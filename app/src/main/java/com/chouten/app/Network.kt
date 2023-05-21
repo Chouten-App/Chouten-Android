@@ -94,9 +94,10 @@ fun <A, B> Collection<A>.asyncMap(f: suspend (A) -> B): List<B> = runBlocking {
     map { async { f(it) } }.map { it.await() }
 }
 
-fun <A, B> Collection<A>.asyncMapNotNull(f: suspend (A) -> B?): List<B> = runBlocking {
-    map { async { f(it) } }.mapNotNull { it.await() }
-}
+fun <A, B> Collection<A>.asyncMapNotNull(f: suspend (A) -> B?): List<B> =
+    runBlocking {
+        map { async { f(it) } }.mapNotNull { it.await() }
+    }
 
 fun logError(e: Exception, post: Boolean = true/*, snackbar: Boolean = true*/) {
     val sw = StringWriter()
@@ -105,15 +106,18 @@ fun logError(e: Exception, post: Boolean = true/*, snackbar: Boolean = true*/) {
     val stackTrace: String = sw.toString()
     if (post) {
         //if (snackbar)
-            //snackString(e.localizedMessage, null, stackTrace)
+        //snackString(e.localizedMessage, null, stackTrace)
         //else
-            //toast(e.localizedMessage)
+        //toast(e.localizedMessage)
         Log.d("Error", stackTrace)
     }
     e.printStackTrace()
 }
 
-fun <T> tryWith(post: Boolean = false/*, snackbar: Boolean = true*/, call: () -> T): T? {
+fun <T> tryWith(
+    post: Boolean = false/*, snackbar: Boolean = true*/,
+    call: () -> T
+): T? {
     return try {
         call.invoke()
     } catch (e: Exception) {
@@ -122,7 +126,10 @@ fun <T> tryWith(post: Boolean = false/*, snackbar: Boolean = true*/, call: () ->
     }
 }
 
-suspend fun <T> tryWithSuspend(post: Boolean = false/*, snackbar: Boolean = true*/, call: suspend () -> T): T? {
+suspend fun <T> tryWithSuspend(
+    post: Boolean = false/*, snackbar: Boolean = true*/,
+    call: suspend () -> T
+): T? {
     return try {
         call.invoke()
     } catch (e: Exception) {
@@ -141,7 +148,10 @@ data class FileUrl(
     val headers: Map<String, String> = mapOf()
 ) : Serializable {
     companion object {
-        operator fun get(url: String?, headers: Map<String, String> = mapOf()): FileUrl? {
+        operator fun get(
+            url: String?,
+            headers: Map<String, String> = mapOf()
+        ): FileUrl? {
             return FileUrl(url ?: return null, headers)
         }
     }

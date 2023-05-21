@@ -14,7 +14,10 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
-import com.chouten.app.*
+import com.chouten.app.Mapper
+import com.chouten.app.PrimaryDataLayer
+import com.chouten.app.client
+import com.chouten.app.preferenceHandler
 import com.google.common.hash.BloomFilter
 import com.google.common.hash.Funnels
 import kotlinx.coroutines.Dispatchers
@@ -34,9 +37,7 @@ class ModuleDataLayer() {
         private set
 
     private val bloomFilter = BloomFilter.create(
-        Funnels.integerFunnel(),
-        100,
-        0.05
+        Funnels.integerFunnel(), 100, 0.05
     )
 
     private fun isModuleExisting(module: ModuleModel): Boolean {
@@ -46,7 +47,8 @@ class ModuleDataLayer() {
         // val doesNotExist = !bloomFilter.mightContain(module.hashCode())
         // if (doesNotExist) return doesNotExist
 
-        availableModules.find { it.hashCode() == module.hashCode() } ?: return false
+        availableModules.find { it.hashCode() == module.hashCode() }
+            ?: return false
         return true
     }
 
@@ -113,7 +115,10 @@ class ModuleDataLayer() {
                             true,
                         )
                     )
-                    e.localizedMessage?.let { Log.e("IMPORT ERROR", it) }
+                    e.localizedMessage?.let {
+                        Log.e("IMPORT ERROR", it)
+                        e.printStackTrace()
+                    }
                 }
             }
         }
@@ -149,11 +154,7 @@ class ModuleDataLayer() {
             // Query the URI for all files of type `application/json`
             // within the ~/Documents/Chouten/Modules/ folder
             context.contentResolver.query(
-                mediaStoreUri,
-                projection,
-                selection,
-                selectionArgs,
-                null
+                mediaStoreUri, projection, selection, selectionArgs, null
             ).use {
                 if (it != null && it.moveToFirst()) {
                     do {
@@ -170,8 +171,7 @@ class ModuleDataLayer() {
             toLoad.forEach { file ->
                 context.contentResolver.openInputStream(
                     File(
-                        modulesDir,
-                        file
+                        modulesDir, file
                     ).toUri()
                 ).use { it ->
                     val reader = BufferedReader(InputStreamReader(it))
@@ -183,9 +183,7 @@ class ModuleDataLayer() {
 
                     val module = Mapper.parse<ModuleModel>(json.toString())
                     module.id = availableModules.count() + loadedModules.count()
-                    if (selectedModule == null &&
-                        module.hashCode() == preferenceHandler.selectedModule
-                    ) {
+                    if (selectedModule == null && module.hashCode() == preferenceHandler.selectedModule) {
                         selectedModule = module
                     }
                     bloomFilter.put(module.hashCode())
@@ -199,8 +197,7 @@ class ModuleDataLayer() {
         } catch (e: IOException) {
             PrimaryDataLayer.enqueueSnackbar(
                 SnackbarVisualsWithError(
-                    e.localizedMessage ?: "Could not save Module",
-                    true
+                    e.localizedMessage ?: "Could not save Module", true
                 )
             )
 
@@ -228,14 +225,11 @@ class ModuleDataLayer() {
 
             // Add the Metadata to the MediaStore
             MediaScannerConnection.scanFile(
-                context,
-                arrayOf(moduleFile.path),
-                arrayOf("application/json")
+                context, arrayOf(moduleFile.path), arrayOf("application/json")
             ) { _, _ ->
                 PrimaryDataLayer.enqueueSnackbar(
                     SnackbarVisualsWithError(
-                        "Successfully saved Module",
-                        false
+                        "Successfully saved Module", false
                     )
                 )
             }
@@ -243,8 +237,7 @@ class ModuleDataLayer() {
         } catch (e: IOException) {
             PrimaryDataLayer.enqueueSnackbar(
                 SnackbarVisualsWithError(
-                    e.localizedMessage ?: "Could not save Module",
-                    true
+                    e.localizedMessage ?: "Could not save Module", true
                 )
             )
 

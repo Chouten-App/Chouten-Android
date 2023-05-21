@@ -8,7 +8,7 @@ data class SnackbarAction(
     val action: () -> Unit
 )
 
-class SnackbarVisualsWithError (
+class SnackbarVisualsWithError(
     override val message: String,
     val isError: Boolean,
     val shouldShowButton: Boolean = false,

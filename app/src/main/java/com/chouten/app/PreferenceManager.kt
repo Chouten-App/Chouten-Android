@@ -28,7 +28,10 @@ class PreferenceManager(context: Context) :
         -1
     )
 
-    var themeType by enumPreference(Preferences.Settings.themeType.preference.first, AppThemeType.SYSTEM)
+    var themeType by enumPreference(
+        Preferences.Settings.themeType.preference.first,
+        AppThemeType.SYSTEM
+    )
 }
 
 abstract class BasePreferenceManager(private val handler: SharedPreferences) {
@@ -63,10 +66,10 @@ abstract class BasePreferenceManager(private val handler: SharedPreferences) {
     fun putLong(key: String, value: Long): Unit =
         handler.edit { putLong(key, value) }
 
-    inline fun <reified T: Enum<T>> getEnum(key: String, defaultValue: T): T =
+    inline fun <reified T : Enum<T>> getEnum(key: String, defaultValue: T): T =
         enumValueOf(getString(key, defaultValue.name)!!)
 
-    inline fun<reified T: Enum<T>> putEnum(key: String, value: T) =
+    inline fun <reified T : Enum<T>> putEnum(key: String, value: T) =
         putString(key, value.name)
 
     protected class Preference<T>(

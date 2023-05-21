@@ -237,11 +237,11 @@ fun ModuleSelectorContainer(
                         }
                     },
                     icon = {
-                           Icon(
-                               Icons.Default.ExpandMore,
-                               contentDescription = stringResource(R.string.module_selection_header),
-                               tint = MaterialTheme.colorScheme.onPrimaryContainer
-                           )
+                        Icon(
+                            Icons.Default.ExpandMore,
+                            contentDescription = stringResource(R.string.module_selection_header),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     },
                     text = {
                         Text(

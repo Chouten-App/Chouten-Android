@@ -1,7 +1,6 @@
 package com.chouten.app.ui.views.infoPage
 
 import android.content.Context
-import android.util.Base64
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,9 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.chouten.app.Mapper
 import com.chouten.app.ModuleLayer
 import com.chouten.app.PrimaryDataLayer
-import com.chouten.app.asyncMap
 import com.chouten.app.data.InfoResult
-import com.chouten.app.data.ModuleModel
 import com.chouten.app.data.ModuleResponse
 import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.data.WebviewHandler
@@ -125,7 +122,10 @@ class InfoPageViewModel(
                             hasLoadedInfo = true
                         } catch (e: Exception) {
                             try {
-                                val results = Mapper.parse<List<InfoResult.MediaItem>>(json)
+                                val results =
+                                    Mapper.parse<List<InfoResult.MediaItem>>(
+                                        json
+                                    )
                                 infoResult = listOf(results)
                             } catch (e: Exception) {
                                 PrimaryDataLayer.enqueueSnackbar(

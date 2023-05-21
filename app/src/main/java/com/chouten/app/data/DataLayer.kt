@@ -50,7 +50,7 @@ class DataLayer() {
         try {
             snackbarQueue.value =
                 snackbarQueue.value?.takeLast(snackbarQueue.value!!.size - amountToRemove)
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             Log.d("CHOUTEN/SNACKBAR", e.localizedMessage ?: "Snackbar Error")
         }
 
@@ -64,7 +64,7 @@ class DataLayer() {
     fun popAlertQueue() {
         try {
             alertQueue.value = alertQueue.value.drop(1)
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             Log.d("CHOUTEN/ALERT", e.localizedMessage ?: "Alert Error")
         }
     }

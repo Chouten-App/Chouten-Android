@@ -63,7 +63,7 @@ class SearchPageViewModel(
                     }
             }
         }
-    
+
     var previousSearchQuery by mutableStateOf("")
         private set // We don't want to be able to set this from outside the class.
 

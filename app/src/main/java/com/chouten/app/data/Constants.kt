@@ -2,8 +2,6 @@ package com.chouten.app.data
 
 import android.os.Build
 import android.os.Environment
-import java.io.File
-import com.chouten.app.ui.BottomNavItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -12,6 +10,8 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Search
 import com.chouten.app.R
+import com.chouten.app.ui.BottomNavItem
+import java.io.File
 
 object AppPaths {
     val baseDir =
@@ -22,6 +22,7 @@ object AppPaths {
 
 object Preferences {
     const val SelectedModule = "SelectedModule"
+
     object Settings {
         val dynamicColor = ChoutenSetting(
             R.string.dynamic_colour_toggle__title,

@@ -59,11 +59,11 @@ fun ChoutenApp() {
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-               alerts.collectAsState().value.forEach {
-                     ChoutenAlert(alert = it)
-               }
+                alerts.collectAsState().value.forEach {
+                    ChoutenAlert(alert = it)
+                }
             }
-            
+
             Navigation(navController)
         }
     })

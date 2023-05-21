@@ -31,7 +31,11 @@ fun Snackbar() {
     val owner = LocalLifecycleOwner.current
     PrimaryDataLayer.snackbarQueue.observe(owner) {
         it.forEach { snackbarItem ->
-            owner.lifecycleScope.launch { snackbarState.showSnackbar(snackbarItem) }
+            owner.lifecycleScope.launch {
+                snackbarState.showSnackbar(
+                    snackbarItem
+                )
+            }
             PrimaryDataLayer.popSnackbarQueue()
         }
     }

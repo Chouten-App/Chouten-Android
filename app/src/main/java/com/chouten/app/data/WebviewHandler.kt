@@ -74,7 +74,7 @@ class WebviewHandler() {
             var counter = 0
             var responseCode = -1
             lateinit var response: ByteArray
-            while(counter < 2 || responseCode != 200) {
+            while (counter < 2 || responseCode != 200) {
                 val _response = when (request.type) {
                     "GET" -> client.get(url, headers)
                     "POST" -> client.post(url, headers, request.body)
@@ -240,13 +240,15 @@ class WebviewHandler() {
         // We need to inject the javascript into the webview
         // and then wait for the results to be returned.
         callLock.lock()
-        webview.evaluateJavascript("""
+        webview.evaluateJavascript(
+            """
             try {
                 ${javascript.code}
             } catch (e) {
                 console.error(e);
             }
-        """.trimIndent()) {
+        """.trimIndent()
+        ) {
             callLock.unlock()
         }
 
@@ -295,7 +297,7 @@ class WebviewHandler() {
                 )
             )
         }
-        
+
         println("Setting NextURL to $url")
         nextUrl = url ?: nextUrl
     }

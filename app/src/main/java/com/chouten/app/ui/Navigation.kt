@@ -88,8 +88,7 @@ fun Navigation(navController: NavHostController) {
             val title = it.arguments?.getString("title") ?: ""
             val url = it.arguments?.getString("url") ?: ""
 
-            if (infoVm == null)
-            {
+            if (infoVm == null) {
                 infoVm = InfoPageViewModel(navController.context, url, title)
             }
 
@@ -174,7 +173,8 @@ fun BottomNavigationBar(
                             BadgedBox(badge = {
                                 Badge(
                                     modifier = Modifier.offset((-2).dp, 2.dp),
-                                    containerColor = MaterialTheme.colorScheme.error) {
+                                    containerColor = MaterialTheme.colorScheme.error
+                                ) {
                                     val count =
                                         if (item.badgeCount > 99) "99+" else item.badgeCount.toString()
                                     Text(

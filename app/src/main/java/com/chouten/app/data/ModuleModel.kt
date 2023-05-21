@@ -63,14 +63,14 @@ data class ModuleModel(
 
     override fun hashCode(): Int {
         return (
-            this.type.hashCode()
-            + this.subtypes.hashCode()
-            + this.name.hashCode()
-            + this.version.hashCode()
-            + this.updateUrl.hashCode()
-            + this.meta.hashCode()
-            + this.code.hashCode()
-        )
+                this.type.hashCode()
+                        + this.subtypes.hashCode()
+                        + this.name.hashCode()
+                        + this.version.hashCode()
+                        + this.updateUrl.hashCode()
+                        + this.meta.hashCode()
+                        + this.code.hashCode()
+                )
     }
 }
 
@@ -78,6 +78,7 @@ data class ModuleModel(
 data class ModuleResponse<T>(
     val result: T, val nextUrl: String? = ""
 )
+
 @Serializable
 data class SearchResult(
     val url: String,

@@ -28,7 +28,8 @@ data class LogEntry(
         Locale.getDefault()
     ).format(Date()),
     val title: String,
-    val module: ModuleModel = ModuleLayer.selectedModule ?: throw Exception("No module selected"),
+    val module: ModuleModel = ModuleLayer.selectedModule
+        ?: throw Exception("No module selected"),
     val message: String,
     val isError: Boolean,
 )
