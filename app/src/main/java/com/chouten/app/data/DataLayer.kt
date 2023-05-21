@@ -5,12 +5,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class DataLayer() {
     var snackbarQueue: MutableLiveData<List<SnackbarVisualsWithError>> =
         MutableLiveData(listOf())
         private set
     private var _snackbarDeleteBuffer = 0
+
+    // Alert Queue uses Flows because we want to be able
+    // to easily modify it and keep the state in composables
+    var alertQueue: MutableStateFlow<List<AlertData>> =
+        MutableStateFlow(listOf())
+        private set
 
     var isNavigationShown by mutableStateOf(true)
 
@@ -48,6 +55,18 @@ class DataLayer() {
         }
 
         _snackbarDeleteBuffer = 0
+    }
+
+    fun enqueueAlert(content: AlertData) {
+        alertQueue.value = alertQueue.value.plus(content)
+    }
+
+    fun popAlertQueue() {
+        try {
+            alertQueue.value = alertQueue.value.drop(1)
+        } catch(e: Exception) {
+            Log.d("CHOUTEN/ALERT", e.localizedMessage ?: "Alert Error")
+        }
     }
 
     companion object {

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.chouten.app.data.DataLayer
@@ -16,7 +17,9 @@ import com.chouten.app.data.ModuleDataLayer
 import com.chouten.app.data.NavigationItems
 import com.chouten.app.ui.BottomNavigationBar
 import com.chouten.app.ui.Navigation
+import com.chouten.app.ui.components.ChoutenAlert
 import com.chouten.app.ui.components.Snackbar
+import kotlinx.coroutines.flow.asStateFlow
 
 lateinit var ModuleLayer: ModuleDataLayer
 lateinit var LogLayer: LogDataLayer
@@ -30,6 +33,9 @@ fun initializeRepositories() {
 @Composable
 fun ChoutenApp() {
     val navController = rememberNavController()
+
+    val alerts = PrimaryDataLayer.alertQueue.asStateFlow()
+
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = { }, bottomBar = {
         AnimatedVisibility(
             visible = PrimaryDataLayer.isNavigationShown,
@@ -50,6 +56,14 @@ fun ChoutenApp() {
                 .padding(padding)
                 .fillMaxSize()
         ) {
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+               alerts.collectAsState().value.forEach {
+                     ChoutenAlert(alert = it)
+               }
+            }
+            
             Navigation(navController)
         }
     })
