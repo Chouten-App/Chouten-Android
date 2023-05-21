@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.media.MediaScannerConnection
 import android.net.Uri
-import android.provider.MediaStore
 import android.util.Log
 import android.webkit.URLUtil
 import androidx.compose.runtime.getValue
@@ -138,57 +137,25 @@ class ModuleDataLayer() {
             }
 
             val loadedModules = mutableListOf<ModuleModel>()
-            val toLoad = mutableListOf<String>()
 
-            val mediaStoreUri = MediaStore.Files.getContentUri("external")
-
-            val projection: Array<String> = arrayOf(
-                MediaStore.Files.FileColumns.DISPLAY_NAME,
-                MediaStore.Files.FileColumns.MIME_TYPE
-            )
-
-            // Select all entries with mime type `application/json`
-            val selection = MediaStore.Files.FileColumns.MIME_TYPE + "=?"
-            val selectionArgs = arrayOf("application/json")
-
-            // Query the URI for all files of type `application/json`
-            // within the ~/Documents/Chouten/Modules/ folder
-            context.contentResolver.query(
-                mediaStoreUri, projection, selection, selectionArgs, null
-            ).use {
-                if (it != null && it.moveToFirst()) {
-                    do {
-                        // Add the name of the file to the `toLoad` list
-                        toLoad += it.getString(
-                            it.getColumnIndexOrThrow(
-                                MediaStore.Files.FileColumns.DISPLAY_NAME
-                            )
-                        )
-                    } while (it.moveToNext())
+            modulesDir.listFiles { _, name ->
+                name.endsWith(".json")
+            }?.forEach { file ->
+                val reader =
+                    BufferedReader(InputStreamReader(file.inputStream()))
+                val json = StringBuilder()
+                var line: String?
+                while (reader.readLine().also { line = it } != null) {
+                    json.append(line)
                 }
-            }
 
-            toLoad.forEach { file ->
-                context.contentResolver.openInputStream(
-                    File(
-                        modulesDir, file
-                    ).toUri()
-                ).use { it ->
-                    val reader = BufferedReader(InputStreamReader(it))
-                    val json = StringBuilder()
-                    var line: String?
-                    while (reader.readLine().also { line = it } != null) {
-                        json.append(line)
-                    }
-
-                    val module = Mapper.parse<ModuleModel>(json.toString())
-                    module.id = availableModules.count() + loadedModules.count()
-                    if (selectedModule == null && module.hashCode() == preferenceHandler.selectedModule) {
-                        selectedModule = module
-                    }
-                    bloomFilter.put(module.hashCode())
-                    loadedModules += module
+                val module = Mapper.parse<ModuleModel>(json.toString())
+                module.id = availableModules.count() + loadedModules.count()
+                if (selectedModule == null && module.hashCode() == preferenceHandler.selectedModule) {
+                    selectedModule = module
                 }
+                bloomFilter.put(module.hashCode())
+                loadedModules += module
             }
 
             availableModules += loadedModules
