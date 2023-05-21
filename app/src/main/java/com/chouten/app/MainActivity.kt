@@ -46,19 +46,22 @@ class MainActivity : ComponentActivity() {
             intent?.action -> {
                 Log.d("INTENT", "$intent")
                 // Enqueue the Resource
-                when (intent.type) {
-                    "text/plain" -> ModuleLayer.enqueueRemoteInstall(
-                        this, intent
-                    )
+                lifecycleScope.launch {
+                    when (intent.type) {
+                        "text/plain" -> ModuleLayer.enqueueRemoteInstall(
+                            this@MainActivity, intent
+                        )
 
-                    "application/json" -> ModuleLayer.enqueueFileInstall(
-                        intent, applicationContext
-                    )
+                        "application/json" ->
+                            ModuleLayer.enqueueFileInstall(
+                                intent, this@MainActivity
+                            )
 
-                    else -> Log.d(
-                        "IMPORT",
-                        "Import type `${intent.type}` not yet implemented"
-                    )
+                        else -> Log.d(
+                            "IMPORT",
+                            "Import type `${intent.type}` not yet implemented"
+                        )
+                    }
                 }
             }
         }

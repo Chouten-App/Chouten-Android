@@ -17,12 +17,14 @@ import androidx.core.net.toUri
 import com.chouten.app.*
 import com.google.common.hash.BloomFilter
 import com.google.common.hash.Funnels
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
+import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
+import java.io.InputStreamReader
 
 class ModuleDataLayer() {
 
@@ -48,39 +50,35 @@ class ModuleDataLayer() {
         return true
     }
 
-    fun enqueueRemoteInstall(context: Context, url: String) {
-        // TODO: Make async / use separate service
-        runBlocking {
-            try {
-                val module = client.get(url).parsed<ModuleModel>()
+    suspend fun enqueueRemoteInstall(context: Context, url: String) {
+        try {
+            val module = client.get(url).parsed<ModuleModel>()
 
-                // At the moment we will not allow installs which are the same.
-                // In the future, we may allow modules which have different versions
-                // to be installed side by side.
-                if (isModuleExisting(module)) throw IOException("Module already installed")
+            // At the moment we will not allow installs which are the same.
+            // In the future, we may allow modules which have different versions
+            // to be installed side by side.
+            if (isModuleExisting(module)) throw IOException("Module already installed")
 
-                addModule(context, module)
-            } catch (e: Exception) {
-                PrimaryDataLayer.enqueueSnackbar(
-                    SnackbarVisualsWithError(
-                        e.localizedMessage ?: "Could not download module",
-                        true,
-                        // TODO: Add more details on button click
-                    )
+            addModule(context, module)
+        } catch (e: Exception) {
+            PrimaryDataLayer.enqueueSnackbar(
+                SnackbarVisualsWithError(
+                    e.localizedMessage ?: "Could not download module",
+                    true,
+                    // TODO: Add more details on button click
                 )
-                e.localizedMessage?.let { Log.e("MODULE INSTALL", it) }
-            }
+            )
+            e.localizedMessage?.let { Log.e("MODULE INSTALL", it) }
         }
     }
 
-    fun enqueueRemoteInstall(context: Context, intent: Intent) {
+    suspend fun enqueueRemoteInstall(context: Context, intent: Intent) {
         val url = intent.getStringExtra(Intent.EXTRA_TEXT)
         if (!URLUtil.isNetworkUrl(url) || url == null) return
         enqueueRemoteInstall(context, url)
     }
 
-    fun enqueueFileInstall(intent: Intent, context: Context) {
-
+    suspend fun enqueueFileInstall(intent: Intent, context: Context) {
         if (intent.clipData != null) {
             val clipdata: ClipData = intent.clipData!!
             val itemCount: Int = clipdata.itemCount
@@ -92,11 +90,12 @@ class ModuleDataLayer() {
                 val reader = BufferedReader(InputStreamReader(inputStream))
                 val json = StringBuilder()
                 var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    json.append(line)
+                withContext(Dispatchers.IO) {
+                    while (reader.readLine().also { line = it } != null) {
+                        json.append(line)
+                    }
+                    inputStream?.close()
                 }
-
-                inputStream?.close()
 
                 try {
                     val module = Mapper.parse<ModuleModel>(json.toString())
@@ -254,10 +253,39 @@ class ModuleDataLayer() {
         }
     }
 
-    fun addModule(context: Context, module: ModuleModel) {
-        saveModule(context, module)
-        module.id = availableModules.count()
-        bloomFilter.put(module.hashCode())
-        availableModules += module
+    suspend fun addModule(context: Context, module: ModuleModel) {
+
+        // Can the app install the module?
+        var hasPermission = false
+        // Has the user dismissed/accepted the permission?
+        var hasUserPermission = false
+
+        PrimaryDataLayer.enqueueAlert(
+            AlertData(
+                "Install ${module.name}?",
+                "Are you sure want to install ${module.name}?\nWe cannot guarantee the safety of this module, so install at your own risk.",
+                "Install",
+                {
+                    hasUserPermission = true
+                    hasPermission = true
+                },
+                "Cancel",
+                {
+                    hasUserPermission = true
+                }
+            )
+        )
+
+        // We want to suspend until the user has accepted or declined the alert
+        withContext(Dispatchers.IO) {
+            while (!hasUserPermission) {
+                delay(100)
+            }
+            if (!hasPermission) return@withContext
+            saveModule(context, module)
+            module.id = availableModules.count()
+            bloomFilter.put(module.hashCode())
+            availableModules += module
+        }
     }
 }
