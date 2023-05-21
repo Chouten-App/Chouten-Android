@@ -20,6 +20,10 @@ object AppPaths {
     val addedDirs = mutableMapOf<String, File>()
 }
 
+object RequestCodes {
+    const val allowAllFiles = 1
+}
+
 object Preferences {
     const val SelectedModule = "SelectedModule"
 

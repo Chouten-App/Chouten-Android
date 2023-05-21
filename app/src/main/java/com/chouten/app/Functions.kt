@@ -1,14 +1,23 @@
 package com.chouten.app
 
 import android.content.Context
+import android.content.Intent
 import android.net.NetworkCapabilities.*
+import android.net.Uri
 import android.os.*
+import android.provider.Settings
 import android.util.Log
 import android.view.*
 import android.view.animation.*
 import android.widget.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.view.*
+import com.chouten.app.data.AlertData
 import com.chouten.app.data.AppPaths
+import com.chouten.app.data.RequestCodes
 import com.chouten.app.data.SnackbarVisualsWithError
 import java.io.*
 import java.util.*
@@ -61,5 +70,49 @@ fun createAppDirectory() {
 
         e.localizedMessage?.let { Log.e("CHOUTEN", it) }
         e.printStackTrace()
+    }
+}
+
+fun checkPermissions() {
+    val requiresFilesPerms = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        !Environment.isExternalStorageManager()
+    } else {
+        // Check for storage permissions
+        val permission = ActivityCompat.checkSelfPermission(
+            App,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+        permission != android.content.pm.PackageManager.PERMISSION_GRANTED
+    }
+
+    if (requiresFilesPerms) {
+        PrimaryDataLayer.enqueueAlert(
+            AlertData(
+                title = "Grant Permissions",
+                message = "Chouten needs access to all files to function properly.",
+                confirmButtonText = "Grant Permissions",
+                confirmButtonAction = {
+                    startActivityForResult(
+                        App,
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+                                data = Uri.parse("package:${App.packageName}")
+                            }
+                        } else {
+                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts(
+                                    "package",
+                                    App.packageName,
+                                    null
+                                )
+                            }
+                        },
+                        RequestCodes.allowAllFiles,
+                        null
+                    )
+                },
+                icon = Icons.Filled.Settings
+            )
+        )
     }
 }

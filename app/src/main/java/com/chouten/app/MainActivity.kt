@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
         initializeRepositories()
         preferenceHandler = PreferenceManager(this)
 
+        checkPermissions()
         createAppDirectory()
         lifecycleScope.launch(Dispatchers.IO) {
             ModuleLayer.loadModules(applicationContext)
