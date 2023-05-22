@@ -102,13 +102,12 @@ fun Navigation(navController: NavHostController) {
             // If the InfoPageViewModel is for a different title, we create a new one
             if (infoVm?.getUrl() != url) {
                 println("The urls are different. The old one is ${infoVm?.getUrl()} and the new one is $url")
-                infoVm?.destroy()
                 ViewModels.infoVm =
                     InfoPageViewModel(navController.context, url, title)
             }
 
             infoVm?.let { viewModel ->
-                InfoPage(viewModel)
+                InfoPage(viewModel, navController)
             }
         }
         navigation(
