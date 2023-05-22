@@ -42,6 +42,11 @@ import com.chouten.app.ui.views.settingsPage.MorePage
 import com.chouten.app.ui.views.settingsPage.screens.AppearancePage
 import com.chouten.app.ui.views.settingsPage.screens.LogPage
 
+object ViewModels {
+    var searchVm: SearchPageViewModel? = null
+    var infoVm: InfoPageViewModel? = null
+}
+
 @Composable
 fun Navigation(navController: NavHostController) {
     val backStack by navController.currentBackStackEntryAsState()
@@ -56,21 +61,26 @@ fun Navigation(navController: NavHostController) {
             else -> true
         }
 
-        val searchPageViewModel =
-            SearchPageViewModel(navController.context, WebviewHandler())
-        var infoVm: InfoPageViewModel? = null
+        val searchVm =
+            ViewModels.searchVm
+        var infoVm = ViewModels.infoVm
 
         composable(
             route = Screen.HomePage.route,
         ) {
             HomePage(navController.context)
-            infoVm = null
         }
         composable(
             route = Screen.SearchPage.route
         ) {
-            SearchPage(navController, searchPageViewModel)
-            infoVm = null
+            if (searchVm == null) {
+                ViewModels.searchVm =
+                    SearchPageViewModel(navController.context, WebviewHandler())
+            }
+            searchVm?.let {
+                SearchPage(navController, it)
+            }
+
         }
         composable(
             // The route will be dynamic, with params:
@@ -88,8 +98,12 @@ fun Navigation(navController: NavHostController) {
             val title = it.arguments?.getString("title") ?: ""
             val url = it.arguments?.getString("url") ?: ""
 
-            if (infoVm == null) {
-                infoVm = InfoPageViewModel(navController.context, url, title)
+            // If the InfoPageViewModel is for a different title, we create a new one
+            if (infoVm?.getUrl() != url) {
+                println("The urls are different. The old one is ${infoVm?.getUrl()} and the new one is $url")
+                infoVm?.destroy()
+                ViewModels.infoVm =
+                    InfoPageViewModel(navController.context, url, title)
             }
 
             infoVm?.let { viewModel ->
