@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
 import com.chouten.app.data.AppThemeType
+import com.chouten.app.data.CustomDNS
 import com.chouten.app.data.Preferences
 import kotlin.reflect.KProperty
 
@@ -31,6 +32,11 @@ class PreferenceManager(context: Context) :
     var themeType by enumPreference(
         Preferences.Settings.themeType.preference.first,
         AppThemeType.SYSTEM
+    )
+
+    var dns by enumPreference(
+        Preferences.Settings.dns.preference.first,
+        CustomDNS.NONE
     )
 }
 

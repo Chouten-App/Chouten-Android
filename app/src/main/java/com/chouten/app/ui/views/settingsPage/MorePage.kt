@@ -47,6 +47,20 @@ fun MorePage(
             )
             SettingsItem(
                 modifier = Modifier.clickable {
+                    navHost.navigate(Screen.NetworkPage.route)
+                },
+                icon = {},
+                text = { Text(stringResource(R.string.network__title)) },
+                secondaryText = { Text(stringResource(R.string.network__desc)) },
+                trailing = {
+                    Icon(
+                        Icons.Default.ChevronRight,
+                        stringResource(R.string.network__title)
+                    )
+                },
+            )
+            SettingsItem(
+                modifier = Modifier.clickable {
                     navHost.navigate(Screen.LogPage.route)
                 },
                 icon = {},

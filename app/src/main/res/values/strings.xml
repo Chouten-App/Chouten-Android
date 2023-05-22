@@ -37,9 +37,15 @@
     <string name="appearance__title">Appearance</string>
     <string name="appearance__desc">Light/Dark/System</string>
 
+    <string name="network__title">Network</string>
+    <string name="network__desc">Network Settings</string>
+    <string name="dns__title">DNS</string>
+    <string name="dns__desc">Change DNS</string>
+
     <string name="log__title">View Logs</string>
     <string name="log__desc">View module logs</string>
     <string name="log__action_clear">Clear Logs</string>
     <string name="log__placeholder">No logs... Yay?</string>
+
 
 </resources>

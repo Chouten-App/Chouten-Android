@@ -39,6 +39,11 @@ object Preferences {
             R.string.appearance__desc,
             preference = Pair("themeType", Enum),
         )
+        val dns = ChoutenSetting(
+            R.string.dns__title,
+            R.string.dns__desc,
+            preference = Pair("dns", String),
+        )
     }
 }
 
@@ -61,13 +66,17 @@ object NavigationItems {
         activeIcon = Icons.Filled.MoreHoriz,
         inactiveIcon = Icons.Outlined.MoreHoriz
     )
-    val LogPage = BottomNavItem(
-        name = R.string.settings_submenu_log,
-        route = "more/log",
-    )
     val AppearancePage = BottomNavItem(
         name = R.string.appearance__title,
         route = "more/appearance",
+    )
+    val NetworkPage = BottomNavItem(
+        name = R.string.network__title,
+        route = "more/network",
+    )
+    val LogPage = BottomNavItem(
+        name = R.string.settings_submenu_log,
+        route = "more/log",
     )
 }
 
@@ -75,6 +84,17 @@ enum class AppThemeType(val printable: String) {
     LIGHT("Light"),
     DARK("Dark"),
     SYSTEM("System");
+
+    override fun toString(): String {
+        return this.printable
+    }
+}
+
+enum class CustomDNS(val printable: String) {
+    NONE("None"),
+    CLOUDFLARE("Cloudflare"),
+    GOOGLE("Google"),
+    ADGUARD("AdGuard");
 
     override fun toString(): String {
         return this.printable

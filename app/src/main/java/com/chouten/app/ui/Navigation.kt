@@ -41,6 +41,7 @@ import com.chouten.app.ui.views.searchPage.SearchPageViewModel
 import com.chouten.app.ui.views.settingsPage.MorePage
 import com.chouten.app.ui.views.settingsPage.screens.AppearancePage
 import com.chouten.app.ui.views.settingsPage.screens.LogPage
+import com.chouten.app.ui.views.settingsPage.screens.NetworkPage
 
 object ViewModels {
     var searchVm: SearchPageViewModel? = null
@@ -130,6 +131,17 @@ fun Navigation(navController: NavHostController) {
                     navController = navController
                 ) {
                     AppearancePage()
+                }
+            }
+
+            composable(
+                route = Screen.NetworkPage.route
+            ) {
+                Subpage(
+                    title = stringResource(NavigationItems.NetworkPage.name),
+                    navController = navController
+                ) {
+                    NetworkPage()
                 }
             }
 

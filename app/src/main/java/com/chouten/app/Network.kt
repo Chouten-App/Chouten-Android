@@ -3,6 +3,7 @@ package com.chouten.app
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import com.chouten.app.data.CustomDNS
 import dev.brahmkshatriya.nicehttp.Requests
 import dev.brahmkshatriya.nicehttp.ResponseParser
 import dev.brahmkshatriya.nicehttp.addGenericDns
@@ -37,7 +38,7 @@ lateinit var okHttpClient: OkHttpClient
 lateinit var client: Requests
 
 fun initializeNetwork(context: Context) {
-    val dns = loadData<Int>("settings_dns", context) //TODO: make this a setting
+    val dns = preferenceHandler.dns
     cache = Cache(
         File(context.cacheDir, "http_cache"),
         5 * 1024L * 1024L // 5 MiB
@@ -48,9 +49,10 @@ fun initializeNetwork(context: Context) {
         .cache(cache)
         .apply {
             when (dns) {
-                1 -> addGoogleDns()
-                2 -> addCloudFlareDns()
-                3 -> addAdGuardDns()
+                CustomDNS.GOOGLE -> addGoogleDns()
+                CustomDNS.CLOUDFLARE -> addCloudFlareDns()
+                CustomDNS.ADGUARD -> addAdGuardDns()
+                else -> {}
             }
         }
         .build()

@@ -21,11 +21,11 @@ lateinit var App: MainActivity
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        preferenceHandler = PreferenceManager(this)
 
         App = this@MainActivity
         initializeNetwork(applicationContext)
         initializeRepositories()
-        preferenceHandler = PreferenceManager(this)
 
         checkPermissions()
         createAppDirectory()
