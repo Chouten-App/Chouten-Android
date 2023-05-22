@@ -19,7 +19,7 @@ import java.net.URLDecoder
 
 class InfoPageViewModel(
     context: Context,
-    private var url: String,
+    private val url: String,
     private var title: String
 ) : ViewModel() {
 
