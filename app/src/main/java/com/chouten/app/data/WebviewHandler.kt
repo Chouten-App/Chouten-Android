@@ -85,6 +85,7 @@ class WebviewHandler() {
                 counter += 1
                 responseCode = _response.code
                 response = _response.body.bytes()
+                if (_response.isSuccessful && responseCode == 200) break
             }
             response
         } catch (e: Exception) {
