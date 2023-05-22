@@ -63,7 +63,7 @@ fun Navigation(navController: NavHostController) {
 
         val searchVm =
             ViewModels.searchVm
-        var infoVm = ViewModels.infoVm
+        val infoVm = ViewModels.infoVm
 
         composable(
             route = Screen.HomePage.route,
@@ -77,7 +77,7 @@ fun Navigation(navController: NavHostController) {
                 ViewModels.searchVm =
                     SearchPageViewModel(navController.context, WebviewHandler())
             }
-            searchVm?.let {
+            ViewModels.searchVm?.let {
                 SearchPage(navController, it)
             }
 
