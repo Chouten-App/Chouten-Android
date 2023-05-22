@@ -120,7 +120,6 @@ fun Navigation(navController: NavHostController) {
                 MorePage(
                     navController
                 )
-                infoVm = null
             }
 
             composable(
