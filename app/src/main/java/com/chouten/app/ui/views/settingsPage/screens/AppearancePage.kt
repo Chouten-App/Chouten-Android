@@ -3,6 +3,7 @@ package com.chouten.app.ui.views.settingsPage.screens
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
@@ -36,11 +37,17 @@ import kotlin.reflect.full.declaredMemberProperties
 @Composable
 fun AppearancePage() {
     val context = LocalContext.current
-    val themes =
-        Pair(dynamicLightColorScheme(context), dynamicDarkColorScheme(context))
     val surfaceContainer =
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+
     val exportJson = rememberSaveable {
+        if (Build.VERSION.SDK_INT < 31) return@rememberSaveable ""
+        val themes =
+            Pair(
+                dynamicLightColorScheme(context),
+                dynamicDarkColorScheme(context)
+            )
+
         val getColours: ((ColorScheme) -> Map<String, String>) = { theme ->
             theme::class.declaredMemberProperties.associate { member ->
                 val hexColor =
@@ -63,7 +70,12 @@ fun AppearancePage() {
                 Integer.toHexString(surfaceContainer.toArgb()).drop(2)
         }
 
-        json.encodeToString(mapOf("light" to lightPairs, "dark" to darkPairs))
+        json.encodeToString(
+            mapOf(
+                "light" to lightPairs,
+                "dark" to darkPairs
+            )
+        )
     }
 
     Column {
