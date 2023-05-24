@@ -30,7 +30,8 @@ data class ModuleModel(
     @Serializable
     data class ModuleCode(
         val search: List<ModuleCodeblock>,
-        val info: List<ModuleCodeblock>
+        val info: List<ModuleCodeblock>,
+        val mediaConsume: List<ModuleCodeblock>,
     ) {
         @Serializable
         data class ModuleCodeblock(
@@ -116,5 +117,37 @@ data class InfoResult(
         val title: String?,
         val description: String?,
         val image: String?,
+    )
+}
+
+@Serializable
+data class WatchResult(
+    val sources: List<Source>,
+    val subtitles: List<Subtitles>,
+    val skips: List<SkipTimes>
+) {
+    @Serializable
+    data class Server(
+        val name: String,
+        val url: String,
+    )
+
+    @Serializable
+    data class Source(
+        val file: String,
+        val type: String,
+    )
+
+    @Serializable
+    data class Subtitles(
+        val url: String,
+        val language: String,
+    )
+
+    @Serializable
+    data class SkipTimes(
+        val start: Double,
+        val end: Double,
+        val type: String
     )
 }

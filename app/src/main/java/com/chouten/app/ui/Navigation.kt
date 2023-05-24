@@ -42,10 +42,13 @@ import com.chouten.app.ui.views.settingsPage.MorePage
 import com.chouten.app.ui.views.settingsPage.screens.AppearancePage
 import com.chouten.app.ui.views.settingsPage.screens.LogPage
 import com.chouten.app.ui.views.settingsPage.screens.NetworkPage
+import com.chouten.app.ui.views.watchPage.WatchPage
+import com.chouten.app.ui.views.watchPage.WatchPageViewModel
 
 object ViewModels {
     var searchVm: SearchPageViewModel? = null
     var infoVm: InfoPageViewModel? = null
+    var watchVm: WatchPageViewModel? = null
 }
 
 @Composable
@@ -58,7 +61,9 @@ fun Navigation(navController: NavHostController) {
         startDestination = Screen.HomePage.route
     ) {
         PrimaryDataLayer.isNavigationShown = when (currentRoute) {
-            "info/{title}/{url}" -> false
+            "info/{title}/{url}",
+            "watch/{title}/{name}/{url}" -> false
+
             else -> true
         }
 
@@ -110,6 +115,35 @@ fun Navigation(navController: NavHostController) {
                 InfoPage(viewModel, navController)
             }
         }
+
+        composable(
+            route = "watch/{title}/{name}/{url}",
+            arguments = listOf(
+                navArgument("title") {
+                    type = NavType.StringType
+                },
+                navArgument("name") {
+                    type = NavType.StringType
+                },
+                navArgument("url") {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            val title = it.arguments?.getString("title") ?: ""
+            val name = it.arguments?.getString("name") ?: ""
+            val url = it.arguments?.getString("url") ?: ""
+
+            if (ViewModels.watchVm?.url != url) {
+                ViewModels.watchVm =
+                    WatchPageViewModel(navController.context, title, name, url)
+            }
+
+            ViewModels.watchVm?.let { viewModel ->
+                WatchPage(viewModel)
+            }
+        }
+
         navigation(
             route = Screen.MorePage.route,
             startDestination = "more/default"

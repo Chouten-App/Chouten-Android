@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -51,6 +52,7 @@ import androidx.navigation.NavController
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import com.valentinilk.shimmer.shimmer
+import java.net.URLEncoder
 
 @Composable
 fun InfoPage(
@@ -206,8 +208,7 @@ fun InfoPage(
                             onClickLabel = "Expand Description",
                             role = Role.Switch
                         ) {
-                            isDescriptionBoxExpanded =
-                                !isDescriptionBoxExpanded
+                            isDescriptionBoxExpanded = !isDescriptionBoxExpanded
                         }
                         .animateContentSize(),
                     color = MaterialTheme.colorScheme.onSurface.copy(0.7F),
@@ -261,7 +262,7 @@ fun InfoPage(
                     Modifier.heightIn(max = 600.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    items(items = provider.infoResults[0]) { item ->
+                    itemsIndexed(items = provider.infoResults[0]) { index, item ->
                         Column(
                             Modifier
                                 .fillMaxWidth()
@@ -271,7 +272,26 @@ fun InfoPage(
                                         3.dp
                                     )
                                 )
-                        ) {
+                                .clickable {
+                                    if (provider.mediaTypeText.lowercase() == "episodes") {
+                                        val titleEncoded = URLEncoder.encode(
+                                            provider.getTitle(),
+                                            "UTF-8"
+                                        )
+                                        val episodeEncoded = URLEncoder.encode(
+                                            item.title ?: "Episode ${index + 1}",
+                                            "UTF-8"
+                                        )
+                                        val urlEncoded = URLEncoder.encode(
+                                            item.url,
+                                            "UTF-8"
+                                        )
+
+                                        navController.navigate("watch/${titleEncoded}/${episodeEncoded}/${urlEncoded}")
+                                    } else {
+                                        throw Error("Reading not yet implemented")
+                                    }
+                                }) {
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(
                                     12.dp
@@ -289,8 +309,7 @@ fun InfoPage(
                                         contentScale = ContentScale.Crop,
                                         alignment = Alignment.Center,
                                         contentDescription = "${item.title} Thumbnail",
-
-                                        ),
+                                    ),
                                     loading = {
                                         Box(
                                             Modifier
@@ -320,8 +339,7 @@ fun InfoPage(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(
-                                                bottom = 6.dp,
-                                                end = 6.dp
+                                                bottom = 6.dp, end = 6.dp
                                             )
                                     ) {
                                         Text(
