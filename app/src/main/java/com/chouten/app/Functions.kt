@@ -116,3 +116,5 @@ fun checkPermissions() {
         )
     }
 }
+
+fun Int.toBoolean() = this == 1

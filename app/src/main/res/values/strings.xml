@@ -4,8 +4,11 @@
     <string name="module_selection_description">Select one of the modules below to provide this app with data:</string>
     <string name="no_module_selected">No Module</string>
     <string name="import_module_header">Import Module</string>
+    <string name="import_theme_header">Import Theme</string>
     <string name="import_module_desc">Import Module from URL</string>
     <string name="import_module_button_confirm">Import Module</string>
+    <string name="import_module_description">Import Module or a Repo from a URL. Please make sure you trust the URL.</string>
+    <string name="import_theme_description">Import Theme or a Repo from a URL. Please make sure you trust the URL.</string>
 
     <string name="search_bar_default">Search for Content</string>
     <string name="search_bar_with">Search with</string>
@@ -17,6 +20,7 @@
     <string name="confirm">Confirm</string>
     <string name="confirm_selection">Confirm Selection</string>
     <string name="cancel">Cancel</string>
+    <string name="import_module">Import</string>
 
     <!-- Navigation Bar Titles -->
     <string name="navbar_home">Home</string>
