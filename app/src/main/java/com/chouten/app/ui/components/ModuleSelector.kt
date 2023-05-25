@@ -1,33 +1,39 @@
 package com.chouten.app.ui.components
 
 import android.content.Context
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Help
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -35,15 +41,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -55,10 +61,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -70,6 +76,7 @@ import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
+
 @OptIn(
     ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class
 )
@@ -79,16 +86,15 @@ fun ModuleSelectorContainer(
     modifier: Modifier = Modifier,
     children: @Composable () -> Unit,
 ) {
-    val sheetState = androidx.compose.material.rememberModalBottomSheetState(
+    val sheetState = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden,
+        confirmValueChange = { it != ModalBottomSheetValue.Expanded },
+        skipHalfExpanded = true,
     )
 
     var importPopupState by rememberSaveable { mutableStateOf(false) }
-    var importUrl by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(
-            TextFieldValue("")
-        )
-    }
+    var height by remember { mutableStateOf(48.dp) }
+    var isAnimated by remember { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
     val noModuleSelected = stringResource(R.string.no_module_selected)
@@ -102,6 +108,7 @@ fun ModuleSelectorContainer(
                 verticalArrangement = Arrangement.SpaceEvenly,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .wrapContentHeight()
                     .padding(15.dp, 0.dp, 15.dp, 25.dp),
             ) {
                 Row(
@@ -126,9 +133,11 @@ fun ModuleSelectorContainer(
                     modifier = Modifier.fillMaxWidth(.8F)
                 )
                 Spacer(Modifier.height(20.dp))
-                ModuleImportButton {
+                ModuleImportButton(onClick = {
                     importPopupState = !importPopupState
-                }
+                    isAnimated = !isAnimated
+                }, isAnimated = isAnimated)
+
                 LazyColumn(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceEvenly,
@@ -173,58 +182,67 @@ fun ModuleSelectorContainer(
             Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            AnimatedVisibility(importPopupState) {
-                AlertDialog(onDismissRequest = {
-                    importPopupState = false
-                },
-                    title = { Text(stringResource(R.string.import_module_header)) },
-                    text = {
-                        OutlinedTextField(
-                            value = importUrl,
-                            onValueChange = { importUrl = it },
-                            label = { Text(stringResource(R.string.import_module_desc)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = MaterialTheme.shapes.medium,
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                            keyboardActions = KeyboardActions(onDone = {
-                                coroutineScope.launch {
-                                    ModuleLayer.enqueueRemoteInstall(
-                                        context,
-                                        importUrl.text
-                                    )
-                                    importUrl = TextFieldValue("")
-                                }
-                                importPopupState = false
-                            })
-                        )
-                    },
-                    confirmButton = {
-                        FilledTonalButton(colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                        ), onClick = {
-                            coroutineScope.launch {
-                                ModuleLayer.enqueueRemoteInstall(
-                                    context,
-                                    importUrl.text
-                                )
-                                importUrl = TextFieldValue("")
-                            }
-                            importPopupState = false
-                        }) {
-                            Text(stringResource(R.string.import_module_button_confirm))
-                        }
-                    })
+
+            // Expand the module import button in height to show a textfield and cancle and confirm buttons
+
+            if (importPopupState) {
+
             }
+
+//                AnimatedVisibility(importPopupState) {
+//
+//                AlertDialog(onDismissRequest = {
+//                    importPopupState = false
+//                },
+//                    title = { Text(stringResource(R.string.import_module_header)) },
+//                    text = {
+//                        OutlinedTextField(
+//                            value = importUrl,
+//                            onValueChange = { importUrl = it },
+//                            label = { Text(stringResource(R.string.import_module_desc)) },
+//                            modifier = Modifier.fillMaxWidth(),
+//                            shape = MaterialTheme.shapes.medium,
+//                            singleLine = true,
+//                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+//                            keyboardActions = KeyboardActions(onDone = {
+//                                coroutineScope.launch {
+//                                    ModuleLayer.enqueueRemoteInstall(
+//                                        context,
+//                                        importUrl.text
+//                                    )
+//                                    importUrl = TextFieldValue("")
+//                                }
+//                                importPopupState = false
+//                            })
+//                        )
+//                    },
+//                    confirmButton = {
+//                        FilledTonalButton(colors = ButtonDefaults.buttonColors(
+//                            containerColor = MaterialTheme.colorScheme.primary,
+//                            contentColor = MaterialTheme.colorScheme.onPrimary,
+//                        ), onClick = {
+//                            coroutineScope.launch {
+//                                ModuleLayer.enqueueRemoteInstall(
+//                                    context,
+//                                    importUrl.text
+//                                )
+//                                importUrl = TextFieldValue("")
+//                            }
+//                            importPopupState = false
+//                        }) {
+//                            Text(stringResource(R.string.import_module_button_confirm))
+//                        }
+//                    })
+//            }
 
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+            ,
             ) {
                 // We want the elevated button
                 // to "float" above the rest of the content
-                ExtendedFloatingActionButton(
+                FloatingActionButton(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(16.dp)
@@ -236,24 +254,17 @@ fun ModuleSelectorContainer(
                             } else sheetState.show()
                         }
                     },
-                    icon = {
-                        Icon(
-                            Icons.Default.ExpandMore,
-                            contentDescription = stringResource(R.string.module_selection_header),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    },
-                    text = {
-                        Text(
-                            text = ModuleLayer.selectedModule?.name
-                                ?: noModuleSelected,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        )
-                    },
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                )
+                ) {
+                    Text(
+                        text = ModuleLayer.selectedModule?.name
+                            ?: noModuleSelected,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
                 children()
             }
         }
@@ -359,15 +370,14 @@ fun ModuleChoice(
 }
 
 @Composable
-fun ModuleImportButton(onClick: () -> Unit) {
+fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
     val iconSize = 25
 
     Button(modifier = Modifier
         .fillMaxWidth(1F)
-        .height(65.dp)
-        .padding(vertical = 4.dp)
+        .height(if (isAnimated) 160.dp else 65.dp).animateContentSize(animationSpec = tween(1000))
         .dashedBorder(
-            1.dp, MaterialTheme.colorScheme.onPrimaryContainer, 10.dp
+            2.dp, MaterialTheme.colorScheme.onPrimaryContainer,10.dp
         ), colors = ButtonDefaults.buttonColors(
         containerColor = Color.Transparent,
         //                contentColor = foregroundColor
@@ -378,7 +388,7 @@ fun ModuleImportButton(onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
-                Icons.Default.Download,
+                Icons.Rounded.Download,
                 stringResource(R.string.module_selection_header),
                 modifier = Modifier
                     .size(iconSize.dp)
