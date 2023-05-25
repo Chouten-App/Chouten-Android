@@ -1,26 +1,20 @@
 package com.chouten.app.ui.components
 
 import android.content.Context
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -29,10 +23,8 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.rounded.Download
-import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -40,7 +32,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -61,10 +52,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -93,7 +82,6 @@ fun ModuleSelectorContainer(
     )
 
     var importPopupState by rememberSaveable { mutableStateOf(false) }
-    var height by remember { mutableStateOf(48.dp) }
     var isAnimated by remember { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
@@ -373,11 +361,15 @@ fun ModuleChoice(
 fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
     val iconSize = 25
 
+    val currentHeight by animateDpAsState(
+        targetValue = if (isAnimated) 160.dp else 65.dp, animationSpec = tween(1000)
+    )
+
     Button(modifier = Modifier
         .fillMaxWidth(1F)
-        .height(if (isAnimated) 160.dp else 65.dp).animateContentSize(animationSpec = tween(1000))
+        .height(currentHeight)
         .dashedBorder(
-            2.dp, MaterialTheme.colorScheme.onPrimaryContainer,10.dp
+            2.dp, MaterialTheme.colorScheme.onPrimaryContainer, 10.dp
         ), colors = ButtonDefaults.buttonColors(
         containerColor = Color.Transparent,
         //                contentColor = foregroundColor
