@@ -35,7 +35,7 @@ fun SegmentedControl(
     defaultSelectedItemIndex: Int = 0,
     useFixedWidth: Boolean = false,
     itemWidth: Dp = 120.dp,
-    cornerRadius : Int = 10,
+    cornerRadius: Int = 10,
     color: Color = MaterialTheme.colorScheme.onPrimaryContainer,
     onItemSelection: (selectedItemIndex: Int) -> Unit
 ) {
@@ -59,12 +59,13 @@ fun SegmentedControl(
                                 .offset(0.dp, 0.dp)
                                 .zIndex(if (selectedIndex.value == index) 1f else 0f)
                         }
-                    } else -> {
-                        if (useFixedWidth)
-                            Modifier
-                                .width(itemWidth)
-                                .offset((-1 * index).dp, 0.dp)
-                                .zIndex(if (selectedIndex.value == index) 1f else 0f)
+                    }
+
+                    else -> {
+                        if (useFixedWidth) Modifier
+                            .width(itemWidth)
+                            .offset((-1 * index).dp, 0.dp)
+                            .zIndex(if (selectedIndex.value == index) 1f else 0f)
                         else Modifier
                             .wrapContentSize()
                             .offset((-1 * index).dp, 0.dp)
@@ -124,7 +125,9 @@ fun SegmentedControl(
                 Text(
                     text = if (selectedIndex.value == index) "✓ $item" else item,
                     fontWeight = FontWeight.Normal,
-                    color = if (selectedIndex.value == index) MaterialTheme.colorScheme.inverseOnSurface else color.copy(alpha = 0.9f),
+                    color = if (selectedIndex.value == index) MaterialTheme.colorScheme.inverseOnSurface else color.copy(
+                        alpha = 0.9f
+                    ),
                 )
             }
         }
