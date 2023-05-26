@@ -1,6 +1,7 @@
 package com.chouten.app.ui.components
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
@@ -72,10 +73,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.chouten.app.ModuleLayer
 import com.chouten.app.R
+import com.chouten.app.data.LogEntry
 import com.chouten.app.toBoolean
 import com.chouten.app.ui.theme.dashedBorder
+import com.chouten.app.ui.views.settingsPage.screens.LogEntryCard
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -390,71 +394,21 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
             .dashedBorder(
                 2.dp, MaterialTheme.colorScheme.onPrimaryContainer, 10.dp
             ),
-    ){
-            if (!isAnimated) {
-                Button(modifier = Modifier
-                    .fillMaxWidth(1F)
-                    .height(65.dp),
+    ) {
+        if (!isAnimated) {
+            Button(modifier = Modifier
+                .fillMaxWidth(1F)
+                .height(65.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
                 ),
                 shape = RoundedCornerShape(12.dp),
                 onClick = onClick,
                 content = {
-                Row(
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        Icons.Rounded.Download,
-                        stringResource(R.string.module_selection_header),
-                        modifier = Modifier
-                            .size(iconSize.dp)
-                            .clip(CircleShape),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Column {
-                        Text(
-                            stringResource(R.string.import_module_header),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Column {
-                            Text(
-                                stringResource(R.string.import_module_desc),
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-            })
-            } else {
-                val interactionSource = remember { MutableInteractionSource() }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth(1F)
-                        .height(360.dp)
-                        .padding(15.dp),
-                    horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.Top
-                ) {
                     Row(
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(
-                                interactionSource = interactionSource,
-                                indication = null
-                            ) { onClick() }
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(
                             Icons.Rounded.Download,
@@ -465,12 +419,62 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            stringResource(if (!importType.toBoolean()) R.string.import_module_header else R.string.import_theme_header),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 17.sp
-                        )
+                        Column {
+                            Text(
+                                stringResource(R.string.import_module_header),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Column {
+                                Text(
+                                    stringResource(R.string.import_module_desc),
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+                })
+        } else {
+            val interactionSource = remember { MutableInteractionSource() }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(1F)
+                    .height(360.dp)
+                    .padding(15.dp),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Top
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null
+                        ) { onClick() }
+                ) {
+                    Icon(
+                        Icons.Rounded.Download,
+                        stringResource(R.string.module_selection_header),
+                        modifier = Modifier
+                            .size(iconSize.dp)
+                            .clip(CircleShape),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        stringResource(if (!importType.toBoolean()) R.string.import_module_header else R.string.import_theme_header),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp
+                    )
 //                        Column {
 //                            Text(
 //                                stringResource(R.string.import_module_header),
@@ -489,105 +493,128 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
 //                                )
 //                            }
 //                        }
-                    }
+                }
 
-                    Text(text = stringResource(if (importType.toBoolean()) R.string.import_module_description else R.string.import_theme_description),
-                        color = MaterialTheme.colorScheme.onSurface.copy(0.7F),
-                        fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 15.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 10.dp, start = 5.dp)
-                    )
+                Text(
+                    text = stringResource(if (importType.toBoolean()) R.string.import_module_description else R.string.import_theme_description),
+                    color = MaterialTheme.colorScheme.onSurface.copy(0.7F),
+                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 15.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 10.dp, start = 5.dp)
+                )
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth().wrapContentHeight().padding(top = 10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .padding(top = 10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
 
-                    ) {
-                        SegmentedControl(items = selectors, cornerRadius = 50, itemWidth = 140.dp, useFixedWidth = true, onItemSelection = {
+                ) {
+                    SegmentedControl(
+                        items = selectors,
+                        cornerRadius = 50,
+                        itemWidth = 140.dp,
+                        useFixedWidth = true,
+                        onItemSelection = {
                             when (it) {
                                 0 -> importType = 0
                                 1 -> importType = 1
                             }
-                        } )
-                        OutlinedTextField(
-                            value = importFromUrlText,
-                            label = { Text(text = "Import from URL") },
-                            onValueChange = {
-                                importFromUrlText = it
-                            }
-                        )
-                        OutlinedTextField(
-                            value = fileNameText,
-                            label = { Text(text = "Filename") },
-                            onValueChange = {
-                                fileNameText = it
-                            }
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(),
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.End,
-                    ) {
-                        Button(
-                            onClick = onClick,
-                            colors = ButtonDefaults.buttonColors(
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                containerColor = Color.Transparent
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(),
-                            modifier = Modifier
-                                .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
-                                .height(30.dp)
-                                .width(75.dp)
-                        ) {
-                            Text(
-                                stringResource(R.string.cancel),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                modifier = Modifier.clickable(
-                                    interactionSource = interactionSource,
-                                    indication = null
-                                ) { onClick() }
-                            )
+                        })
+                    OutlinedTextField(
+                        value = importFromUrlText,
+                        label = { Text(text = "Import from URL") },
+                        onValueChange = {
+                            importFromUrlText = it
                         }
-
-                        Button(
-                            onClick = {},
-                            colors = ButtonDefaults.buttonColors(
-                                contentColor = MaterialTheme.colorScheme.onPrimary,
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(),
-                            modifier = Modifier
-                                .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
-                                .height(30.dp)
-                                .width(75.dp)
-
-                        ) {
-                            Text(
-                                stringResource(R.string.import_module),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                // using Modifier.clickable() to remove ripple effect
-                                modifier = Modifier.clickable(
-                                    interactionSource = interactionSource,
-                                    indication = null
-                                ) {/*TODO: import module */}
-                            )
+                    )
+                    OutlinedTextField(
+                        value = fileNameText,
+                        label = { Text(text = "Filename") },
+                        onValueChange = {
+                            fileNameText = it
                         }
-                    }
-
+                    )
                 }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(),
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    Button(
+                        onClick = onClick,
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            containerColor = Color.Transparent
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(),
+                        modifier = Modifier
+                            .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
+                            .height(35.dp)
+                            .width(75.dp)
+                    ) {
+                        Text(
+                            stringResource(R.string.cancel),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            modifier = Modifier.clickable(
+                                interactionSource = interactionSource,
+                                indication = null
+                            ) { onClick() }
+                        )
+                    }
+
+                    Button(
+                        onClick = {
+                            // TODO: Make a snackbar for this instead of a println
+                            if (importFromUrlText.text.isEmpty() || fileNameText.text.isEmpty()) println(
+                                "Import URL or Filename is empty!"
+                            )
+                            when (importType) {
+                                0 -> {
+                                    // TODO: import module from URL
+                                }
+                                1 -> {
+                                    println("Importing theme from URL is not supported yet!")
+                                }
+                            }
+
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(),
+                        modifier = Modifier
+                            .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
+                            .height(35.dp)
+                            .width(75.dp)
+
+                    ) {
+                        Text(
+                            stringResource(R.string.import_module),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            // using Modifier.clickable() to remove ripple effect
+                            modifier = Modifier.clickable(
+                                interactionSource = interactionSource,
+                                indication = null
+                            ) {
+                            }
+                        )
+                    }
+                }
+
             }
         }
+    }
 }

@@ -127,7 +127,7 @@ fun SegmentedControl(
                 Text(
                     text = if (selectedIndex.value == index) "✓ $item" else item,
                     fontWeight = FontWeight.Normal,
-                    color = if (selectedIndex.value == index) Color.White else color.copy(alpha = 0.9f),
+                    color = if (selectedIndex.value == index) MaterialTheme.colorScheme.inverseOnSurface else color.copy(alpha = 0.9f),
                 )
             }
         }
