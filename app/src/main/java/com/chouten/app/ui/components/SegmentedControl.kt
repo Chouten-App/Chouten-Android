@@ -1,18 +1,25 @@
 package com.chouten.app.ui.components
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -122,13 +129,28 @@ fun SegmentedControl(
                     ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent)
                 },
             ) {
-                Text(
-                    text = if (selectedIndex.value == index) "✓ $item" else item,
-                    fontWeight = FontWeight.Normal,
-                    color = if (selectedIndex.value == index) MaterialTheme.colorScheme.inverseOnSurface else color.copy(
-                        alpha = 0.9f
-                    ),
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    if (selectedIndex.value == index) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = "Use $item as selected item",
+                            tint = MaterialTheme.colorScheme.inverseOnSurface
+                        )
+                    }
+                    Text(
+                        text = item,
+                        fontWeight = FontWeight.Normal,
+                        color = if (selectedIndex.value == index) MaterialTheme.colorScheme.inverseOnSurface else color.copy(
+                            alpha = 0.9f
+                        ),
+                    )
+                }
             }
         }
     }
