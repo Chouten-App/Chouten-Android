@@ -496,14 +496,11 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
                 }
 
                 Text(
+                    modifier = Modifier.padding(5.dp),
                     text = stringResource(if (importType.toBoolean()) R.string.import_module_description else R.string.import_theme_description),
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(0.7F),
-                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 15.sp,
-                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 10.dp, start = 5.dp)
                 )
 
                 Column(
