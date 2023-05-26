@@ -24,13 +24,13 @@ import androidx.compose.ui.zIndex
 import com.chouten.app.R
 
 /**
- * items : list of items to be render
- * defaultSelectedItemIndex : to highlight item by default (Optional)
- * useFixedWidth : set true if you want to set fix width to item (Optional)
- * itemWidth : Provide item width if useFixedWidth is set to true (Optional)
- * cornerRadius : To make control as rounded (Optional)
- * color : Set color to control (Optional)
- * onItemSelection : Get selected item index
+ * - `items` : list of items to be rendered
+ * - `defaultSelectedItemIndex` : to highlight item by default (Optional)
+ * - `useFixedWidth` : set true if you want to set fix width to item (Optional)
+ * - `itemWidth` : Provide item width if useFixedWidth is set to true (Optional)
+ * - `cornerRadius` : To make control as rounded (Optional)
+ * - `color` : Set color to control (Optional)
+ * - `onItemSelection` : Get selected item index
  */
 @Composable
 fun SegmentedControl(
