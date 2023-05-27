@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -102,9 +101,7 @@ fun ModuleSelectorContainer(
     val noModuleSelected = stringResource(R.string.no_module_selected)
 
     ModalBottomSheetLayout(
-        modifier = modifier,
-        sheetState = sheetState,
-        sheetContent = {
+        modifier = modifier, sheetState = sheetState, sheetContent = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceEvenly,
@@ -146,8 +143,7 @@ fun ModuleSelectorContainer(
                 ) {
                     items(items = ModuleLayer.availableModules) { module ->
                         ModuleChoice(
-                            module.id
-                                ?: throw Exception("Module ID not set for ${module.name}"),
+                            module.id ?: throw Exception("Module ID not set for ${module.name}"),
                             module.name,
                             module.meta.author,
                             module.version,
@@ -174,15 +170,13 @@ fun ModuleSelectorContainer(
             Divider(
                 modifier = Modifier.padding(16.dp, 0.dp),
             )
-        },
-        sheetBackgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
+        }, sheetBackgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
             3.dp
         ), //TODO: Replace with something else, cuz deprecated soon (elevation lv 2)
         sheetShape = RoundedCornerShape(28.dp, 28.dp, 0.dp, 0.dp)
     ) {
         Column(
-            Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween
+            Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween
         ) {
 
             // Expand the module import button in height to show a textfield and cancle and confirm buttons
@@ -238,8 +232,7 @@ fun ModuleSelectorContainer(
 //            }
 
             Box(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
             ) {
                 // We want the elevated button
                 // to "float" above the rest of the content
@@ -258,8 +251,7 @@ fun ModuleSelectorContainer(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 ) {
                     Text(
-                        text = ModuleLayer.selectedModule?.name
-                            ?: noModuleSelected,
+                        text = ModuleLayer.selectedModule?.name ?: noModuleSelected,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -294,8 +286,7 @@ fun ModuleChoice(
         colors = if (backgroundColor != null) {
             ButtonDefaults.buttonColors(
                 containerColor = backgroundColor,
-                contentColor = foregroundColor
-                    ?: MaterialTheme.colorScheme.onPrimaryContainer
+                contentColor = foregroundColor ?: MaterialTheme.colorScheme.onPrimaryContainer
             )
         } else ButtonDefaults.buttonColors(),
         shape = RoundedCornerShape(12.dp),
@@ -307,9 +298,7 @@ fun ModuleChoice(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (icon == null) Icon(
-                    Icons.Default.Help,
-                    "Question Mark",
-                    modifier = Modifier.size(iconSize.dp)
+                    Icons.Default.Help, "Question Mark", modifier = Modifier.size(iconSize.dp)
                 )
                 else GlideImage(
                     imageModel = { icon },
@@ -338,8 +327,7 @@ fun ModuleChoice(
                     Text(
                         name,
                         fontWeight = FontWeight.Bold,
-                        color = foregroundColor
-                            ?: MaterialTheme.colorScheme.onSecondary,
+                        color = foregroundColor ?: MaterialTheme.colorScheme.onSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -384,20 +372,16 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
             // We want collapsed height as a fraction of the screen height
             // so we can animate it later
             collapsedHeight.value / screenHeight.value
-        },
-        animationSpec = tween(
-            durationMillis = 1000,
-            easing = FastOutSlowInEasing
+        }, animationSpec = tween(
+            durationMillis = 1000, easing = FastOutSlowInEasing
         )
     )
 
     val currentHeight by animateDpAsState(
         if (isAnimated) {
             360.dp
-        } else collapsedHeight,
-        animationSpec = tween(
-            durationMillis = 1000,
-            easing = FastOutSlowInEasing
+        } else collapsedHeight, animationSpec = tween(
+            durationMillis = 1000, easing = FastOutSlowInEasing
         )
     )
 
@@ -467,16 +451,13 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Top
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.Start,
+                Row(horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(
-                            interactionSource = interactionSource,
-                            indication = null
-                        ) { onClick() }
-                ) {
+                            interactionSource = interactionSource, indication = null
+                        ) { onClick() }) {
                     Icon(
                         Icons.Rounded.Download,
                         stringResource(R.string.module_selection_header),
@@ -528,8 +509,7 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
                     verticalArrangement = Arrangement.spacedBy(10.dp)
 
                 ) {
-                    SegmentedControl(
-                        items = selectors,
+                    SegmentedControl(items = selectors,
                         cornerRadius = 50,
                         itemWidth = 140.dp,
                         useFixedWidth = true,
@@ -539,31 +519,26 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
                                 1 -> importType = 1
                             }
                         })
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 5.dp),
+                    OutlinedTextField(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 5.dp),
                         value = importFromUrlText,
                         label = { Text(text = "Import from URL") },
                         onValueChange = {
                             importFromUrlText = it
-                        }
-                    )
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 5.dp),
+                        })
+                    OutlinedTextField(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 5.dp),
                         value = fileNameText,
                         label = { Text(text = "Filename") },
                         onValueChange = {
                             fileNameText = it
-                        }
-                    )
+                        })
                 }
 
                 Row(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.End,
                 ) {
@@ -580,8 +555,7 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
                             if (importFromUrlText.text.isBlank() || fileNameText.text.isBlank()) {
                                 PrimaryDataLayer.enqueueSnackbar(
                                     SnackbarVisualsWithError(
-                                        "Import URL or Filename is empty!",
-                                        true
+                                        "Import URL or Filename is empty!", true
                                     )
                                 )
                             }
