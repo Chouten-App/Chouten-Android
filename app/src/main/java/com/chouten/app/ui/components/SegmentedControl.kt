@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -17,17 +19,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 
 /**
+ * - `modifier` : modifier to be applied to the control (Optional)
  * - `items` : list of items to be rendered
  * - `defaultSelectedItemIndex` : to highlight item by default (Optional)
  * - `useFixedWidth` : set true if you want to set fix width to item (Optional)
@@ -38,6 +45,7 @@ import androidx.compose.ui.zIndex
  */
 @Composable
 fun SegmentedControl(
+    modifier: Modifier = Modifier,
     items: List<String>,
     defaultSelectedItemIndex: Int = 0,
     useFixedWidth: Boolean = false,
@@ -47,9 +55,17 @@ fun SegmentedControl(
     onItemSelection: (selectedItemIndex: Int) -> Unit
 ) {
     val selectedIndex = remember { mutableStateOf(defaultSelectedItemIndex) }
+    val localDensity = LocalDensity.current
+    // Create element height in dp state
+    var rowWidthDp by remember {
+        mutableStateOf(0.dp)
+    }
 
     Row(
-        modifier = Modifier
+        modifier = modifier.onGloballyPositioned { coordinates ->
+            // Set column height using the LayoutCoordinates
+            rowWidthDp = with(localDensity) { coordinates.size.width.toDp() }
+        }
     ) {
         items.forEachIndexed { index, item ->
             OutlinedButton(
@@ -62,7 +78,7 @@ fun SegmentedControl(
                                 .zIndex(if (selectedIndex.value == index) 1f else 0f)
                         } else {
                             Modifier
-                                .wrapContentSize()
+                                .width(rowWidthDp / items.size)
                                 .offset(0.dp, 0.dp)
                                 .zIndex(if (selectedIndex.value == index) 1f else 0f)
                         }
@@ -74,7 +90,7 @@ fun SegmentedControl(
                             .offset((-1 * index).dp, 0.dp)
                             .zIndex(if (selectedIndex.value == index) 1f else 0f)
                         else Modifier
-                            .wrapContentSize()
+                            .width(rowWidthDp / items.size)
                             .offset((-1 * index).dp, 0.dp)
                             .zIndex(if (selectedIndex.value == index) 1f else 0f)
                     }

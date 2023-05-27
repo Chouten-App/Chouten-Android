@@ -509,20 +509,22 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
                     verticalArrangement = Arrangement.spacedBy(10.dp)
 
                 ) {
-                    SegmentedControl(items = selectors,
+                    SegmentedControl(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        items = selectors,
                         cornerRadius = 50,
                         itemWidth = 140.dp,
-                        useFixedWidth = true,
+                        //useFixedWidth = true,
                         onItemSelection = {
-                            when (it) {
-                                0 -> importType = 0
-                                1 -> importType = 1
-                            }
+                            importType = it
                         })
                     OutlinedTextField(modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 5.dp),
                         value = importFromUrlText,
+                        maxLines = 1,
+                        singleLine = true,
                         label = { Text(text = "Import from URL") },
                         onValueChange = {
                             importFromUrlText = it
@@ -531,10 +533,13 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
                         .fillMaxWidth()
                         .padding(horizontal = 5.dp),
                         value = fileNameText,
+                        maxLines = 1,
+                        singleLine = true,
                         label = { Text(text = "Filename") },
                         onValueChange = {
                             fileNameText = it
-                        })
+                        },
+                    )
                 }
 
                 Row(
