@@ -53,6 +53,8 @@ class ModuleDataLayer() {
 
     suspend fun enqueueRemoteInstall(context: Context, url: String) {
         try {
+            if (!URLUtil.isNetworkUrl(url)) throw IOException("Invalid URL")
+
             val module = client.get(url).parsed<ModuleModel>()
 
             // At the moment we will not allow installs which are the same.
@@ -77,6 +79,27 @@ class ModuleDataLayer() {
         val url = intent.getStringExtra(Intent.EXTRA_TEXT)
         if (!URLUtil.isNetworkUrl(url) || url == null) return
         enqueueRemoteInstall(context, url)
+    }
+
+    //TODO: test this :) haven't tested it yet
+    suspend fun enqueueLocalInstall(context: Context, filename: String) {
+        try {
+            val file = File(AppPaths.baseDir, filename)
+            if (!file.exists()) throw IOException("File does not exist")
+            val module = Mapper.parse<ModuleModel>(file.readText())
+
+            if (isModuleExisting(module)) throw IOException("Module already installed")
+
+            addModule(context, module)
+        } catch (e: Exception) {
+            PrimaryDataLayer.enqueueSnackbar(
+                SnackbarVisualsWithError(
+                    e.localizedMessage ?: "Could not install module",
+                    true,
+                )
+            )
+            e.localizedMessage?.let { Log.e("MODULE INSTALL", it) }
+        }
     }
 
     suspend fun enqueueFileInstall(intent: Intent, context: Context) {

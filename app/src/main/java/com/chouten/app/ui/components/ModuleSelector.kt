@@ -75,6 +75,7 @@ import com.chouten.app.toBoolean
 import com.chouten.app.ui.theme.dashedBorder
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -135,7 +136,7 @@ fun ModuleSelectorContainer(
                 ModuleImportButton(onClick = {
                     importPopupState = !importPopupState
                     isAnimated = !isAnimated
-                }, isAnimated = isAnimated)
+                }, isAnimated = isAnimated, context = context)
 
                 LazyColumn(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -359,7 +360,7 @@ fun ModuleChoice(
 }
 
 @Composable
-fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
+fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context: Context) {
     val iconSize = 25
     val selectors = listOf("Module", "Theme")
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
@@ -389,6 +390,9 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
 
     var importFromUrlText by remember { mutableStateOf(TextFieldValue("")) }
     var fileNameText by remember { mutableStateOf(TextFieldValue("")) }
+
+    val coroutineScope = rememberCoroutineScope()
+
 
     Box(
         modifier = Modifier
@@ -557,20 +561,51 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
 
                     FilledTonalButton(
                         onClick = {
-                            if (importFromUrlText.text.isBlank() || fileNameText.text.isBlank()) {
+                            if (importFromUrlText.text.isBlank() && fileNameText.text.isBlank()) {
                                 PrimaryDataLayer.enqueueSnackbar(
                                     SnackbarVisualsWithError(
                                         "Import URL or Filename is empty!", true
                                     )
                                 )
+                                return@FilledTonalButton
                             }
+
+                            if (importFromUrlText.text.isNotBlank() && fileNameText.text.isNotBlank()) {
+                                PrimaryDataLayer.enqueueSnackbar(
+                                    SnackbarVisualsWithError(
+                                        "Import URL and Filename cannot be used together!", true
+                                    )
+                                )
+                                return@FilledTonalButton
+                            }
+
+
                             when (importType) {
                                 0 -> {
-                                    // TODO: import module from URL
+                                    // Local install
+                                    if (fileNameText.text.isNotBlank()) {
+                                        coroutineScope.launch {
+                                            ModuleLayer.enqueueLocalInstall(
+                                                context,
+                                                fileNameText.text,
+                                            )
+                                        }
+                                        return@FilledTonalButton
+                                    }
+                                    // Remote install
+                                    coroutineScope.launch {
+                                        ModuleLayer.enqueueRemoteInstall(
+                                            context,
+                                            importFromUrlText.text,
+                                        )
+                                    }
                                 }
-
                                 1 -> {
-                                    println("Importing theme from URL is not supported yet!")
+                                    PrimaryDataLayer.enqueueSnackbar(
+                                        SnackbarVisualsWithError(
+                                            "Importing theme from URL is not supported yet!", true
+                                        )
+                                    )
                                 }
                             }
 
