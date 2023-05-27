@@ -1,31 +1,26 @@
 package com.chouten.app.ui.components
 
 import android.content.Context
-import android.widget.Toast
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -43,11 +38,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -61,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -69,17 +67,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.chouten.app.ModuleLayer
+import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.R
-import com.chouten.app.data.LogEntry
+import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.toBoolean
 import com.chouten.app.ui.theme.dashedBorder
-import com.chouten.app.ui.views.settingsPage.screens.LogEntryCard
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -243,8 +239,7 @@ fun ModuleSelectorContainer(
 
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-            ,
+                    .fillMaxSize(),
             ) {
                 // We want the elevated button
                 // to "float" above the rest of the content
@@ -379,9 +374,33 @@ fun ModuleChoice(
 fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
     val iconSize = 25
     val selectors = listOf("Module", "Theme")
-    val currentHeight by animateDpAsState(
-        targetValue = if (isAnimated) 360.dp else 65.dp, animationSpec = tween(1000)
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val expandedHeight = 0.65f
+    val collapsedHeight = 65.dp
+    val currentHeightF by animateFloatAsState(
+        if (isAnimated) {
+            expandedHeight
+        } else {
+            // We want collapsed height as a fraction of the screen height
+            // so we can animate it later
+            collapsedHeight.value / screenHeight.value
+        },
+        animationSpec = tween(
+            durationMillis = 1000,
+            easing = FastOutSlowInEasing
+        )
     )
+
+    val currentHeight by animateDpAsState(
+        if (isAnimated) {
+            360.dp
+        } else collapsedHeight,
+        animationSpec = tween(
+            durationMillis = 1000,
+            easing = FastOutSlowInEasing
+        )
+    )
+
     var importType by remember { mutableStateOf(0) } // 0 = Module, 1 = Theme
 
     var importFromUrlText by remember { mutableStateOf(TextFieldValue("")) }
@@ -389,16 +408,15 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
 
     Box(
         modifier = Modifier
-            .fillMaxWidth(1F)
-            .height(currentHeight)
+            .fillMaxWidth()
             .dashedBorder(
                 2.dp, MaterialTheme.colorScheme.onPrimaryContainer, 10.dp
             ),
     ) {
         if (!isAnimated) {
             Button(modifier = Modifier
-                .fillMaxWidth(1F)
-                .height(65.dp),
+                .fillMaxWidth()
+                .height(currentHeight),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
                 ),
@@ -444,8 +462,7 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
 
             Column(
                 modifier = Modifier
-                    .fillMaxWidth(1F)
-                    .height(360.dp)
+                    .fillMaxHeight(currentHeightF)
                     .padding(15.dp),
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Top
@@ -472,8 +489,7 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
                     Text(
                         stringResource(if (!importType.toBoolean()) R.string.import_module_header else R.string.import_theme_header),
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp
+                        style = MaterialTheme.typography.titleMedium
                     )
 //                        Column {
 //                            Text(
@@ -524,6 +540,9 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
                             }
                         })
                     OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 5.dp),
                         value = importFromUrlText,
                         label = { Text(text = "Import from URL") },
                         onValueChange = {
@@ -531,6 +550,9 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
                         }
                     )
                     OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 5.dp),
                         value = fileNameText,
                         label = { Text(text = "Filename") },
                         onValueChange = {
@@ -541,72 +563,42 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false) {
 
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(),
+                        .fillMaxSize(),
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.End,
                 ) {
-                    Button(
+                    TextButton(
                         onClick = onClick,
-                        colors = ButtonDefaults.buttonColors(
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            containerColor = Color.Transparent
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(),
-                        modifier = Modifier
-                            .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
-                            .height(35.dp)
-                            .width(75.dp)
                     ) {
                         Text(
                             stringResource(R.string.cancel),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            modifier = Modifier.clickable(
-                                interactionSource = interactionSource,
-                                indication = null
-                            ) { onClick() }
                         )
                     }
 
-                    Button(
+                    FilledTonalButton(
                         onClick = {
-                            // TODO: Make a snackbar for this instead of a println
-                            if (importFromUrlText.text.isEmpty() || fileNameText.text.isEmpty()) println(
-                                "Import URL or Filename is empty!"
-                            )
+                            if (importFromUrlText.text.isBlank() || fileNameText.text.isBlank()) {
+                                PrimaryDataLayer.enqueueSnackbar(
+                                    SnackbarVisualsWithError(
+                                        "Import URL or Filename is empty!",
+                                        true
+                                    )
+                                )
+                            }
                             when (importType) {
                                 0 -> {
                                     // TODO: import module from URL
                                 }
+
                                 1 -> {
                                     println("Importing theme from URL is not supported yet!")
                                 }
                             }
 
                         },
-                        colors = ButtonDefaults.buttonColors(
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(),
-                        modifier = Modifier
-                            .defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
-                            .height(35.dp)
-                            .width(75.dp)
-
                     ) {
                         Text(
                             stringResource(R.string.import_module),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            // using Modifier.clickable() to remove ripple effect
-                            modifier = Modifier.clickable(
-                                interactionSource = interactionSource,
-                                indication = null
-                            ) {
-                            }
                         )
                     }
                 }
