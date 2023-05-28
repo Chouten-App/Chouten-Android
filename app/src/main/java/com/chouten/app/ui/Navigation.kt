@@ -3,9 +3,7 @@ package com.chouten.app.ui
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -22,7 +20,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -42,9 +39,9 @@ import com.chouten.app.ui.views.infoPage.InfoPageViewModel
 import com.chouten.app.ui.views.searchPage.SearchPage
 import com.chouten.app.ui.views.searchPage.SearchPageViewModel
 import com.chouten.app.ui.views.settingsPage.MorePage
-import com.chouten.app.ui.views.settingsPage.screens.AppearancePage
 import com.chouten.app.ui.views.settingsPage.screens.LogPage
 import com.chouten.app.ui.views.settingsPage.screens.NetworkPage
+import com.chouten.app.ui.views.settingsPage.screens.appearancePage.AppearancePage
 import com.chouten.app.ui.views.watchPage.WatchPage
 import com.chouten.app.ui.views.watchPage.WatchPageViewModel
 
