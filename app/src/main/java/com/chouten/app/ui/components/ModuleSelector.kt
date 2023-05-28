@@ -561,37 +561,17 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context
 
                     FilledTonalButton(
                         onClick = {
-                            if (importFromUrlText.text.isBlank() && fileNameText.text.isBlank()) {
+                            if (importFromUrlText.text.isBlank()) {
                                 PrimaryDataLayer.enqueueSnackbar(
                                     SnackbarVisualsWithError(
-                                        "Import URL or Filename is empty!", true
+                                        "Import URL is empty!", true
                                     )
                                 )
                                 return@FilledTonalButton
                             }
-
-                            if (importFromUrlText.text.isNotBlank() && fileNameText.text.isNotBlank()) {
-                                PrimaryDataLayer.enqueueSnackbar(
-                                    SnackbarVisualsWithError(
-                                        "Import URL and Filename cannot be used together!", true
-                                    )
-                                )
-                                return@FilledTonalButton
-                            }
-
 
                             when (importType) {
                                 0 -> {
-                                    // Local install
-                                    if (fileNameText.text.isNotBlank()) {
-                                        coroutineScope.launch {
-                                            ModuleLayer.enqueueLocalInstall(
-                                                context,
-                                                fileNameText.text,
-                                            )
-                                        }
-                                        return@FilledTonalButton
-                                    }
                                     // Remote install
                                     coroutineScope.launch {
                                         ModuleLayer.enqueueRemoteInstall(
