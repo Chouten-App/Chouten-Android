@@ -35,8 +35,11 @@
     <string name="dynamic_colour_toggle__title">Dynamic Theming</string>
     <string name="dynamic_colour_toggle__desc">Use Material You Dynamic Theming</string>
 
-    <string name="export_theme__title">Export Theme to JSON</string>
-    <string name="export_theme__desc">Copy your theme in JSON format</string>
+    <string name="export_theme__title">Export Theme</string>
+    <string name="export_theme__desc">Export Theme as File</string>
+    <string name="export_theme__success">Theme Exported Successfully</string>
+    <string name="export_theme__label">Theme Name</string>
+    <string name="export_theme__error">Could not export Theme</string>
 
     <string name="appearance__title">Appearance</string>
     <string name="appearance__desc">Light/Dark/System</string>
