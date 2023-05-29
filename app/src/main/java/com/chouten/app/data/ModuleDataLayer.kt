@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
-import android.media.MediaScannerConnection
 import android.net.Uri
 import android.util.Log
 import android.webkit.URLUtil
@@ -15,6 +14,8 @@ import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import com.chouten.app.Mapper
 import com.chouten.app.PrimaryDataLayer
+import com.chouten.app.UnzipUtils
+import com.chouten.app.get
 import com.chouten.app.client
 import com.chouten.app.preferenceHandler
 import com.google.common.hash.BloomFilter
@@ -22,7 +23,6 @@ import com.google.common.hash.Funnels
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
 import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
@@ -39,13 +39,9 @@ class ModuleDataLayer() {
         Funnels.integerFunnel(), 100, 0.05
     )
 
-    private fun isModuleExisting(module: ModuleModel): Boolean {
-        // TODO: Fix bloom filter
-        // Android Studio also gives some weird warning about `doesNotExist`
-        // always being true which doesn't make much sense.
-        // val doesNotExist = !bloomFilter.mightContain(module.hashCode())
-        // if (doesNotExist) return doesNotExist
+    private val webviewHandler = WebviewHandler()
 
+    private fun isModuleExisting(module: ModuleModel): Boolean {
         availableModules.find { it.hashCode() == module.hashCode() }
             ?: return false
         return true
@@ -55,15 +51,57 @@ class ModuleDataLayer() {
         try {
             if (!URLUtil.isNetworkUrl(url)) throw IOException("Invalid URL")
 
-            val module = client.get(url).parsed<ModuleModel>()
+            val modulePath = AppPaths.addedDirs["Modules"]?.absolutePath + "/" + url.toUri().lastPathSegment
 
-            // At the moment we will not allow installs which are the same.
-            // In the future, we may allow modules which have different versions
-            // to be installed side by side.
-            if (isModuleExisting(module)) throw IOException("Module already installed")
+            // download the zip file
+            val response = client.get(url)
+            val bytes = response.body.bytes()
+
+            // create a temporary file
+            val tempFile = withContext(Dispatchers.IO) {
+                File.createTempFile("checkout", ".zip", context.cacheDir)
+            }
+
+            // write the bytes to the file
+            withContext(Dispatchers.IO) {
+                tempFile.writeBytes(bytes)
+            }
+
+            // unzip the file
+            withContext(Dispatchers.IO) {
+                println("HERE?")
+                UnzipUtils.unzip(tempFile, modulePath)
+                tempFile.delete()
+            }
+            // TODO: Use MediaScannerConnection to scan the file so that it shows up in the file manager
+//            MediaScannerConnection.scanFile(
+//                context,
+//                arrayOf(modulePath),
+//                null,
+//                null
+//            )
+            println("HERE")
+
+            val module = getMetadata(modulePath)
+            val moduleFolder = File(modulePath)
+            val newPath = File(modulePath.replace(moduleFolder.name, module.name))
+            moduleFolder.renameTo(newPath)
+
+            module.meta.icon = "${newPath.absolutePath}/icon.png"
+
+            if (isModuleExisting(module)) throw IOException("Module already installed!")
+
+            // rename the folder to the module name
 
             addModule(context, module)
+
         } catch (e: Exception) {
+            // remove the temporary file if it exists
+            if (e is IOException) {
+                val tempFile = File(context.cacheDir, "checkout.zip")
+                if (tempFile.exists()) tempFile.delete()
+            }
+
             PrimaryDataLayer.enqueueSnackbar(
                 SnackbarVisualsWithError(
                     e.localizedMessage ?: "Could not download module",
@@ -74,6 +112,38 @@ class ModuleDataLayer() {
             e.localizedMessage?.let { Log.e("MODULE INSTALL", it) }
         }
     }
+
+    private fun getMetadata(folderUrl: String): ModuleModel {
+        val metadataFile = File("$folderUrl/metadata.json")
+
+        if (!metadataFile.exists()) throw IOException("Metadata file does not exist")
+
+        val metadata = metadataFile.readText()
+        return Mapper.parse(metadata)
+    }
+
+
+    private suspend fun getCode(module: ModuleModel): List<ModuleModel.ModuleCode.ModuleCodeblock> {
+        return emptyList()
+    }
+
+//    private suspend fun getCodeVariables(code: String): ModuleModel.ModuleCode.ModuleCodeblock {
+//        println("Code before is ${code.substringBefore("function logic()")})}")
+//        val vars = webviewHandler.inject(
+//
+//        )
+//        println("Vars: $vars")
+//        return Mapper.parse(
+//            vars.replace(
+//                "\\\"",
+//                "\""
+//            ).replace(
+//                "\\\\",
+//                "\\"
+//            )
+//        )
+//    }
+
 
     suspend fun enqueueRemoteInstall(context: Context, intent: Intent) {
         val url = intent.getStringExtra(Intent.EXTRA_TEXT)
@@ -125,7 +195,34 @@ class ModuleDataLayer() {
         }
     }
 
-    fun updateSelectedModule(moduleId: Int) {
+    fun removeModule(module: ModuleModel) {
+        try {
+            val modulePath = AppPaths.addedDirs["Modules"]?.absolutePath + "/" + module.name
+            val moduleFolder = File(modulePath)
+            moduleFolder.deleteRecursively()
+            availableModules.remove(module)
+
+            // TODO: Are we going to select the next module in the list? Or just deselect?
+            if (selectedModule == module) {
+                selectedModule = null
+                preferenceHandler.selectedModule = -1
+            }
+
+        } catch (e: Exception) {
+            PrimaryDataLayer.enqueueSnackbar(
+                SnackbarVisualsWithError(
+                    e.localizedMessage ?: "Could not remove module",
+                    true,
+                )
+            )
+            e.localizedMessage?.let {
+                Log.e("REMOVE MODULE ERROR", it)
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateSelectedModule(moduleId: String) {
         val module = availableModules[moduleId]
         println("Updating to ${module.name}")
         selectedModule = module
@@ -138,31 +235,27 @@ class ModuleDataLayer() {
                 throw IOException("Modules folder not found")
             }
 
-            val loadedModules = mutableListOf<ModuleModel>()
+            modulesDir.listFiles()?.forEach { file ->
+                if (file.isDirectory) {
+                    val metadataFile = File(file, "metadata.json")
+                    if (!metadataFile.exists()) {
+                        // remove the folder if the metadata file does not exist
+                        file.deleteRecursively()
+                        PrimaryDataLayer.enqueueSnackbar(
+                            SnackbarVisualsWithError(
+                                "Module ${file.name} does not have a metadata file. Removing...",
+                                true,
+                            )
+                        )
+                        return@forEach
+                    }
 
-            modulesDir.listFiles { _, name ->
-                name.endsWith(".json")
-            }?.forEach { file ->
-                val reader =
-                    BufferedReader(InputStreamReader(file.inputStream()))
-                val json = StringBuilder()
-                var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    json.append(line)
+                    val metadata = metadataFile.readText()
+                    val decoded = Mapper.parse<ModuleModel>(metadata)
+                    decoded.meta.icon = "${file.absolutePath}/icon.png"
+                    availableModules.add(decoded)
                 }
-
-                val module = Mapper.parse<ModuleModel>(json.toString())
-                module.id = availableModules.count() + loadedModules.count()
-                if (selectedModule == null && module.hashCode() == preferenceHandler.selectedModule) {
-                    selectedModule = module
-                }
-                bloomFilter.put(module.hashCode())
-                loadedModules += module
             }
-
-            availableModules += loadedModules
-            Log.d("CHOUTEN", "LOADED ${loadedModules.size} MODULES")
-
         } catch (e: IOException) {
             PrimaryDataLayer.enqueueSnackbar(
                 SnackbarVisualsWithError(
@@ -179,28 +272,6 @@ class ModuleDataLayer() {
         try {
             val modulesDir = AppPaths.addedDirs.getOrElse("Modules") {
                 throw IOException("Modules folder not found")
-            }
-
-            val moduleFile = File(
-                modulesDir,
-                "${module.name}_${module.meta.author}.${module.version}.json"
-            )
-
-            Log.d("CHOUTEN/IO", "$moduleFile")
-
-            context.contentResolver.openOutputStream(moduleFile.toUri()).use {
-                it?.write(Mapper.json.encodeToString(module).toByteArray())
-            }
-
-            // Add the Metadata to the MediaStore
-            MediaScannerConnection.scanFile(
-                context, arrayOf(moduleFile.path), arrayOf("application/json")
-            ) { _, _ ->
-                PrimaryDataLayer.enqueueSnackbar(
-                    SnackbarVisualsWithError(
-                        "Successfully saved Module", false
-                    )
-                )
             }
 
         } catch (e: IOException) {
@@ -245,7 +316,6 @@ class ModuleDataLayer() {
             }
             if (!hasPermission) return@withContext
             saveModule(context, module)
-            module.id = availableModules.count()
             bloomFilter.put(module.hashCode())
             availableModules += module
         }

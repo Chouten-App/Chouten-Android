@@ -64,7 +64,7 @@ class WatchPageViewModel(
         webview.initialize(context)
         webview.updateNextUrl(decodedUrl)
         currentModule?.subtypes?.forEach { subtype ->
-            currentModule.code[subtype]?.mediaConsume?.forEach { watchFn ->
+            currentModule.code?.get(subtype)?.mediaConsume?.forEach { watchFn ->
                 // We need the info function to
                 // be executed synchronously
                 viewModelScope.launch {

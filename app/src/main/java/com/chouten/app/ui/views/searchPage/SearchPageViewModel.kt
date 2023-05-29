@@ -86,7 +86,7 @@ class SearchPageViewModel(
         isSearching = true
         val searchModule = ModuleLayer.selectedModule ?: return
         searchModule.subtypes.forEach { subtype ->
-            val searchFns = searchModule.code[subtype]?.search
+            val searchFns = searchModule.code?.get(subtype)?.search
             searchFns?.forEach { searchFn ->
                 // We need the search function to
                 // be executed synchronously.

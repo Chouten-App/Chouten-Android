@@ -1,10 +1,14 @@
 package com.chouten.app.ui.components
 
 import android.content.Context
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -25,16 +29,23 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FractionalThreshold
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Help
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.DismissDirection
+import androidx.compose.material.DismissValue
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -42,6 +53,8 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material.SwipeToDismiss
+import androidx.compose.material.SwipeableDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.surfaceColorAtElevation
@@ -50,11 +63,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -64,6 +79,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -75,13 +91,13 @@ import com.chouten.app.toBoolean
 import com.chouten.app.ui.theme.dashedBorder
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 
 @OptIn(
-    ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class
+    ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class
 )
 @Composable
 fun ModuleSelectorContainer(
@@ -100,6 +116,8 @@ fun ModuleSelectorContainer(
 
     val coroutineScope = rememberCoroutineScope()
     val noModuleSelected = stringResource(R.string.no_module_selected)
+
+    val animatedList by updateAnimatedItemsState(newList = ModuleLayer.availableModules.map { it })
 
     ModalBottomSheetLayout(
         modifier = modifier, sheetState = sheetState, sheetContent = {
@@ -142,29 +160,125 @@ fun ModuleSelectorContainer(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceEvenly,
                 ) {
-                    items(items = ModuleLayer.availableModules) { module ->
-                        ModuleChoice(
-                            module.id ?: throw Exception("Module ID not set for ${module.name}"),
-                            module.name,
-                            module.meta.author,
-                            module.version,
-                            module.meta.icon,
-                            module.meta.backgroundColor.let {
-                                val str = "FF" + it.removePrefix("#")
-                                Color(str.toLong(16))
-                            },
-                            module.meta.foregroundColor.let {
-                                val str = "FF" + it.removePrefix("#")
-                                Color(str.toLong(16))
-                            },
-                            onClick = {
+                    animatedItemsIndexed(
+                        state = animatedList,
+                        key = { module -> module.id }
+                    ) { i, module ->
+                        val currentItem by rememberUpdatedState(module)
+                        val dismissState = rememberDismissState(
+                            confirmStateChange = {
+                                when (it) {
+                                    DismissValue.DismissedToStart -> {
+                                        println("Removing module ${currentItem.name}")
+                                        ModuleLayer.removeModule(currentItem)
+                                        true
+                                    }
+
+                                    else -> false
+                                }
+                            }
+                        )
+
+                        SwipeActions(
+                            endActionsConfig = SwipeActionsConfig(
+                                threshold = 0.5f,
+                                background = MaterialTheme.colorScheme.error,
+                                icon = Icons.Rounded.Delete,
+                                stayDismissed = true,
+                                iconTint = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+                                onDismiss = {
+                                    println("Removing module ${currentItem.name}")
+                                    ModuleLayer.removeModule(currentItem)
+                                }
+
+                            ),
+                        ) {
+                            ModuleChoice(
+                                module.id,
+                                module.name,
+                                module.meta.author,
+                                module.version,
+                                module.meta.icon,
+                                module.meta.backgroundColor.let {
+                                    val str = "FF" + it.removePrefix("#")
+                                    Color(str.toLong(16))
+                                },
+                                module.meta.foregroundColor.let {
+                                    val str = "FF" + it.removePrefix("#")
+                                    Color(str.toLong(16))
+                                },
+                            ) {
                                 ModuleLayer.updateSelectedModule(
                                     module.id
                                         ?: throw Exception("Module ID not set for ${module.name}"),
                                 )
                                 coroutineScope.launch { sheetState.hide() }
-                            },
-                        )
+                            }
+                        }
+
+//                        SwipeToDismiss(
+//                            state = dismissState,
+//                            modifier = Modifier
+//                                .padding(vertical = 1.dp)
+//                                .animateItemPlacement(),
+//                            directions = setOf(DismissDirection.EndToStart),
+//                            dismissThresholds = { FractionalThreshold(0.50f) },
+//                            dismissContent = {
+//                                    ModuleChoice(
+//                                        module.id,
+//                                        module.name,
+//                                        module.meta.author,
+//                                        module.version,
+//                                        module.meta.icon,
+//                                        module.meta.backgroundColor.let {
+//                                            val str = "FF" + it.removePrefix("#")
+//                                            Color(str.toLong(16))
+//                                        },
+//                                        module.meta.foregroundColor.let {
+//                                            val str = "FF" + it.removePrefix("#")
+//                                            Color(str.toLong(16))
+//                                        },
+//                                    ) {
+//                                        ModuleLayer.updateSelectedModule(
+//                                            module.id
+//                                                ?: throw Exception("Module ID not set for ${module.name}"),
+//                                        )
+//                                        coroutineScope.launch { sheetState.hide() }
+//                                    }
+//                            },
+//                            background = {
+//                                val color by animateColorAsState(
+//                                    when (dismissState.targetValue) {
+//                                        DismissValue.Default -> Color.Transparent
+//                                        else -> Color.Red
+//                                    }
+//                                )
+//                                val alignment = Alignment.CenterEnd
+//                                val icon = Icons.Rounded.Delete
+//
+//                                val scale by animateFloatAsState(
+//                                    if (dismissState.targetValue == DismissValue.Default) 0.50f else 0.75f
+//                                )
+//
+//                                Box(
+//                                    Modifier
+//                                        .fillMaxWidth(1F)
+//                                        .height(65.dp)
+//                                        .padding(vertical = 4.dp)
+//                                        .background(color, shape = RoundedCornerShape(12.dp)),
+//                                    contentAlignment = alignment,
+//                                ) {
+//                                    Icon(
+//                                        icon,
+//                                        contentDescription = "Delete Icon",
+//                                        modifier = Modifier
+//                                            .size(40.dp)
+//                                            .scale(scale),
+//                                    )
+//                                }
+//                            },
+//
+//                        )
                     }
                 }
             }
@@ -267,7 +381,7 @@ fun ModuleSelectorContainer(
 
 @Composable
 fun ModuleChoice(
-    id: Int,
+    id: String,
     name: String,
     author: String,
     version: String,
@@ -533,9 +647,10 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context
                         onValueChange = {
                             importFromUrlText = it
                         })
-                    OutlinedTextField(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 5.dp),
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 5.dp),
                         value = fileNameText,
                         maxLines = 1,
                         singleLine = true,
@@ -580,6 +695,7 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context
                                         )
                                     }
                                 }
+
                                 1 -> {
                                     PrimaryDataLayer.enqueueSnackbar(
                                         SnackbarVisualsWithError(

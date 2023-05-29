@@ -74,7 +74,7 @@ class InfoPageViewModel(
         webview.initialize(context)
         webview.updateNextUrl(decodedUrl)
         currentModule?.subtypes?.forEach { subtype ->
-            val infoFns = currentModule.code[subtype]?.info
+            val infoFns = currentModule.code?.get(subtype)?.info
             infoFns?.forEach { infoFn ->
                 // We need the info function to
                 // be executed synchronously

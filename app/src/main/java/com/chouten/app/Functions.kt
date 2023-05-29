@@ -12,15 +12,18 @@ import android.view.animation.*
 import android.widget.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.view.*
 import com.chouten.app.data.AlertData
 import com.chouten.app.data.AppPaths
+import com.chouten.app.data.ModuleModel
 import com.chouten.app.data.RequestCodes
 import com.chouten.app.data.SnackbarVisualsWithError
 import java.io.*
 import java.util.*
+import java.util.zip.ZipFile
 import kotlin.math.*
 
 
@@ -118,3 +121,68 @@ fun checkPermissions() {
 }
 
 fun Int.toBoolean() = this == 1
+
+
+/**
+ * UnzipUtils class extracts files and sub-directories of a standard zip file to
+ * a destination directory.
+ *
+ */
+object UnzipUtils {
+    /**
+     * @param zipFilePath
+     * @param destDirectory
+     * @throws IOException
+     */
+    @Throws(IOException::class)
+    fun unzip(zipFilePath: File, destDirectory: String) {
+
+        File(destDirectory).run {
+            if (!exists()) mkdirs()
+        }
+
+        ZipFile(zipFilePath).use { zip ->
+            zip.entries().asSequence().forEach { entry ->
+                zip.getInputStream(entry).use { input ->
+                    val filePath = destDirectory + File.separator + entry.name
+                    println("Extracting: $filePath")
+
+                    if (!entry.isDirectory) {
+                        println("Extracting file: $filePath")
+                        // if the entry is a file, extracts it
+                        extractFile(input, filePath)
+                    } else {
+                        println("Extracting directory: $filePath")
+                        // if the entry is a directory, make the directory
+                        val dir = File(filePath)
+                        dir.mkdir()
+                    }
+
+                }
+
+            }
+        }
+    }
+
+    /**
+     * Extracts a zip entry (file entry)
+     * @param inputStream
+     * @param destFilePath
+     * @throws IOException
+     */
+    @Throws(IOException::class)
+    private fun extractFile(inputStream: InputStream, destFilePath: String) {
+        val bos = BufferedOutputStream(FileOutputStream(destFilePath))
+        val bytesIn = ByteArray(inputStream.available())
+        var read: Int
+        while (inputStream.read(bytesIn).also { read = it } != -1) {
+            bos.write(bytesIn, 0, read)
+        }
+        bos.close()
+
+    }
+}
+
+operator fun SnapshotStateList<ModuleModel>.get(moduleId: String): ModuleModel {
+    return this.first { it.id == moduleId }
+}

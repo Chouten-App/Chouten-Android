@@ -5,22 +5,23 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ModuleModel(
-    var id: Int?, // The ID will be set when we load a new module. It is not
+    var id: String, // The ID provided by the module
     // something that needs to be defined within the JSON
     val type: String, // TODO: Better checking to only allow for Source/Meta module types
     val subtypes: List<String>,
     val name: String,
     val version: String,
+    val formatVersion: Int,
     val updateUrl: String,
-    @SerialName("metadata") val meta: ModuleMetaData,
-    val code: Map<String, ModuleCode>
+    @SerialName("general") val meta: ModuleMetaData,
+    val code: Map<String, ModuleCode>?
 ) {
 
     @Serializable
     data class ModuleMetaData(
         val author: String,
         val description: String,
-        val icon: String,
+        var icon: String?,
         val lang: List<String>,
         @SerialName("baseURL") val baseUrl: String,
         @SerialName("bgColor") val backgroundColor: String,
@@ -52,6 +53,7 @@ data class ModuleModel(
                 val removeScripts: Boolean,
                 val allowExternalScripts: Boolean,
                 val usesApi: Boolean? = false,
+                val imports: List<String>? = listOf(),
             )
 
             @Serializable
@@ -70,8 +72,23 @@ data class ModuleModel(
                         + this.version.hashCode()
                         + this.updateUrl.hashCode()
                         + this.meta.hashCode()
-                        + this.code.hashCode()
                 )
+    }
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ModuleModel
+
+        if (id != other.id) return false
+        if (type != other.type) return false
+        if (subtypes != other.subtypes) return false
+        if (name != other.name) return false
+        if (version != other.version) return false
+        if (updateUrl != other.updateUrl) return false
+        if (meta != other.meta) return false
+
+        return true
     }
 }
 
