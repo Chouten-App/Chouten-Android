@@ -145,17 +145,15 @@ object UnzipUtils {
             zip.entries().asSequence().forEach { entry ->
                 zip.getInputStream(entry).use { input ->
                     val filePath = destDirectory + File.separator + entry.name
-                    println("Extracting: $filePath")
-
-                    if (!entry.isDirectory) {
-                        println("Extracting file: $filePath")
+                    if (!entry.name.contains("/")) {
                         // if the entry is a file, extracts it
                         extractFile(input, filePath)
                     } else {
-                        println("Extracting directory: $filePath")
                         // if the entry is a directory, make the directory
-                        val dir = File(filePath)
-                        dir.mkdir()
+                        val dirPath = filePath.substring(0, filePath.lastIndexOf("/"))
+                        File(dirPath).mkdirs()
+                        if (!entry.name.endsWith("/")) extractFile(input, filePath)
+
                     }
 
                 }
@@ -179,7 +177,6 @@ object UnzipUtils {
             bos.write(bytesIn, 0, read)
         }
         bos.close()
-
     }
 }
 

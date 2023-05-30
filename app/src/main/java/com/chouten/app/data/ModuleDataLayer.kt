@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.capitalize
 import androidx.core.net.toUri
 import com.chouten.app.Mapper
 import com.chouten.app.PrimaryDataLayer
@@ -27,6 +28,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
+import java.util.Locale
 
 class ModuleDataLayer() {
 
@@ -51,7 +53,9 @@ class ModuleDataLayer() {
         try {
             if (!URLUtil.isNetworkUrl(url)) throw IOException("Invalid URL")
 
-            val modulePath = AppPaths.addedDirs["Modules"]?.absolutePath + "/" + url.toUri().lastPathSegment
+            val modulePath = AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (url.toUri().lastPathSegment?.removeSuffix(".module")
+                ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
+                ?: throw IOException("Invalid URL"))
 
             // download the zip file
             val response = client.get(url)
@@ -69,7 +73,6 @@ class ModuleDataLayer() {
 
             // unzip the file
             withContext(Dispatchers.IO) {
-                println("HERE?")
                 UnzipUtils.unzip(tempFile, modulePath)
                 tempFile.delete()
             }
@@ -80,15 +83,9 @@ class ModuleDataLayer() {
 //                null,
 //                null
 //            )
-            println("HERE")
 
             val module = getMetadata(modulePath)
-            val moduleFolder = File(modulePath)
-            val newPath = File(modulePath.replace(moduleFolder.name, module.name))
-            moduleFolder.renameTo(newPath)
-
-            module.meta.icon = "${newPath.absolutePath}/icon.png"
-
+            module.meta.icon = "${modulePath}/icon.png"
             if (isModuleExisting(module)) throw IOException("Module already installed!")
 
             // rename the folder to the module name
@@ -253,6 +250,7 @@ class ModuleDataLayer() {
                     val metadata = metadataFile.readText()
                     val decoded = Mapper.parse<ModuleModel>(metadata)
                     decoded.meta.icon = "${file.absolutePath}/icon.png"
+                    println(decoded)
                     availableModules.add(decoded)
                 }
             }

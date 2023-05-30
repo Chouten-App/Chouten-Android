@@ -1,5 +1,6 @@
 package com.chouten.app.data
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Base64
 import android.util.Log
@@ -44,6 +45,7 @@ class WebviewHandler() {
      * Initialize the webview handler.
      * This should be called before any other webview methods.
      */
+    @SuppressLint("SetJavaScriptEnabled")
     fun initialize(context: Context) {
         if (this::webview.isInitialized) return
         webview = WebView(context)
