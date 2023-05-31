@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.util.Log
 import android.webkit.URLUtil
@@ -11,8 +12,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.capitalize
 import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
+import com.chouten.app.App
 import com.chouten.app.Mapper
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.UnzipUtils
@@ -22,15 +24,18 @@ import com.chouten.app.preferenceHandler
 import com.google.common.hash.BloomFilter
 import com.google.common.hash.Funnels
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
+import java.net.URLDecoder
 import java.util.Locale
 
-class ModuleDataLayer() {
+class ModuleDataLayer {
 
     var selectedModule by mutableStateOf<ModuleModel?>(null)
         private set
@@ -43,6 +48,10 @@ class ModuleDataLayer() {
 
     private val webviewHandler = WebviewHandler()
 
+    init {
+        webviewHandler.initialize(App.applicationContext)
+    }
+
     private fun isModuleExisting(module: ModuleModel): Boolean {
         availableModules.find { it.hashCode() == module.hashCode() }
             ?: return false
@@ -53,9 +62,11 @@ class ModuleDataLayer() {
         try {
             if (!URLUtil.isNetworkUrl(url)) throw IOException("Invalid URL")
 
-            val modulePath = AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (url.toUri().lastPathSegment?.removeSuffix(".module")
-                ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
-                ?: throw IOException("Invalid URL"))
+            val modulePath =
+                AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (url.toUri().lastPathSegment?.removeSuffix(
+                    ".module"
+                )
+                    ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() } + ".cache")
 
             // download the zip file
             val response = client.get(url)
@@ -76,19 +87,29 @@ class ModuleDataLayer() {
                 UnzipUtils.unzip(tempFile, modulePath)
                 tempFile.delete()
             }
-            // TODO: Use MediaScannerConnection to scan the file so that it shows up in the file manager
-//            MediaScannerConnection.scanFile(
-//                context,
-//                arrayOf(modulePath),
-//                null,
-//                null
-//            )
 
             val module = getMetadata(modulePath)
-            module.meta.icon = "${modulePath}/icon.png"
-            if (isModuleExisting(module)) throw IOException("Module already installed!")
+
+            if (isModuleExisting(module)) {
+                // remove the .cache folder
+                val moduleFolder = File(modulePath)
+                moduleFolder.deleteRecursively()
+
+                throw IOException("Module already exists")
+            }
 
             // rename the folder to the module name
+            val moduleFolder = File(modulePath)
+            val newModuleFolder = File(moduleFolder.parent, module.name)
+            moduleFolder.renameTo(newModuleFolder)
+
+            // Use MediaScannerConnection to scan the file so that it shows up in the file manager
+            MediaScannerConnection.scanFile(
+                context,
+                arrayOf(newModuleFolder.absolutePath),
+                null,
+                null
+            )
 
             addModule(context, module)
 
@@ -116,30 +137,94 @@ class ModuleDataLayer() {
         if (!metadataFile.exists()) throw IOException("Metadata file does not exist")
 
         val metadata = metadataFile.readText()
-        return Mapper.parse(metadata)
+        val module = Mapper.parse<ModuleModel>(metadata)
+        module.meta.icon =
+            "${folderUrl.substring(0, folderUrl.lastIndexOf("/"))}/${module.name}/icon.png"
+        return module
     }
 
 
-    private suspend fun getCode(module: ModuleModel): List<ModuleModel.ModuleCode.ModuleCodeblock> {
-        return emptyList()
+    private suspend fun getHomeCode(module: ModuleModel): List<ModuleModel.ModuleCode.ModuleCodeblock> {
+        val moduleDir =
+            (AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (module.name)) + "/Home"
+
+        val codeblocks = mutableListOf<ModuleModel.ModuleCode.ModuleCodeblock>()
+
+        // get files that end with .js and sor them by the number in the file name. (e.g. code.js, code1.js, code2.js)
+        val files = File(moduleDir).listFiles { _, name -> name.endsWith(".js") }
+            ?.sortedBy { it.name.substringBefore(".js").toIntOrNull() ?: 0 }
+            ?: throw IOException("No Home files found")
+
+        files.forEach {
+            val code = it.readText()
+            val requestData = getRequestData(code)
+
+            codeblocks.add(
+                element = ModuleModel.ModuleCode.ModuleCodeblock(
+                    code = "function logic() ${code.substringAfter("function logic()")}; logic();",
+                    removeScripts = requestData.removeScripts,
+                    allowExternalScripts = requestData.allowExternalScripts,
+                    usesApi = requestData.usesApi,
+                    request = requestData.request,
+                    imports = requestData.imports
+                )
+            )
+        }
+        return codeblocks
     }
 
-//    private suspend fun getCodeVariables(code: String): ModuleModel.ModuleCode.ModuleCodeblock {
-//        println("Code before is ${code.substringBefore("function logic()")})}")
-//        val vars = webviewHandler.inject(
-//
-//        )
-//        println("Vars: $vars")
-//        return Mapper.parse(
-//            vars.replace(
-//                "\\\"",
-//                "\""
-//            ).replace(
-//                "\\\\",
-//                "\\"
-//            )
-//        )
-//    }
+    private suspend fun getSearchCode(module: ModuleModel): List<ModuleModel.ModuleCode.ModuleCodeblock> {
+        val moduleDir =
+            (AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (module.name)) + "/Search"
+
+        val codeblocks = mutableListOf<ModuleModel.ModuleCode.ModuleCodeblock>()
+
+        // get files that end with .js and sor them by the number in the file name. (e.g. code.js, code1.js, code2.js)
+        val files = File(moduleDir).listFiles { _, name -> name.endsWith(".js") }
+            ?.sortedBy { it.name.substringBefore(".js").toIntOrNull() ?: 0 }
+            ?: throw IOException("No Search files found")
+
+        files.forEach {
+            val code = it.readText()
+            val requestData = getRequestData(code)
+            codeblocks.add(
+                element = ModuleModel.ModuleCode.ModuleCodeblock(
+                    code = "function logic() ${code.substringAfter("function logic()")}; logic();",
+                    removeScripts = requestData.removeScripts,
+                    allowExternalScripts = requestData.allowExternalScripts,
+                    usesApi = requestData.usesApi,
+                    request = requestData.request,
+                    imports = requestData.imports
+                )
+            )
+        }
+        return codeblocks
+    }
+
+    private suspend fun getRequestData(code: String): ModuleModel.ModuleCode.ModuleCodeblock {
+        val request = webviewHandler.inject(
+            ModuleModel.ModuleCode.ModuleCodeblock(
+                code = code.substringBefore("function logic()") + "requestData();",
+                removeScripts = false,
+                allowExternalScripts = false,
+                usesApi = true
+            ),
+            true
+        )
+
+        // the request data is returned as a stringified json object that looks like this:
+        // "{\"request\":{\"url\": ...}}"
+        // replace the escaped quotes with normal quotes and parse the json
+
+        return Mapper.parse(request.replace("\\\\\"|\"\\{|\\}\"".toRegex()) {
+            when (it.value) {
+                "\\\"" -> "\""
+                "\"{" -> "{"
+                "}\"" -> "}"
+                else -> it.value
+            }
+        })
+    }
 
 
     suspend fun enqueueRemoteInstall(context: Context, intent: Intent) {
@@ -219,9 +304,22 @@ class ModuleDataLayer() {
         }
     }
 
-    fun updateSelectedModule(moduleId: String) {
+    suspend fun updateSelectedModule(moduleId: String) {
         val module = availableModules[moduleId]
         println("Updating to ${module.name}")
+
+        val moduleHome = App.lifecycleScope.async {
+            getHomeCode(module)
+        }
+
+//        val moduleSearch = App.lifecycleScope.async {
+//            getSearchCode(module)
+//        }
+
+        //val search = moduleSearch.await()
+        val home = moduleHome.await()
+        module.code = mapOf("anime" to ModuleModel.ModuleCode(home = home))
+
         selectedModule = module
         preferenceHandler.selectedModule = selectedModule.hashCode()
     }
@@ -250,7 +348,7 @@ class ModuleDataLayer() {
                     val metadata = metadataFile.readText()
                     val decoded = Mapper.parse<ModuleModel>(metadata)
                     decoded.meta.icon = "${file.absolutePath}/icon.png"
-                    println(decoded)
+
                     availableModules.add(decoded)
                 }
             }

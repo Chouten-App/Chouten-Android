@@ -7,9 +7,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.chouten.app.LogLayer
 import com.chouten.app.Mapper
 import com.chouten.app.ModuleLayer
 import com.chouten.app.PrimaryDataLayer
+import com.chouten.app.data.LogEntry
 import com.chouten.app.data.ModuleResponse
 import com.chouten.app.data.SearchResult
 import com.chouten.app.data.SnackbarVisualsWithError
@@ -87,6 +89,7 @@ class SearchPageViewModel(
         val searchModule = ModuleLayer.selectedModule ?: return
         searchModule.subtypes.forEach { subtype ->
             val searchFns = searchModule.code?.get(subtype)?.search
+
             searchFns?.forEach { searchFn ->
                 // We need the search function to
                 // be executed synchronously.
@@ -108,7 +111,7 @@ class SearchPageViewModel(
                         return@launch
                     }
 
-                    val res = webview.inject(searchFn.javascript)
+                    val res = webview.inject(searchFn)
                     if (res.isBlank()) {
                         PrimaryDataLayer.enqueueSnackbar(
                             SnackbarVisualsWithError(
@@ -120,18 +123,11 @@ class SearchPageViewModel(
                         return@launch
                     }
 
-                    val json = res.substring(2..res.length - 3).replace(
-                        "\\\"",
-                        "\""
-                    ).replace(
-                        "\\\\",
-                        "\\"
-                    )
                     _searchResults.clear()
                     try {
                         val results =
                             Mapper.parse<ModuleResponse<List<SearchResult>>>(
-                                json
+                                res
                             )
                         _searchResults.addAll(results.result)
                         isSearching = false
@@ -142,6 +138,18 @@ class SearchPageViewModel(
                                 "Error parsing search results for $query", true
                             )
                         )
+                        e.printStackTrace()
+                        e.localizedMessage?.let {
+                            LogEntry(
+                                title = "Error parsing search results for $query",
+                                message = it,
+                                isError = true,
+                            )
+                        }?.let {
+                            LogLayer.addLogEntry(
+                                it
+                            )
+                        }
                         isSearching = false
                     }
                 }

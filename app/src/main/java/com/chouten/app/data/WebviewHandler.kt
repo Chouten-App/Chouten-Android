@@ -45,11 +45,12 @@ class WebviewHandler() {
      * Initialize the webview handler.
      * This should be called before any other webview methods.
      */
-    @SuppressLint("SetJavaScriptEnabled")
+    @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
     fun initialize(context: Context) {
         if (this::webview.isInitialized) return
         webview = WebView(context)
         webview.settings.javaScriptEnabled = true
+        webview.addJavascriptInterface(this, "Android")
     }
 
     /**
@@ -57,7 +58,6 @@ class WebviewHandler() {
      */
     suspend fun load(codeblock: ModuleModel.ModuleCode.ModuleCodeblock): Boolean {
         val request = codeblock.request
-        val js = codeblock.javascript
         // Use the client to get the data from the url
         // and then inject it into the webview.
         val headers = request.headers.mapNotNull {
@@ -77,12 +77,12 @@ class WebviewHandler() {
             var responseCode = -1
             lateinit var response: ByteArray
             while (counter < 2 || responseCode != 200) {
-                val _response = when (request.type) {
+                val _response = when (request.method) {
                     "GET" -> client.get(url, headers)
                     "POST" -> client.post(url, headers, request.body)
                     "PUT" -> client.put(url, headers, request.body)
                     "DELETE" -> client.delete(url, headers)
-                    else -> throw Exception("Invalid request type ${request.type}")
+                    else -> throw Exception("Invalid request type ${request.method}")
                 }
                 counter += 1
                 responseCode = _response.code
@@ -112,22 +112,22 @@ class WebviewHandler() {
         LogLayer.addLogEntry(
             LogEntry(
                 title = "Loading data from ${request.url}",
-                message = "Request Type: ${request.type}\nUses API? ${js.usesApi}",
+                message = "Request Type: ${request.method}\nUses API? ${codeblock.usesApi}",
                 isError = false
             )
         )
 
         // The webview expects a Base64 encoded string
         val encodedData = Base64.encodeToString(data, Base64.DEFAULT)
-        if (js.usesApi != true) {
-            webview.loadData(encodedData, "text/html", "base64")
+        if (!codeblock.usesApi!!) {
+            webview.loadData(encodedData, "text/html; charset=utf-8", "base64")
         } else {
             // We want to load a skeleton
             // so that the webview is ready to go
             // when we inject the data.
 
             val sanitised =
-                data.toString(StandardCharsets.UTF_8)
+                data.toString()
                     // Replace the HTML ampersand values
                     // e.g &#39; -> '
                     .replace(Regex("&#\\d+;"), "")
@@ -171,7 +171,7 @@ class WebviewHandler() {
                 // Inject the data into the webview
                 // and then remove the webview client.
                 // Add the chouten div to the DOM
-                if (js.usesApi == true) {
+                if (codeblock.usesApi) {
                     injectionLock.unlock();
                     return
                 }
@@ -196,7 +196,6 @@ class WebviewHandler() {
                 } else {
                     Pair("Info", false)
                 }
-
                 LogLayer.addLogEntry(
                     LogEntry(
                         title = logType,
@@ -217,7 +216,7 @@ class WebviewHandler() {
     /**
      * Inject the given javascript into the webview
      */
-    suspend fun inject(javascript: ModuleModel.ModuleCode.ModuleCodeblock.ModuleJavascriptOpts): String {
+    suspend fun inject(javascript: ModuleModel.ModuleCode.ModuleCodeblock, immediate: Boolean = false): String {
         println("Running code: ${javascript.code}")
         var results = ""
         // If there's already an injection in progress
@@ -254,22 +253,37 @@ class WebviewHandler() {
         """.trimIndent()
         ) {
             callLock.unlock()
+            // check if immediate is true, and if so, unlock the injection lock and return
+            if (immediate) {
+                results = it ?: ""
+                injectionLock.unlock()
+                return@evaluateJavascript
+            }
+
         }
+
+        if (immediate) {
+            callLock.lock()
+            callLock.unlock()
+            injectionLock.lock()
+            return results
+        }
+
+        println("CHECK URL: ${webview.url}")
 
         // Each entry in the chouten div
         // is stored inside a <p> tag.
         // We want to make a JSON array of the
         // innerText of each <p> tag.
         val retrieveInjection = """
-            var results = [];
+            var results = {result: [], nextUrl: ""};
             document.querySelectorAll("#chouten > p").forEach((el) => {
-                el.innerText = el.innerText.replace(/\\n/g, "");
-                results.push(el.innerText);
+                results.result.push(...JSON.parse(el.innerText));
             });
             // Clear the chouten div
             document.getElementById("chouten").innerHTML = "";
-            if (results == null || results.length == 0) {
-                results = [[{result: [], nextUrl: ""}]];
+            if (results == null || results.result.length == 0) {
+                results = {result: [], nextUrl: ""};
             }
             results
         """.trimIndent()
@@ -278,7 +292,7 @@ class WebviewHandler() {
         webview.evaluateJavascript(retrieveInjection) {
             // it is a JSON Array of strings
             // so we need to parse it.
-            results = it ?: "[[{result: [], nextUrl: \"\"}]]"
+            results = it ?: "{result: [], nextUrl: \"\"}"
             Log.d("WebviewHandler", "Returning $results")
             callLock.unlock()
         }
@@ -288,7 +302,7 @@ class WebviewHandler() {
         callLock.lock()
         callLock.unlock()
         injectionLock.unlock()
-        return results
+        return results.trimIndent()
     }
 
     fun updateNextUrl(url: String?) {

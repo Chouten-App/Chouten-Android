@@ -14,9 +14,8 @@ data class ModuleModel(
     val formatVersion: Int,
     val updateUrl: String,
     @SerialName("general") val meta: ModuleMetaData,
-    val code: Map<String, ModuleCode>?
+    var code: Map<String, ModuleCode>?
 ) {
-
     @Serializable
     data class ModuleMetaData(
         val author: String,
@@ -30,30 +29,27 @@ data class ModuleModel(
 
     @Serializable
     data class ModuleCode(
-        val search: List<ModuleCodeblock>,
-        val info: List<ModuleCodeblock>,
-        val mediaConsume: List<ModuleCodeblock>,
+        val home: List<ModuleCodeblock> = listOf(),
+        val search: List<ModuleCodeblock> = listOf(),
+        val info: List<ModuleCodeblock> = listOf(),
+        val mediaConsume: List<ModuleCodeblock> = listOf(),
     ) {
         @Serializable
         data class ModuleCodeblock(
-            val request: ModuleRequest,
-            val javascript: ModuleJavascriptOpts
+            val request: ModuleRequest = ModuleRequest("", "", listOf(), ""),
+            val removeScripts: Boolean,
+            val allowExternalScripts: Boolean,
+            val usesApi: Boolean? = false,
+            val imports: List<String>? = listOf(),
+            // not set within the JSON
+            val code: String? = null,
         ) {
             @Serializable
             data class ModuleRequest(
-                val url: String, // Left blank if we wish to reuse the last url
-                val type: String, // "POST", "GET", "PUT" and "DELETE"
+                var url: String, // Left blank if we wish to reuse the last url
+                val method: String, // "POST", "GET", "PUT" and "DELETE"
                 val headers: List<ModuleKVPair>,
                 val body: String? // The body of the Request
-            )
-
-            @Serializable
-            data class ModuleJavascriptOpts(
-                val code: String,
-                val removeScripts: Boolean,
-                val allowExternalScripts: Boolean,
-                val usesApi: Boolean? = false,
-                val imports: List<String>? = listOf(),
             )
 
             @Serializable
@@ -96,6 +92,27 @@ data class ModuleModel(
 data class ModuleResponse<T>(
     val result: T, val nextUrl: String? = ""
 )
+
+@Serializable
+data class HomeResult(
+    val type: String, // "Carousel", "list", "grid_2x", "..."
+    val title: String, // "Spotlight", "Recently released", "..."
+    val data: List<HomeItem>
+) {
+    @Serializable
+    data class HomeItem(
+        val url: String,
+        val image: String,
+        val titles: Map<String, String>,
+        val indicator: String?,
+        val current: Int?,
+        val total: Int?,
+        val subtitle: String?,
+        val subtitleValue: List<String>,
+        val buttonText: String?,
+        val showIcon: Boolean? = false,
+    )
+}
 
 @Serializable
 data class SearchResult(

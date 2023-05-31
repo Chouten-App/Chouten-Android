@@ -208,10 +208,11 @@ fun ModuleSelectorContainer(
                                     Color(str.toLong(16))
                                 },
                             ) {
-                                ModuleLayer.updateSelectedModule(
-                                    module.id
-                                        ?: throw Exception("Module ID not set for ${module.name}"),
-                                )
+                                coroutineScope.launch {
+                                    ModuleLayer.updateSelectedModule(
+                                        module.id
+                                    )
+                                }
                                 coroutineScope.launch { sheetState.hide() }
                             }
                         }

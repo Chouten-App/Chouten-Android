@@ -73,7 +73,7 @@ class WatchPageViewModel(
                         return@launch
                     }
 
-                    val res = webview.inject(watchFn.javascript)
+                    val res = webview.inject(watchFn)
                     if (res.isBlank()) {
                         PrimaryDataLayer.enqueueSnackbar(
                             SnackbarVisualsWithError(

@@ -84,7 +84,7 @@ class InfoPageViewModel(
                         return@launch
                     }
 
-                    val res = webview.inject(infoFn.javascript)
+                    val res = webview.inject(infoFn)
                     if (res.isBlank()) {
                         PrimaryDataLayer.enqueueSnackbar(
                             SnackbarVisualsWithError(
