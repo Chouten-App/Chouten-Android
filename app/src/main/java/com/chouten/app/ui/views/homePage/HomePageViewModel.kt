@@ -71,13 +71,11 @@ class HomePageViewModel(
                     }
 
                     try {
-
-                        println(res)
                         val results =
                             Mapper.parse<ModuleResponse<List<HomeResult>>>(
                                 res
                             )
-                        println(results)
+                        println("RESULTS: "+results)
                         isLoading = false
                         _homeResults.addAll(results.result)
                         webview.updateNextUrl(results.nextUrl)

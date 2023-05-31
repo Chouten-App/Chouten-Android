@@ -4,9 +4,11 @@ import android.content.Intent
 import android.content.Intent.ACTION_SEND
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.chouten.app.ui.theme.ChoutenTheme
 import kotlinx.coroutines.Dispatchers

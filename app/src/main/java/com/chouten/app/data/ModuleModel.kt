@@ -111,6 +111,7 @@ data class HomeResult(
         val subtitleValue: List<String>,
         val buttonText: String?,
         val showIcon: Boolean? = false,
+        val iconText: String?,
     )
 }
 

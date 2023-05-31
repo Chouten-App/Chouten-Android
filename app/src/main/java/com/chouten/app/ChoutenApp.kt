@@ -36,7 +36,7 @@ fun ChoutenApp() {
 
     val alerts = PrimaryDataLayer.alertQueue.asStateFlow()
 
-    Scaffold(modifier = Modifier.fillMaxSize(), topBar = { }, bottomBar = {
+    Scaffold(modifier = Modifier.fillMaxSize(), topBar = {}, bottomBar = {
         AnimatedVisibility(
             visible = PrimaryDataLayer.isNavigationShown,
             enter = expandVertically(),

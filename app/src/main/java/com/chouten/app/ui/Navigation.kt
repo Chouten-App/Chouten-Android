@@ -34,6 +34,7 @@ import com.chouten.app.data.NavigationItems
 import com.chouten.app.data.WebviewHandler
 import com.chouten.app.ui.components.Subpage
 import com.chouten.app.ui.views.homePage.HomePage
+import com.chouten.app.ui.views.homePage.HomePageViewModel
 import com.chouten.app.ui.views.infoPage.InfoPage
 import com.chouten.app.ui.views.infoPage.InfoPageViewModel
 import com.chouten.app.ui.views.searchPage.SearchPage
@@ -49,6 +50,7 @@ object ViewModels {
     var searchVm: SearchPageViewModel? = null
     var infoVm: InfoPageViewModel? = null
     var watchVm: WatchPageViewModel? = null
+    var homeVm: HomePageViewModel? = null
 }
 
 @Composable
@@ -70,11 +72,18 @@ fun Navigation(navController: NavHostController) {
         val searchVm =
             ViewModels.searchVm
         val infoVm = ViewModels.infoVm
+        val homeVm = ViewModels.homeVm
 
         composable(
             route = Screen.HomePage.route,
         ) {
-            HomePage(navController.context)
+            if (homeVm == null) {
+                ViewModels.homeVm =
+                    HomePageViewModel(navController.context, WebviewHandler())
+            }
+            ViewModels.homeVm?.let {
+                HomePage(navController.context, it, navController)
+            }
         }
         composable(
             route = Screen.SearchPage.route

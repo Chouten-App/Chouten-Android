@@ -13,6 +13,7 @@ import com.chouten.app.ModuleLayer
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.client
 import kotlinx.coroutines.sync.Mutex
+import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
 
@@ -119,8 +120,10 @@ class WebviewHandler() {
 
         // The webview expects a Base64 encoded string
         val encodedData = Base64.encodeToString(data, Base64.DEFAULT)
+        val decodedData = String(Base64.decode(encodedData, Base64.DEFAULT))
+        //println("Decoded data: $decodedData")
         if (!codeblock.usesApi!!) {
-            webview.loadData(encodedData, "text/html; charset=utf-8", "base64")
+            webview.loadDataWithBaseURL(null, decodedData, "text/html; charset=utf-8", "br", null)
         } else {
             // We want to load a skeleton
             // so that the webview is ready to go
@@ -269,16 +272,16 @@ class WebviewHandler() {
             return results
         }
 
-        println("CHECK URL: ${webview.url}")
-
         // Each entry in the chouten div
         // is stored inside a <p> tag.
         // We want to make a JSON array of the
         // innerText of each <p> tag.
         val retrieveInjection = """
             var results = {result: [], nextUrl: ""};
+            // print the html page
             document.querySelectorAll("#chouten > p").forEach((el) => {
-                results.result.push(...JSON.parse(el.innerText));
+                results.result.push(...JSON.parse(el.innerText).result);
+                results.nextUrl = JSON.parse(el.innerText).nextUrl;
             });
             // Clear the chouten div
             document.getElementById("chouten").innerHTML = "";

@@ -27,6 +27,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.File
@@ -59,15 +62,15 @@ class ModuleDataLayer {
     }
 
     suspend fun enqueueRemoteInstall(context: Context, url: String) {
+        if (!URLUtil.isNetworkUrl(url)) throw IOException("Invalid URL")
+
+        val modulePath =
+            AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (url.toUri().lastPathSegment?.removeSuffix(
+                ".module"
+            )
+                ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() } + ".cache")
+
         try {
-            if (!URLUtil.isNetworkUrl(url)) throw IOException("Invalid URL")
-
-            val modulePath =
-                AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (url.toUri().lastPathSegment?.removeSuffix(
-                    ".module"
-                )
-                    ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() } + ".cache")
-
             // download the zip file
             val response = client.get(url)
             val bytes = response.body.bytes()
@@ -118,6 +121,10 @@ class ModuleDataLayer {
             if (e is IOException) {
                 val tempFile = File(context.cacheDir, "checkout.zip")
                 if (tempFile.exists()) tempFile.delete()
+
+                // delete .cache folder if it exists
+                val moduleFolder = File(modulePath)
+                if (moduleFolder.exists()) moduleFolder.deleteRecursively()
             }
 
             PrimaryDataLayer.enqueueSnackbar(
@@ -143,6 +150,35 @@ class ModuleDataLayer {
         return module
     }
 
+    // TODO: Move (getInfoCode, getSearchCode, getHomeCode) to a single function to reduce code duplication
+    private suspend fun getInfoCode(module: ModuleModel): List<ModuleModel.ModuleCode.ModuleCodeblock> {
+        val moduleDir =
+            (AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (module.name)) + "/Info"
+
+        val codeblocks = mutableListOf<ModuleModel.ModuleCode.ModuleCodeblock>()
+
+        // get files that end with .js and sor them by the number in the file name. (e.g. code.js, code1.js, code2.js)
+        val files = File(moduleDir).listFiles { _, name -> name.endsWith(".js") }
+            ?.sortedBy { it.name.substringBefore(".js").toIntOrNull() ?: 0 }
+            ?: throw IOException("No Home files found")
+
+        files.forEach {
+            val code = it.readText()
+            val requestData = getRequestData(code)
+
+            codeblocks.add(
+                element = ModuleModel.ModuleCode.ModuleCodeblock(
+                    code = "function logic() ${code.substringAfter("function logic()")}; logic();",
+                    removeScripts = requestData.removeScripts,
+                    allowExternalScripts = requestData.allowExternalScripts,
+                    usesApi = requestData.usesApi,
+                    request = requestData.request,
+                    imports = requestData.imports
+                )
+            )
+        }
+        return codeblocks
+    }
 
     private suspend fun getHomeCode(module: ModuleModel): List<ModuleModel.ModuleCode.ModuleCodeblock> {
         val moduleDir =
@@ -307,18 +343,39 @@ class ModuleDataLayer {
     suspend fun updateSelectedModule(moduleId: String) {
         val module = availableModules[moduleId]
         println("Updating to ${module.name}")
+        val lock = Mutex()
 
         val moduleHome = App.lifecycleScope.async {
-            getHomeCode(module)
+            lock.withLock {
+                getHomeCode(module)
+            }
         }
 
-//        val moduleSearch = App.lifecycleScope.async {
-//            getSearchCode(module)
-//        }
+        val moduleSearch = App.lifecycleScope.async {
+            lock.withLock {
+                getSearchCode(module)
+            }
+        }
 
-        //val search = moduleSearch.await()
+        val moduleInfo = App.lifecycleScope.async {
+            lock.withLock {
+                getInfoCode(module)
+            }
+        }
+
+        // TODO: Somehow having multiple async calls breaks. Need a fix
+        // probably because its injecting multiple things at the same time
+
+
+        // Wait for all the async calls to complete
         val home = moduleHome.await()
         module.code = mapOf("anime" to ModuleModel.ModuleCode(home = home))
+//
+//        val info = moduleInfo.await()
+//        module.code = mapOf("anime" to ModuleModel.ModuleCode(home = home))
+//
+//        val search = moduleSearch.await()
+//        module.code = mapOf("anime" to ModuleModel.ModuleCode(home = home))
 
         selectedModule = module
         preferenceHandler.selectedModule = selectedModule.hashCode()
