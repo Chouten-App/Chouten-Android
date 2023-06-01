@@ -1,4 +1,4 @@
-package com.chouten.app.ui.views.settingsPage.screens.appearancePage
+package com.chouten.app.ui.views.settings.screens.appearance
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable

@@ -1,5 +1,7 @@
 package com.chouten.app
 
+import android.view.Window
+import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -10,6 +12,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import com.chouten.app.data.DataLayer
 import com.chouten.app.data.LogDataLayer
@@ -32,6 +36,7 @@ fun initializeRepositories() {
 
 @Composable
 fun ChoutenApp() {
+
     val navController = rememberNavController()
 
     val alerts = PrimaryDataLayer.alertQueue.asStateFlow()

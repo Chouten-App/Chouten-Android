@@ -1,4 +1,4 @@
-package com.chouten.app.ui.views.searchPage
+package com.chouten.app.ui.views.search
 
 import android.content.Context
 import androidx.compose.runtime.getValue

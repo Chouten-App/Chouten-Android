@@ -1,4 +1,4 @@
-package com.chouten.app.ui.views.settingsPage.screens
+package com.chouten.app.ui.views.settings.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize

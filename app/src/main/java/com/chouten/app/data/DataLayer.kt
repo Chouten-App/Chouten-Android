@@ -7,7 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.flow.MutableStateFlow
 
-class DataLayer() {
+class DataLayer {
     var snackbarQueue: MutableLiveData<List<SnackbarVisualsWithError>> =
         MutableLiveData(listOf())
         private set

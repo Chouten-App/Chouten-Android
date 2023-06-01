@@ -1,4 +1,4 @@
-package com.chouten.app.ui.views.infoPage
+package com.chouten.app.ui.views.info
 
 import android.content.Context
 import androidx.compose.runtime.getValue

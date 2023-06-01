@@ -17,7 +17,7 @@ import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
 
-class WebviewHandler() {
+class WebviewHandler {
     private lateinit var webview: WebView
 
     /**
@@ -196,7 +196,7 @@ class WebviewHandler() {
                 // and then remove the webview client.
                 // Add the chouten div to the DOM
                 if (codeblock.usesApi) {
-                    injectionLock.unlock();
+                    injectionLock.unlock()
                     return
                 }
 

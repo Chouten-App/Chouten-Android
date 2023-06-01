@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class LogDataLayer() {
+class LogDataLayer {
     private var _logEntries = mutableStateListOf<LogEntry>()
     val logEntries: List<LogEntry>
         get() = _logEntries

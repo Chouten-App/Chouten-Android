@@ -1,4 +1,4 @@
-package com.chouten.app.ui.views.searchPage
+package com.chouten.app.ui.views.search
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.*
@@ -277,7 +277,7 @@ fun SearchResultItem(
         )
         Row(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(0.9F)
                 .wrapContentWidth(Alignment.End)
         ) {
             Text(

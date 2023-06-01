@@ -1,4 +1,4 @@
-package com.chouten.app.ui.views.settingsPage.screens.appearancePage
+package com.chouten.app.ui.views.settings.screens.appearance
 
 import android.content.Context
 import android.os.Build
@@ -13,7 +13,7 @@ import androidx.lifecycle.ViewModel
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.data.AppPaths
 import com.chouten.app.data.SnackbarVisualsWithError
-import com.chouten.app.ui.views.settingsPage.json
+import com.chouten.app.ui.views.settings.json
 import kotlinx.serialization.encodeToString
 import kotlin.reflect.full.declaredMemberProperties
 

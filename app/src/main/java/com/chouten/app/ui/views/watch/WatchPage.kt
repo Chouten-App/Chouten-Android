@@ -1,4 +1,4 @@
-package com.chouten.app.ui.views.watchPage
+package com.chouten.app.ui.views.watch
 
 import android.app.Activity
 import android.net.Uri

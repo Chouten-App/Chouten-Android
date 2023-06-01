@@ -20,6 +20,8 @@ lateinit var App: MainActivity
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        actionBar?.hide()
+
         super.onCreate(savedInstanceState)
         preferenceHandler = PreferenceManager(this)
 

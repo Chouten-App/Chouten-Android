@@ -1,4 +1,4 @@
-package com.chouten.app.ui.views.settingsPage.screens
+package com.chouten.app.ui.views.settings.screens
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable

@@ -1,4 +1,4 @@
-package com.chouten.app.ui.views.homePage
+package com.chouten.app.ui.views.home
 
 import android.content.Context
 import androidx.compose.runtime.getValue
@@ -7,20 +7,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.chouten.app.LogLayer
 import com.chouten.app.Mapper
 import com.chouten.app.ModuleLayer
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.data.HomeResult
-import com.chouten.app.data.LogEntry
 import com.chouten.app.data.ModuleResponse
-import com.chouten.app.data.SearchResult
 import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.data.WebviewHandler
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.net.URLEncoder
 
 class HomePageViewModel(
     context: Context,

@@ -25,6 +25,7 @@
     <!-- Navigation Bar Titles -->
     <string name="navbar_home">Home</string>
     <string name="navbar_search">Search</string>
+    <string name="navbar_more_header">頂点</string>
     <string name="navbar_more">More</string>
 
     <string name="settings_submenu_log">App Logs</string>
@@ -52,7 +53,5 @@
     <string name="log__title">View Logs</string>
     <string name="log__desc">View module logs</string>
     <string name="log__action_clear">Clear Logs</string>
-    <string name="log__placeholder">No logs... Yay?</string>
-
-
+    <string name="log__placeholder">No logs… Yay?</string>
 </resources>

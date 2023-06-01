@@ -33,18 +33,18 @@ import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.data.NavigationItems
 import com.chouten.app.data.WebviewHandler
 import com.chouten.app.ui.components.Subpage
-import com.chouten.app.ui.views.homePage.HomePage
-import com.chouten.app.ui.views.homePage.HomePageViewModel
-import com.chouten.app.ui.views.infoPage.InfoPage
-import com.chouten.app.ui.views.infoPage.InfoPageViewModel
-import com.chouten.app.ui.views.searchPage.SearchPage
-import com.chouten.app.ui.views.searchPage.SearchPageViewModel
-import com.chouten.app.ui.views.settingsPage.MorePage
-import com.chouten.app.ui.views.settingsPage.screens.LogPage
-import com.chouten.app.ui.views.settingsPage.screens.NetworkPage
-import com.chouten.app.ui.views.settingsPage.screens.appearancePage.AppearancePage
-import com.chouten.app.ui.views.watchPage.WatchPage
-import com.chouten.app.ui.views.watchPage.WatchPageViewModel
+import com.chouten.app.ui.views.home.HomePage
+import com.chouten.app.ui.views.home.HomePageViewModel
+import com.chouten.app.ui.views.info.InfoPage
+import com.chouten.app.ui.views.info.InfoPageViewModel
+import com.chouten.app.ui.views.search.SearchPage
+import com.chouten.app.ui.views.search.SearchPageViewModel
+import com.chouten.app.ui.views.settings.MorePage
+import com.chouten.app.ui.views.settings.screens.LogPage
+import com.chouten.app.ui.views.settings.screens.NetworkPage
+import com.chouten.app.ui.views.settings.screens.appearance.AppearancePage
+import com.chouten.app.ui.views.watch.WatchPage
+import com.chouten.app.ui.views.watch.WatchPageViewModel
 
 object ViewModels {
     var searchVm: SearchPageViewModel? = null
