@@ -81,7 +81,7 @@ fun Navigation(navController: NavHostController) {
                     HomePageViewModel(navController.context, WebviewHandler())
             }
             ViewModels.homeVm?.let {
-                HomePage(navController.context, it, navController)
+                HomePage(navController, it)
             }
         }
         composable(

@@ -93,21 +93,19 @@ import java.util.Locale
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomePage(
-    context: Context,
+    navController: NavController,
     provider: HomePageViewModel = HomePageViewModel(
-        context = context,
+        context = navController.context,
         WebviewHandler()
     ),
-    navController: NavController
 ) {
-    provider.initialize()
     val scrollState = rememberScrollState()
     Column(
         Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ModuleSelectorContainer(context = context) {
+        ModuleSelectorContainer(context = navController.context) {
             AnimatedVisibility(
                 provider.isLoading,
                 modifier = Modifier

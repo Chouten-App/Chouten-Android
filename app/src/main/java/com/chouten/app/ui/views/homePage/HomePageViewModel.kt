@@ -27,10 +27,6 @@ class HomePageViewModel(
     private val webview: WebviewHandler = WebviewHandler()
 ) : ViewModel() {
 
-    init {
-        webview.initialize(context)
-    }
-
     var isLoading by mutableStateOf(false)
         private set
 
@@ -38,7 +34,12 @@ class HomePageViewModel(
     val homeResults: List<HomeResult>
         get() = _homeResults
 
-    fun initialize() {
+    init {
+        webview.initialize(context)
+        this.initialize()
+    }
+
+    private fun initialize() {
         viewModelScope.launch {
             loadHomePage()
         }
