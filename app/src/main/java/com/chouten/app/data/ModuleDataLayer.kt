@@ -27,15 +27,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
-import java.net.URLDecoder
 import java.util.Locale
 
 class ModuleDataLayer {
@@ -50,6 +46,10 @@ class ModuleDataLayer {
     )
 
     private val webviewHandler = WebviewHandler()
+
+    private fun reInitialize(context: Context) {
+        webviewHandler.reset(context)
+    }
 
     init {
         webviewHandler.initialize(App.applicationContext)
@@ -150,68 +150,14 @@ class ModuleDataLayer {
         return module
     }
 
-    // TODO: Move (getInfoCode, getSearchCode, getHomeCode) to a single function to reduce code duplication
-    private suspend fun getInfoCode(module: ModuleModel): List<ModuleModel.ModuleCode.ModuleCodeblock> {
+    /**
+     * @param module The module to read the code from
+     * @param subFolder The subfolder to read the code from (e.g. "Search", "Info", "Media")
+     * @return A list of codeblocks
+     */
+    private suspend fun getModuleCode(module: ModuleModel, subFolder: String): List<ModuleModel.ModuleCode.ModuleCodeblock> {
         val moduleDir =
-            (AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (module.name)) + "/Info"
-
-        val codeblocks = mutableListOf<ModuleModel.ModuleCode.ModuleCodeblock>()
-
-        // get files that end with .js and sor them by the number in the file name. (e.g. code.js, code1.js, code2.js)
-        val files = File(moduleDir).listFiles { _, name -> name.endsWith(".js") }
-            ?.sortedBy { it.name.substringBefore(".js").toIntOrNull() ?: 0 }
-            ?: throw IOException("No Home files found")
-
-        files.forEach {
-            val code = it.readText()
-            val requestData = getRequestData(code)
-
-            codeblocks.add(
-                element = ModuleModel.ModuleCode.ModuleCodeblock(
-                    code = "function logic() ${code.substringAfter("function logic()")}; logic();",
-                    removeScripts = requestData.removeScripts,
-                    allowExternalScripts = requestData.allowExternalScripts,
-                    usesApi = requestData.usesApi,
-                    request = requestData.request,
-                    imports = requestData.imports
-                )
-            )
-        }
-        return codeblocks
-    }
-
-    private suspend fun getHomeCode(module: ModuleModel): List<ModuleModel.ModuleCode.ModuleCodeblock> {
-        val moduleDir =
-            (AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (module.name)) + "/Home"
-
-        val codeblocks = mutableListOf<ModuleModel.ModuleCode.ModuleCodeblock>()
-
-        // get files that end with .js and sor them by the number in the file name. (e.g. code.js, code1.js, code2.js)
-        val files = File(moduleDir).listFiles { _, name -> name.endsWith(".js") }
-            ?.sortedBy { it.name.substringBefore(".js").toIntOrNull() ?: 0 }
-            ?: throw IOException("No Home files found")
-
-        files.forEach {
-            val code = it.readText()
-            val requestData = getRequestData(code)
-
-            codeblocks.add(
-                element = ModuleModel.ModuleCode.ModuleCodeblock(
-                    code = "function logic() ${code.substringAfter("function logic()")}; logic();",
-                    removeScripts = requestData.removeScripts,
-                    allowExternalScripts = requestData.allowExternalScripts,
-                    usesApi = requestData.usesApi,
-                    request = requestData.request,
-                    imports = requestData.imports
-                )
-            )
-        }
-        return codeblocks
-    }
-
-    private suspend fun getSearchCode(module: ModuleModel): List<ModuleModel.ModuleCode.ModuleCodeblock> {
-        val moduleDir =
-            (AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (module.name)) + "/Search"
+            (AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (module.name)) + "/$subFolder"
 
         val codeblocks = mutableListOf<ModuleModel.ModuleCode.ModuleCodeblock>()
 
@@ -251,7 +197,6 @@ class ModuleDataLayer {
         // the request data is returned as a stringified json object that looks like this:
         // "{\"request\":{\"url\": ...}}"
         // replace the escaped quotes with normal quotes and parse the json
-
         return Mapper.parse(request.replace("\\\\\"|\"\\{|\\}\"".toRegex()) {
             when (it.value) {
                 "\\\"" -> "\""
@@ -343,45 +288,34 @@ class ModuleDataLayer {
     suspend fun updateSelectedModule(moduleId: String) {
         val module = availableModules[moduleId]
         println("Updating to ${module.name}")
-        val lock = Mutex()
-
-        val moduleHome = App.lifecycleScope.async {
-            lock.withLock {
-                getHomeCode(module)
-            }
-        }
 
         val moduleSearch = App.lifecycleScope.async {
-            lock.withLock {
-                getSearchCode(module)
-            }
+            getModuleCode(module, "Search")
         }
 
-        val moduleInfo = App.lifecycleScope.async {
-            lock.withLock {
-                getInfoCode(module)
-            }
+       val moduleInfo = App.lifecycleScope.async {
+           getModuleCode(module, "Info")
         }
 
-        // TODO: Somehow having multiple async calls breaks. Need a fix
-        // probably because its injecting multiple things at the same time
+        val moduleHome = App.lifecycleScope.async {
+            getModuleCode(module, "Home")
+        }
 
+        val moduleMediaConsume = App.lifecycleScope.async {
+            getModuleCode(module, "Media")
+        }
 
-        // Wait for all the async calls to complete
+        val search = moduleSearch.await()
         val home = moduleHome.await()
-        module.code = mapOf("anime" to ModuleModel.ModuleCode(home = home))
-//
-//        val info = moduleInfo.await()
-//        module.code = mapOf("anime" to ModuleModel.ModuleCode(home = home))
-//
-//        val search = moduleSearch.await()
-//        module.code = mapOf("anime" to ModuleModel.ModuleCode(home = home))
+        val info = moduleInfo.await()
+        val mediaConsume = moduleMediaConsume.await()
+        module.code = mapOf("anime" to ModuleModel.ModuleCode(search = search, home = home, info = info, mediaConsume = mediaConsume))
 
         selectedModule = module
         preferenceHandler.selectedModule = selectedModule.hashCode()
     }
 
-    fun loadModules(context: Context) {
+    suspend fun loadModules() {
         try {
             val modulesDir = AppPaths.addedDirs.getOrElse("Modules") {
                 throw IOException("Modules folder not found")
@@ -407,6 +341,18 @@ class ModuleDataLayer {
                     decoded.meta.icon = "${file.absolutePath}/icon.png"
 
                     availableModules.add(decoded)
+                }
+            }
+
+            preferenceHandler.selectedModule.let { selected ->
+                availableModules.forEach { module ->
+                    if (module.hashCode() == selected) {
+                        //update the selected module
+                        App.lifecycleScope.launch {
+                            updateSelectedModule(module.id)
+                        }
+                        return@forEach
+                    }
                 }
             }
         } catch (e: IOException) {

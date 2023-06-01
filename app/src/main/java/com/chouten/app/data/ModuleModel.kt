@@ -36,7 +36,7 @@ data class ModuleModel(
     ) {
         @Serializable
         data class ModuleCodeblock(
-            val request: ModuleRequest = ModuleRequest("", "", listOf(), ""),
+            val request: ModuleRequest? = ModuleRequest("", "", listOf(), ""),
             val removeScripts: Boolean,
             val allowExternalScripts: Boolean,
             val usesApi: Boolean? = false,
@@ -47,7 +47,7 @@ data class ModuleModel(
             @Serializable
             data class ModuleRequest(
                 var url: String, // Left blank if we wish to reuse the last url
-                val method: String, // "POST", "GET", "PUT" and "DELETE"
+                var method: String, // "POST", "GET", "PUT" and "DELETE"
                 val headers: List<ModuleKVPair>,
                 val body: String? // The body of the Request
             )
@@ -127,16 +127,16 @@ data class SearchResult(
 
 @Serializable
 data class InfoResult(
-    val id: String,
+    val id: String?,
     val titles: Titles,
-    val altTitles: List<String>,
+    val altTitles: List<String>?,
     val description: String,
-    val poster: String,
+    val poster: String?,
     val banner: String?,
     val status: String?,
     val totalMediaCount: Int?,
     val mediaType: String,
-    val seasons: List<String>,
+    val seasons: List<String>?,
     val mediaList: List<List<MediaItem>>
 ) {
     @Serializable
@@ -148,7 +148,7 @@ data class InfoResult(
     @Serializable
     data class MediaItem(
         val url: String,
-        val number: Double,
+        val number: Float?,
         val title: String?,
         val description: String?,
         val image: String?,

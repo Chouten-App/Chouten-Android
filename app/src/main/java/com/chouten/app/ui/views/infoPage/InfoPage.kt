@@ -1,5 +1,6 @@
 package com.chouten.app.ui.views.infoPage
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +34,7 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,8 +43,13 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.Paragraph
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -54,6 +61,7 @@ import com.skydoves.landscapist.glide.GlideImage
 import com.valentinilk.shimmer.shimmer
 import java.net.URLEncoder
 
+@OptIn(ExperimentalTextApi::class)
 @Composable
 fun InfoPage(
     provider: InfoPageViewModel,
@@ -67,6 +75,7 @@ fun InfoPage(
     )
 
     var isDescriptionBoxExpanded by rememberSaveable { mutableStateOf(false) }
+    var descriptionLineCount by rememberSaveable { mutableStateOf(0) }
 
     Column(
         modifier = Modifier
@@ -114,12 +123,14 @@ fun InfoPage(
                         .clip(
                             CircleShape
                         )
-                        .size(36.dp)
+                        .size(24.dp)
                         .background(MaterialTheme.colorScheme.primary)
                         .align(Alignment.TopEnd)
                 ) {
                     Icon(
-                        modifier = Modifier.fillMaxSize(0.5f),
+                        modifier = Modifier
+                            .padding(0.dp)
+                            .size(20.dp),
                         imageVector = Icons.Default.Close,
                         contentDescription = "Back",
                         tint = MaterialTheme.colorScheme.onPrimary
@@ -201,6 +212,7 @@ fun InfoPage(
                         }
                     }
                 } // top info
+
                 Text(provider.descriptionText,
                     Modifier
                         .clickable(
@@ -215,24 +227,29 @@ fun InfoPage(
                     fontSize = 15.sp,
                     lineHeight = 16.sp,
                     maxLines = if (!isDescriptionBoxExpanded) 9 else Int.MAX_VALUE,
-                    overflow = TextOverflow.Ellipsis)
+                    overflow = TextOverflow.Ellipsis,
+                    onTextLayout = { textLayoutResult ->
+                        descriptionLineCount = textLayoutResult.lineCount
+                    }
+                )
 
-
-                TextButton(
-                    onClick = {
-                        isDescriptionBoxExpanded = !isDescriptionBoxExpanded
-                    },
-                ) {
-                    Text(
-                        if (!isDescriptionBoxExpanded) "Show More" else "Show Less",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp)
-                    )
+                AnimatedVisibility(visible = descriptionLineCount >= 9) {
+                    TextButton(
+                        onClick = {
+                            isDescriptionBoxExpanded = !isDescriptionBoxExpanded
+                        },
+                    ) {
+                        Text(
+                            if (!isDescriptionBoxExpanded) "Show More" else "Show Less",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.End,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp),
+                        )
+                    }
                 }
 
                 Row(

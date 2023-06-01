@@ -96,14 +96,16 @@ class SearchPageViewModel(
                 viewModelScope.launch {
                     if (!webview.load(
                             searchFn.copy(
-                                request = searchFn.request.copy(
-                                    url = searchFn.request.url.replace(
-                                        "<query>",
-                                        withContext(Dispatchers.IO) {
-                                            URLEncoder.encode(query, "UTF-8")
-                                        }
+                                request = searchFn.request?.url?.let {
+                                    searchFn.request.copy(
+                                        url = it.replace(
+                                            "<query>",
+                                            withContext(Dispatchers.IO) {
+                                                URLEncoder.encode(query, "UTF-8")
+                                            }
+                                        )
                                     )
-                                )
+                                }
                             )
                         )
                     ) {

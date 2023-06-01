@@ -23,7 +23,6 @@ class WatchPageViewModel(
     private var name: String? = "",
     _url: String
 ) : ViewModel() {
-
     var url: String = ""
         private set
 
@@ -83,17 +82,10 @@ class WatchPageViewModel(
                         return@launch
                     }
 
-                    // use regex to convert things like \\" to "
-                    val json = res.substring(2..res.length - 3).replace(
-                        "\\\"", "\""
-                    ).replace(
-                        "\\\\", "\\"
-                    )
-
                     try {
                         val results =
                             Mapper.parse<ModuleResponse<List<WatchResult.Server>>>(
-                                json
+                                res
                             )
                         webview.updateNextUrl(results.nextUrl)
                         println("Results for servers are ${results.result}")
@@ -103,7 +95,7 @@ class WatchPageViewModel(
                         try {
                             val results =
                                 Mapper.parse<ModuleResponse<WatchResult>>(
-                                    json
+                                    res
                                 )
                             webview.updateNextUrl(results.nextUrl)
                             println("Results for watch are ${results.result}")

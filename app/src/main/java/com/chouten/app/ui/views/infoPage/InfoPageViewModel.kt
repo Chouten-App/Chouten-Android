@@ -97,24 +97,17 @@ class InfoPageViewModel(
 
                     // use regex to convert things like \\" to "
                     try {
-                        val json = res.substring(2..res.length - 3).replace(
-                            "\\\"",
-                            "\""
-                        ).replace(
-                            "\\\\",
-                            "\\"
-                        )
-                        println("The JSON received was $json")
+                        println("The JSON received was $res")
                         try {
                             val results =
-                                Mapper.parse<ModuleResponse<InfoResult>>(json)
-                            webview.updateNextUrl(results.nextUrl)
+                                Mapper.parse<ModuleResponse<InfoResult>>(res)
+                            if (results.nextUrl?.isNotBlank()!!) webview.updateNextUrl(results.nextUrl)
                             println("Results for info are ${results.result}")
 
                             val result = results.result
-                            altTitles = result.altTitles
+                            altTitles = result.altTitles!!
                             description = result.description
-                            thumbnail = result.poster
+                            thumbnail = result.poster.toString()
                             banner = result.banner ?: ""
                             status = result.status ?: ""
                             mediaCount = result.totalMediaCount ?: 0
@@ -123,10 +116,10 @@ class InfoPageViewModel(
                         } catch (e: Exception) {
                             try {
                                 val results =
-                                    Mapper.parse<List<InfoResult.MediaItem>>(
-                                        json
+                                    Mapper.parse<ModuleResponse<List<InfoResult.MediaItem>>>(
+                                        res
                                     )
-                                infoResult = listOf(results)
+                                infoResult = listOf(results.result)
                             } catch (e: Exception) {
                                 PrimaryDataLayer.enqueueSnackbar(
                                     SnackbarVisualsWithError(

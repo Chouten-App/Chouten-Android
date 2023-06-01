@@ -65,7 +65,6 @@ fun Navigation(navController: NavHostController) {
         PrimaryDataLayer.isNavigationShown = when (currentRoute) {
             "info/{title}/{url}",
             "watch/{title}/{name}/{url}" -> false
-
             else -> true
         }
 

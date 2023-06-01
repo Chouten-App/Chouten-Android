@@ -51,39 +51,49 @@ class WebviewHandler() {
         if (this::webview.isInitialized) return
         webview = WebView(context)
         webview.settings.javaScriptEnabled = true
-        webview.addJavascriptInterface(this, "Android")
+        webview.settings.domStorageEnabled = true
+        //webview.addJavascriptInterface(this, "Android")
+    }
+
+    /**
+     * destroy the webview. And reinstantiate it.
+     */
+    fun reset(context: Context) {
+        webview.destroy()
+        initialize(context)
     }
 
     /**
      * Load the webview with data from the given url
      */
     suspend fun load(codeblock: ModuleModel.ModuleCode.ModuleCodeblock): Boolean {
-        val request = codeblock.request
+        var request = codeblock.request
+
         // Use the client to get the data from the url
         // and then inject it into the webview.
-        val headers = request.headers.mapNotNull {
+        var headers = request?.headers?.mapNotNull {
             if (it.key.isBlank() || it.value.isBlank()) return@mapNotNull null
             it.key to it.value
-        }.toMap()
+        }?.toMap()
 
-        val url = request.url.isNotBlank().let {
-            if (it) request.url else {
-                println("Using nextUrl: $nextUrl")
-                nextUrl
-            }
+        val url = let {
+            val url = request?.url ?: nextUrl
+            if (request == null) request = ModuleModel.ModuleCode.ModuleCodeblock.ModuleRequest(url, "GET", listOf(), null)
+            url
         }
-
+        println("Requesting $url")
         val data: ByteArray = try {
             var counter = 0
             var responseCode = -1
             lateinit var response: ByteArray
             while (counter < 2 || responseCode != 200) {
-                val _response = when (request.method) {
+                if (headers == null) headers = mapOf()
+                val _response = when (request?.method) {
                     "GET" -> client.get(url, headers)
-                    "POST" -> client.post(url, headers, request.body)
-                    "PUT" -> client.put(url, headers, request.body)
+                    "POST" -> client.post(url, headers, request?.body)
+                    "PUT" -> client.put(url, headers, request?.body)
                     "DELETE" -> client.delete(url, headers)
-                    else -> throw Exception("Invalid request type ${request.method}")
+                    else -> throw Exception("Invalid request type ${request?.method}")
                 }
                 counter += 1
                 responseCode = _response.code
@@ -92,36 +102,42 @@ class WebviewHandler() {
             }
             response
         } catch (e: Exception) {
-            PrimaryDataLayer.enqueueSnackbar(
-                SnackbarVisualsWithError(
-                    "Failed to load data from ${request.url}",
-                    true
+            if (request != null) {
+                PrimaryDataLayer.enqueueSnackbar(
+                    SnackbarVisualsWithError(
+                        "Failed to load data from ${request?.url}",
+                        true
+                    )
                 )
-            )
-            LogLayer.addLogEntry(
-                LogEntry(
-                    title = "Failed to load data from ${request.url}",
-                    message = e.stackTraceToString(),
-                    isError = true
+            }
+            if (request != null) {
+                LogLayer.addLogEntry(
+                    LogEntry(
+                        title = "Failed to load data from ${request?.url}",
+                        message = e.stackTraceToString(),
+                        isError = true
+                    )
                 )
-            )
+            }
 
             e.printStackTrace()
             return false
         }
 
-        LogLayer.addLogEntry(
-            LogEntry(
-                title = "Loading data from ${request.url}",
-                message = "Request Type: ${request.method}\nUses API? ${codeblock.usesApi}",
-                isError = false
+
+            LogLayer.addLogEntry(
+                LogEntry(
+                    title = "Loading data from ${request?.url}",
+                    message = "Request Type: ${request?.method}\nUses API? ${codeblock.usesApi}",
+                    isError = false
+                )
             )
-        )
+
 
         // The webview expects a Base64 encoded string
         val encodedData = Base64.encodeToString(data, Base64.DEFAULT)
         val decodedData = String(Base64.decode(encodedData, Base64.DEFAULT))
-        //println("Decoded data: $decodedData")
+
         if (!codeblock.usesApi!!) {
             webview.loadDataWithBaseURL(null, decodedData, "text/html; charset=utf-8", "br", null)
         } else {
@@ -130,7 +146,7 @@ class WebviewHandler() {
             // when we inject the data.
 
             val sanitised =
-                data.toString()
+                decodedData
                     // Replace the HTML ampersand values
                     // e.g &#39; -> '
                     .replace(Regex("&#\\d+;"), "")
@@ -146,11 +162,16 @@ class WebviewHandler() {
                 Log.d("WebviewHandler", chunk)
             }
 
-            Log.d("WebviewHandler", "Injecting $sanitised")
+            Log.d("WebviewHandler", "Injecting: $sanitised")
             val skeleton = """
                 <html>
                     <head>
-                    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+                    ${
+                codeblock.imports?.joinToString("") {
+                    val url = URLDecoder.decode(it, "UTF-8")
+                    "<script src=\"$url\"></script>"
+                } ?: ""
+                    }
                     </head>
                     <body>
                         <div id="chouten"></div>
@@ -220,12 +241,12 @@ class WebviewHandler() {
      * Inject the given javascript into the webview
      */
     suspend fun inject(javascript: ModuleModel.ModuleCode.ModuleCodeblock, immediate: Boolean = false): String {
-        println("Running code: ${javascript.code}")
+        //println("Running code: ${javascript.code}")
         var results = ""
         // If there's already an injection in progress
         // then we need to wait until it's finished.
-        injectionLock.lock()
 
+        injectionLock.lock()
         if (javascript.removeScripts) {
             callLock.lock()
             // Remove all scripts from the DOM
@@ -258,6 +279,7 @@ class WebviewHandler() {
             callLock.unlock()
             // check if immediate is true, and if so, unlock the injection lock and return
             if (immediate) {
+                println(it)
                 results = it ?: ""
                 injectionLock.unlock()
                 return@evaluateJavascript
@@ -269,6 +291,7 @@ class WebviewHandler() {
             callLock.lock()
             callLock.unlock()
             injectionLock.lock()
+            injectionLock.unlock()
             return results
         }
 
@@ -280,13 +303,16 @@ class WebviewHandler() {
             var results = {result: [], nextUrl: ""};
             // print the html page
             document.querySelectorAll("#chouten > p").forEach((el) => {
-                results.result.push(...JSON.parse(el.innerText).result);
+                var json = JSON.parse(el.innerText);
+                console.log("INSIDE: " + JSON.stringify(json));
+                if (Array.isArray(json.result) || Array.isArray(json)) results.result.push(...(Array.isArray(json) ? json : json.result));
+                else results.result = json.result;
                 results.nextUrl = JSON.parse(el.innerText).nextUrl;
             });
             // Clear the chouten div
             document.getElementById("chouten").innerHTML = "";
             if (results == null || results.result.length == 0) {
-                results = {result: [], nextUrl: ""};
+                results = {result: [], nextUrl: results.nextUrl};
             }
             results
         """.trimIndent()
