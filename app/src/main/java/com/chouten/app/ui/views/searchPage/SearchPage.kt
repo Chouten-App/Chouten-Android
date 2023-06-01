@@ -115,6 +115,7 @@ fun SearchPage(
                     SearchResultItem(
                         item = res,
                         onClick = { title, url ->
+                            println("Clicked on $title with url $url")
                             navController.navigate("info/$title/$url")
                         }
                     )

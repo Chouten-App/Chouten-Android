@@ -131,12 +131,12 @@ data class InfoResult(
     val titles: Titles,
     val altTitles: List<String>?,
     val description: String,
-    val poster: String?,
+    val poster: String,
     val banner: String?,
     val status: String?,
     val totalMediaCount: Int?,
     val mediaType: String,
-    val seasons: List<String>?,
+    val seasons: List<Season>?,
     val mediaList: List<List<MediaItem>>
 ) {
     @Serializable
@@ -152,6 +152,12 @@ data class InfoResult(
         val title: String?,
         val description: String?,
         val image: String?,
+    )
+
+    @Serializable
+    data class Season(
+        val name: String,
+        val url: String,
     )
 }
 

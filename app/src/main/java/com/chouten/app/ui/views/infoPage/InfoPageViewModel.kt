@@ -123,7 +123,7 @@ class InfoPageViewModel(
                             } catch (e: Exception) {
                                 PrimaryDataLayer.enqueueSnackbar(
                                     SnackbarVisualsWithError(
-                                        "Error parsing results for $title",
+                                        "Error parsing second results for $title",
                                         false
                                     )
                                 )
