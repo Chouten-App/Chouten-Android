@@ -17,7 +17,6 @@ jobs:
       uses: actions/setup-java@v3
       with:
         java-version: '11'
-        distribution: 'tearing'
         cache: gradle
 
     - name: Grant execute permission for gradlew
