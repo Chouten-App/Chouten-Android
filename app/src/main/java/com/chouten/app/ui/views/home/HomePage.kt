@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,6 +24,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -171,30 +175,44 @@ fun HomePage(
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             // indicator
+                                            result.data[pagerState.currentPage].indicator?.let {
+                                                Text(
+                                                    text = it,
+                                                    modifier = Modifier
+                                                        .padding(
+                                                            5.dp
+                                                        )
+                                                        .background(
+                                                            color = MaterialTheme.colorScheme.primary,
+                                                            shape = RoundedCornerShape(20.dp)
+                                                        )
+                                                        .padding(
+                                                            start = 10.dp,
+                                                            end = 10.dp,
+                                                            top = 2.dp,
+                                                            bottom = 2.dp
+                                                        ),
+                                                    color = MaterialTheme.colorScheme.onPrimary,
+                                                    fontWeight = FontWeight.Bold,
 
-                                            Text(
-                                                text = result.title,
-                                                modifier = Modifier
-                                                    .padding(
-                                                        5.dp
                                                     )
-                                                    .background(
-                                                        color = MaterialTheme.colorScheme.primary,
-                                                        shape = RoundedCornerShape(20.dp)
-                                                    )
-                                                    .padding(
-                                                        start = 10.dp,
-                                                        end = 10.dp,
-                                                        top = 2.dp,
-                                                        bottom = 2.dp
+                                            }
+
+                                            result.data[pagerState.currentPage].iconText?.let {
+                                                Text(
+                                                    text = it,
+                                                    style = MaterialTheme.typography.titleMedium.copy(
+                                                        color = MaterialTheme.colorScheme.onSurface.copy(
+                                                            alpha = 0.8F
+                                                        )
                                                     ),
-                                                color = MaterialTheme.colorScheme.onPrimary,
-                                                fontWeight = FontWeight.Bold,
-
+                                                    modifier = Modifier
+                                                        .padding(
+                                                            end = 10.dp
+                                                        ),
+                                                    fontWeight = FontWeight.Bold,
                                                 )
-
-                                            //TODO: add release date to far right if it exists
-                                            // Text(...)
+                                            }
                                         }
                                         Text(
                                             result.data[pagerState.currentPage].titles["primary"]!!,
@@ -230,24 +248,28 @@ fun HomePage(
 
                                         Spacer(modifier = Modifier.height(20.dp))
 
-                                        // TODO: Maybe add the description somewhere here
+                                        Row {
+                                            result.data[pagerState.currentPage].subtitle?.let {
+                                                Text(
+                                                    it,
+                                                    style = MaterialTheme.typography.titleMedium.copy(
+                                                        color = MaterialTheme.colorScheme.onSurface.copy(
+                                                            alpha = 0.8F
+                                                        )
+                                                    ),
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    maxLines = 2,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .wrapContentWidth(Alignment.Start)
+                                                        .padding(start = 20.dp, end = 20.dp)
+                                                )
+                                            }
 
-                                        result.data[pagerState.currentPage].iconText?.let {
-                                            Text(
-                                                it,
-                                                style = MaterialTheme.typography.titleMedium.copy(
-                                                    color = MaterialTheme.colorScheme.onSurface.copy(
-                                                        alpha = 0.8F
-                                                    )
-                                                ),
-                                                fontWeight = FontWeight.SemiBold,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .wrapContentWidth(Alignment.Start)
-                                                    .padding(start = 20.dp, end = 20.dp)
-                                            )
+                                            if (result.data[pagerState.currentPage].subtitleValue.isNotEmpty()) {
+                                                Text(result.data[pagerState.currentPage].subtitleValue.joinToString(" * "))
+                                            }
                                         }
 
                                         Spacer(modifier = Modifier.height(10.dp))
@@ -323,7 +345,6 @@ fun HomePage(
                             }
 
                         }
-
                         "list" -> {
                             Box(
                                 modifier = Modifier
@@ -355,7 +376,41 @@ fun HomePage(
                                 }
                             }
                         }
-                        // TODO: other types
+                        "grid_2x" -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 10.dp)
+                            ) {
+                                Text(
+                                    result.title,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentWidth(Alignment.Start)
+                                )
+                            }
+
+                            LazyHorizontalGrid(
+                                rows = GridCells.Fixed(2),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(500.dp) // TODO: make this dynamic
+                                    .padding(start = 10.dp),
+                            ) {
+                                items(result.data) { item ->
+                                    HomeResultItem(
+                                        modifier = Modifier
+                                            .height(150.dp) //TODO: make this dynamic
+                                            .width(120.dp),
+                                        item = item
+                                    ) { title, url ->
+                                        navController.navigate("info/$title/$url")
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -1,6 +1,8 @@
 package com.chouten.app
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.net.NetworkCapabilities.*
 import android.net.Uri
@@ -182,4 +184,9 @@ object UnzipUtils {
 
 operator fun SnapshotStateList<ModuleModel>.get(moduleId: String): ModuleModel {
     return this.first { it.id == moduleId }
+}
+fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

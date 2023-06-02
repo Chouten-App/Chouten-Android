@@ -57,6 +57,8 @@ class MainActivity : ComponentActivity() {
                 else -> MaterialTheme.colorScheme.surface
             }
             LaunchedEffect(systemUiController, statusBarBackgroundColor) {
+                systemUiController.isStatusBarVisible = false
+
                 systemUiController.setStatusBarColor(
                     color = Color.Transparent,
                     darkIcons = statusBarBackgroundColor.luminance() > 0.5,

@@ -1,10 +1,12 @@
 package com.chouten.app.ui.views.watch
 
 import android.app.Activity
+import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.view.ViewGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
@@ -14,12 +16,17 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import com.chouten.app.findActivity
 
 @Composable
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 fun WatchPage(
     provider: WatchPageViewModel
 ) {
+    // Force the user's screen to
+    // be oriented to landscape.
+    //LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+
     val context = LocalContext.current
     val orientationOnLoad = rememberSaveable {
         (context as Activity).requestedOrientation
@@ -46,10 +53,10 @@ fun WatchPage(
             C.VIDEO_SCALING_MODE_SCALE_TO_FIT
         _player.repeatMode = ExoPlayer.REPEAT_MODE_OFF
 
-        // Force the user's screen to
-        // be oriented to landscape.
-        (context as Activity).requestedOrientation =
-            android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+
+        LaunchedEffect((context as Activity).requestedOrientation) {
+            context.requestedOrientation =  ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        }
 
         DisposableEffect(
             AndroidView(
@@ -67,11 +74,25 @@ fun WatchPage(
         ) {
             // Restore the user's screen to
             // its original orientation.
-            context.requestedOrientation = orientationOnLoad
+            (context as Activity).requestedOrientation = orientationOnLoad
 
             onDispose {
                 _player.release()
             }
+        }
+    }
+}
+
+@Composable
+fun LockScreenOrientation(orientation: Int) {
+    val context = LocalContext.current
+    DisposableEffect(orientation) {
+        val activity = context.findActivity() ?: return@DisposableEffect onDispose {}
+        val originalOrientation = activity.requestedOrientation
+        activity.requestedOrientation = orientation
+        onDispose {
+            // restore original orientation when view disappears
+            activity.requestedOrientation = originalOrientation
         }
     }
 }

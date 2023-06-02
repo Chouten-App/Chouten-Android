@@ -52,7 +52,7 @@ class WebviewHandler {
         webview = WebView(context)
         webview.settings.javaScriptEnabled = true
         webview.settings.domStorageEnabled = true
-        //webview.addJavascriptInterface(this, "Android")
+        webview.addJavascriptInterface(this, "Android")
     }
 
     /**
@@ -220,6 +220,7 @@ class WebviewHandler {
                 } else {
                     Pair("Info", false)
                 }
+                println("Current module: "+ModuleLayer.selectedModule?.name)
                 LogLayer.addLogEntry(
                     LogEntry(
                         title = logType,

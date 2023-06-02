@@ -24,7 +24,6 @@ class PreferenceManager(context: Context) :
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     )
 
-
     var isOfflineMode: Boolean by booleanPreference(
         Preferences.Settings.downloadedOnly.preference.first,
         false
@@ -33,7 +32,6 @@ class PreferenceManager(context: Context) :
         Preferences.Settings.incognito.preference.first,
         false
     )
-
 
     var selectedModule by intPreference(
         Preferences.SelectedModule,

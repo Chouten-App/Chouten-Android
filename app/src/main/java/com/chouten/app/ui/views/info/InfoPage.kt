@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -41,6 +43,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.FontWeight
@@ -113,7 +116,7 @@ fun InfoPage(
                         navController.popBackStack()
                     },
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(20.dp)
                         .clip(
                             CircleShape
                         )
@@ -229,11 +232,13 @@ fun InfoPage(
                     }
                 )
 
-                AnimatedVisibility(visible = descriptionLineCount >= 9) {
+                AnimatedVisibility(visible = descriptionLineCount >= 9, modifier = Modifier.fillMaxWidth()) {
                     TextButton(
                         onClick = {
                             isDescriptionBoxExpanded = !isDescriptionBoxExpanded
                         },
+                        modifier = Modifier
+                            .wrapContentWidth(Alignment.End)
                     ) {
                         Text(
                             if (!isDescriptionBoxExpanded) "Show More" else "Show Less",
@@ -241,9 +246,6 @@ fun InfoPage(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.End,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 4.dp),
                         )
                     }
                 }
