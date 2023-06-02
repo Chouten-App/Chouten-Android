@@ -144,7 +144,9 @@ fun InfoPage(
                         .width(120.dp)
                         .height(180.dp)
                         .clip(MaterialTheme.shapes.medium),
-                        imageModel = { provider.thumbnailUrl },
+                        imageModel = {
+                            provider.thumbnailUrl
+                           },
                         imageOptions = ImageOptions(
                             contentScale = ContentScale.Crop,
                             alignment = Alignment.Center,

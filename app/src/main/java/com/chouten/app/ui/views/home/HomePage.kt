@@ -248,7 +248,12 @@ fun HomePage(
                                                             end = 20.dp,
                                                             bottom = 10.dp
                                                         ),
-                                                    onClick = { /*TODO*/ }
+                                                    onClick = {
+                                                        val currentItem = result.data[pagerState.currentPage]
+                                                        val title = URLEncoder.encode(currentItem .titles["primary"], "UTF-8")
+                                                        val url = URLEncoder.encode(currentItem .url, "UTF-8")
+                                                        navController.navigate("info/$title/$url")
+                                                    }
                                                 ) {
                                                     Text(
                                                         it,

@@ -107,7 +107,7 @@ class InfoPageViewModel(
                             val result = results.result
                             altTitles = result.altTitles!!
                             description = result.description
-                            thumbnail = result.poster.toString()
+                            thumbnail = result.poster
                             banner = result.banner ?: ""
                             status = result.status ?: ""
                             mediaCount = result.totalMediaCount ?: 0
