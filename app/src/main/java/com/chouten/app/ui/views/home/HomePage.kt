@@ -39,6 +39,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -120,7 +121,7 @@ fun HomePage(
                                     pageCount = result.data.size,
                                     state = pagerState,
 
-                                ) {
+                                    ) {
                                     val item = result.data[it]
                                     GlideImage(
                                         imageModel = { item.image },
@@ -144,13 +145,18 @@ fun HomePage(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(start = 10.dp, end = 10.dp, top = 200.dp)
+                                        .shadow(
+                                            elevation = 10.dp,
+                                            shape = MaterialTheme.shapes.large
+                                        )
                                         .wrapContentHeight(Alignment.CenterVertically)
                                         .align(Alignment.Center)
+                                        .clip(MaterialTheme.shapes.large)
                                         .background(
-                                            color = MaterialTheme.colorScheme.surface,
-                                            shape = RoundedCornerShape(20.dp)
+                                            MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                                1.dp
+                                            )
                                         )
-                                        .shadow(3.dp)
                                 ) {
                                     Column {
                                         Row(
@@ -185,7 +191,7 @@ fun HomePage(
                                                 color = MaterialTheme.colorScheme.onPrimary,
                                                 fontWeight = FontWeight.Bold,
 
-                                            )
+                                                )
 
                                             //TODO: add release date to far right if it exists
                                             // Text(...)
@@ -206,7 +212,11 @@ fun HomePage(
                                             Text(
                                                 it,
                                                 // add some alpha to the color to make it grey
-                                                style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5F)),
+                                                style = MaterialTheme.typography.titleMedium.copy(
+                                                    color = MaterialTheme.colorScheme.onSurface.copy(
+                                                        alpha = 0.5F
+                                                    )
+                                                ),
                                                 fontWeight = FontWeight.Bold,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,
@@ -215,7 +225,7 @@ fun HomePage(
                                                     .wrapContentWidth(Alignment.Start)
                                                     .padding(start = 20.dp, end = 20.dp),
 
-                                            )
+                                                )
                                         }
 
                                         Spacer(modifier = Modifier.height(20.dp))
@@ -225,7 +235,11 @@ fun HomePage(
                                         result.data[pagerState.currentPage].iconText?.let {
                                             Text(
                                                 it,
-                                                style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8F)),
+                                                style = MaterialTheme.typography.titleMedium.copy(
+                                                    color = MaterialTheme.colorScheme.onSurface.copy(
+                                                        alpha = 0.8F
+                                                    )
+                                                ),
                                                 fontWeight = FontWeight.SemiBold,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis,
@@ -238,7 +252,10 @@ fun HomePage(
 
                                         Spacer(modifier = Modifier.height(10.dp))
 
-                                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.Bottom
+                                        ) {
                                             result.data[pagerState.currentPage].buttonText?.let {
                                                 TextButton(
                                                     modifier = Modifier
@@ -249,15 +266,26 @@ fun HomePage(
                                                             bottom = 10.dp
                                                         ),
                                                     onClick = {
-                                                        val currentItem = result.data[pagerState.currentPage]
-                                                        val title = URLEncoder.encode(currentItem .titles["primary"], "UTF-8")
-                                                        val url = URLEncoder.encode(currentItem .url, "UTF-8")
+                                                        val currentItem =
+                                                            result.data[pagerState.currentPage]
+                                                        val title = URLEncoder.encode(
+                                                            currentItem.titles["primary"],
+                                                            "UTF-8"
+                                                        )
+                                                        val url = URLEncoder.encode(
+                                                            currentItem.url,
+                                                            "UTF-8"
+                                                        )
                                                         navController.navigate("info/$title/$url")
                                                     }
                                                 ) {
                                                     Text(
                                                         it,
-                                                        style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9F)),
+                                                        style = MaterialTheme.typography.titleMedium.copy(
+                                                            color = MaterialTheme.colorScheme.onSurface.copy(
+                                                                alpha = 0.9F
+                                                            )
+                                                        ),
                                                         fontWeight = FontWeight.Bold,
                                                         fontSize = 18.sp,
                                                         maxLines = 1,
@@ -269,10 +297,13 @@ fun HomePage(
                                             }
 
                                             IconButton(
-                                                modifier = Modifier.fillMaxWidth().padding(end = 20.dp, bottom = 20.dp)
-                                                    .wrapContentWidth(Alignment.End).size(24.dp),
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(end = 20.dp, bottom = 20.dp)
+                                                    .wrapContentWidth(Alignment.End)
+                                                    .size(24.dp),
                                                 onClick = { /*TODO*/ },
-                                                colors =  IconButtonDefaults.iconButtonColors(
+                                                colors = IconButtonDefaults.iconButtonColors(
                                                     containerColor = MaterialTheme.colorScheme.primary,
                                                     contentColor = MaterialTheme.colorScheme.onPrimary,
                                                 )
@@ -280,7 +311,9 @@ fun HomePage(
                                                 Icon(
                                                     Icons.Rounded.Add,
                                                     contentDescription = "Add to list",
-                                                    modifier = Modifier.padding(0.dp).size(24.dp)
+                                                    modifier = Modifier
+                                                        .padding(0.dp)
+                                                        .size(24.dp)
                                                 )
                                             }
                                         }
@@ -290,6 +323,7 @@ fun HomePage(
                             }
 
                         }
+
                         "list" -> {
                             Box(
                                 modifier = Modifier
