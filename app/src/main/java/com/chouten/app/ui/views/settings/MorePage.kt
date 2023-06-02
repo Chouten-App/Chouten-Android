@@ -17,8 +17,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.chouten.app.R
+import com.chouten.app.data.Preferences
+import com.chouten.app.preferenceHandler
 import com.chouten.app.ui.Screen
 import com.chouten.app.ui.components.SettingsItem
+import com.chouten.app.ui.components.SettingsToggle
 import kotlinx.serialization.json.Json
 
 val json = Json { prettyPrint = true }
@@ -41,6 +44,27 @@ fun MorePage(
                 .fillMaxSize()
                 .padding(it),
         ) {
+            SettingsToggle(
+                preference = Preferences.Settings.downloadedOnly,
+                defaultValue = preferenceHandler.getBoolean(
+                    Preferences.Settings.downloadedOnly.preference.first,
+                    false
+                ),
+                onCheckedChange = { toggle ->
+                    preferenceHandler.isOfflineMode = toggle
+                }
+            )
+            SettingsToggle(
+                preference = Preferences.Settings.incognito,
+                defaultValue = preferenceHandler.getBoolean(
+                    Preferences.Settings.incognito.preference.first,
+                    false
+                ),
+                onCheckedChange = { toggle ->
+                    preferenceHandler.isIncognito = toggle
+                }
+            )
+            Divider(Modifier.padding(16.dp))
             SettingsItem(
                 modifier = Modifier.clickable {
                     navHost.navigate(Screen.AppearancePage.route)

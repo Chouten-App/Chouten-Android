@@ -36,6 +36,12 @@
     <string name="dynamic_colour_toggle__title">Dynamic Theming</string>
     <string name="dynamic_colour_toggle__desc">Use Material You Dynamic Theming</string>
 
+    <string name="downloaded_only_toggle__title">Toggle Downloaded Only</string>
+    <string name="downloaded_only_toggle__desc">Go offline and stuff you know</string>
+
+    <string name="incognito_toggle__title">Toggle Incognito</string>
+    <string name="incognito_toggle__desc">For the naughty naughty</string>
+
     <string name="export_theme__title">Export Theme</string>
     <string name="export_theme__desc">Export Theme as File</string>
     <string name="export_theme__success">Theme Exported Successfully</string>

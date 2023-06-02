@@ -28,6 +28,18 @@ object Preferences {
     const val SelectedModule = "SelectedModule"
 
     object Settings {
+        val downloadedOnly = ChoutenSetting(
+            R.string.downloaded_only_toggle__title,
+            R.string.downloaded_only_toggle__desc,
+            preference = Pair("offlineMode", Boolean)
+        )
+
+        val incognito = ChoutenSetting(
+            R.string.incognito_toggle__title,
+            R.string.incognito_toggle__desc,
+            preference = Pair("incognito", Boolean)
+        )
+
         val dynamicColor = ChoutenSetting(
             R.string.dynamic_colour_toggle__title,
             R.string.dynamic_colour_toggle__desc,

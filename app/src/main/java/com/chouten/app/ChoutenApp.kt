@@ -6,8 +6,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -21,6 +26,7 @@ import com.chouten.app.data.ModuleDataLayer
 import com.chouten.app.data.NavigationItems
 import com.chouten.app.ui.BottomNavigationBar
 import com.chouten.app.ui.Navigation
+import com.chouten.app.ui.components.AppStateBanners
 import com.chouten.app.ui.components.ChoutenAlert
 import com.chouten.app.ui.components.Snackbar
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,12 +42,21 @@ fun initializeRepositories() {
 
 @Composable
 fun ChoutenApp() {
+    val scaffoldInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
 
     val navController = rememberNavController()
-
     val alerts = PrimaryDataLayer.alertQueue.asStateFlow()
 
-    Scaffold(modifier = Modifier.fillMaxSize(), topBar = {}, bottomBar = {
+    Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
+        AppStateBanners(
+            downloadedOnlyMode = preferenceHandler.isOfflineMode,
+            incognitoMode = preferenceHandler.isIncognito,
+            indexing = false,
+            modifier = Modifier.windowInsetsPadding(scaffoldInsets),
+        )
+    },
+        contentWindowInsets = scaffoldInsets,
+        bottomBar = {
         AnimatedVisibility(
             visible = PrimaryDataLayer.isNavigationShown,
             enter = expandVertically(),

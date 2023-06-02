@@ -6,9 +6,17 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
+import com.chouten.app.ui.components.DownloadedOnlyBannerBackgroundColor
+import com.chouten.app.ui.components.IncognitoModeBannerBackgroundColor
 import com.chouten.app.ui.theme.ChoutenTheme
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -21,6 +29,7 @@ lateinit var App: MainActivity
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         actionBar?.hide()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         super.onCreate(savedInstanceState)
         preferenceHandler = PreferenceManager(this)
@@ -38,6 +47,23 @@ class MainActivity : ComponentActivity() {
         if (intent != null) handleSharedIntent(intent)
         installSplashScreen()
         setContent {
+            val incognito = preferenceHandler.isIncognito
+            val downloadOnly = preferenceHandler.isOfflineMode
+            // Set statusbar color considering the top app state banner
+            val systemUiController = rememberSystemUiController()
+            val statusBarBackgroundColor = when {
+                downloadOnly -> DownloadedOnlyBannerBackgroundColor
+                incognito -> IncognitoModeBannerBackgroundColor
+                else -> MaterialTheme.colorScheme.surface
+            }
+            LaunchedEffect(systemUiController, statusBarBackgroundColor) {
+                systemUiController.setStatusBarColor(
+                    color = Color.Transparent,
+                    darkIcons = statusBarBackgroundColor.luminance() > 0.5,
+                    transformColorForLightContent = { Color.Black },
+                )
+            }
+
             ChoutenTheme {
                 ChoutenApp()
             }

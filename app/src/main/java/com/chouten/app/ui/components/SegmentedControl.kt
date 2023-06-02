@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -66,6 +67,8 @@ fun SegmentedControl(
             // Set column height using the LayoutCoordinates
             rowWidthDp = with(localDensity) { coordinates.size.width.toDp() }
         }
+            .padding(horizontal = 5.dp)
+            .fillMaxWidth(),
     ) {
         items.forEachIndexed { index, item ->
             OutlinedButton(

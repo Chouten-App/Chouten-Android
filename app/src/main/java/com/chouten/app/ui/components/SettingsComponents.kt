@@ -45,20 +45,17 @@ fun SettingsToggle(
     defaultValue: Boolean = false
 ) {
     var toggleState by rememberSaveable { mutableStateOf(defaultValue) }
-    SettingsItem(modifier.clickable {
-        preference.onToggle?.invoke(toggleState)
-        onCheckedChange.invoke(toggleState)
-        toggleState = !toggleState
-    },
+    SettingsItem(modifier = modifier, // modifier.clickable { makes it buggy
         { preference.icon?.let { Icon(it, stringResource(preference.text)) } },
         { Text(stringResource(preference.text)) },
         { preference.secondaryText?.let { Text(stringResource(it)) } }) {
-        Switch(enabled = preference.constraints?.let { it() } ?: true,
+        Switch(
+            enabled = preference.constraints?.let { it() } != false,
             checked = toggleState,
             onCheckedChange = {
                 preference.onToggle?.invoke(toggleState)
                 onCheckedChange.invoke(it)
-                toggleState = !toggleState
+                toggleState = it
             })
     }
 }
