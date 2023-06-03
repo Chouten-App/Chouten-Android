@@ -63,6 +63,10 @@ class WebviewHandler {
         initialize(context)
     }
 
+    fun destroy() {
+        webview.destroy()
+    }
+
     /**
      * Load the webview with data from the given url
      */

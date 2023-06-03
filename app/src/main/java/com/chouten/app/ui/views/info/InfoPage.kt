@@ -1,5 +1,6 @@
 package com.chouten.app.ui.views.info
 
+import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -52,7 +53,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
+import com.chouten.app.ui.views.watch.PlayerActivity
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import com.valentinilk.shimmer.shimmer
@@ -289,20 +292,12 @@ fun InfoPage(
                                 )
                                 .clickable {
                                     if (provider.mediaTypeText.lowercase() == "episodes") {
-                                        val titleEncoded = URLEncoder.encode(
-                                            provider.getTitle(),
-                                            "UTF-8"
-                                        )
-                                        val episodeEncoded = URLEncoder.encode(
-                                            item.title ?: "Episode ${index + 1}",
-                                            "UTF-8"
-                                        )
-                                        val urlEncoded = URLEncoder.encode(
-                                            item.url,
-                                            "UTF-8"
-                                        )
-
-                                        navController.navigate("watch/${titleEncoded}/${episodeEncoded}/${urlEncoded}")
+                                        val intent = Intent(navController.context, PlayerActivity::class.java)
+                                        intent.putExtra("title", provider.getTitle())
+                                        intent.putExtra("episode", item.title)
+                                        intent.putExtra("url", item.url)
+                                        startActivity(navController.context, intent, null)
+                                        //navController.navigate("watch/${titleEncoded}/${episodeEncoded}/${urlEncoded}")
                                     } else {
                                         throw Error("Reading not yet implemented")
                                     }

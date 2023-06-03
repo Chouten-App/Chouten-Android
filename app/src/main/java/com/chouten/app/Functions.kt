@@ -25,6 +25,7 @@ import com.chouten.app.data.RequestCodes
 import com.chouten.app.data.SnackbarVisualsWithError
 import java.io.*
 import java.util.*
+import java.util.concurrent.TimeUnit
 import java.util.zip.ZipFile
 import kotlin.math.*
 
@@ -124,11 +125,9 @@ fun checkPermissions() {
 
 fun Int.toBoolean() = this == 1
 
-
 /**
  * UnzipUtils class extracts files and sub-directories of a standard zip file to
  * a destination directory.
- *
  */
 object UnzipUtils {
     /**
@@ -189,4 +188,19 @@ fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null
+}
+
+fun Long.formatMinSec(): String {
+    return if (this == 0L) {
+        "00:00"
+    } else {
+        String.format(
+            "%02d:%02d",
+            TimeUnit.MILLISECONDS.toMinutes(this),
+            TimeUnit.MILLISECONDS.toSeconds(this) -
+                    TimeUnit.MINUTES.toSeconds(
+                        TimeUnit.MILLISECONDS.toMinutes(this)
+                    )
+        )
+    }
 }
