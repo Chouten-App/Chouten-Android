@@ -22,6 +22,10 @@ android {
         }
     }
 
+    lintOptions {
+        lintConfig = file("$rootDir/lint.xml")
+    }
+
     buildTypes {
         release {
             minifyEnabled false
