@@ -29,7 +29,7 @@ lateinit var App: MainActivity
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         actionBar?.hide()
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        //WindowCompat.setDecorFitsSystemWindows(window, false)
 
         super.onCreate(savedInstanceState)
         preferenceHandler = PreferenceManager(this)
@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                 else -> MaterialTheme.colorScheme.surface
             }
             LaunchedEffect(systemUiController, statusBarBackgroundColor) {
-                systemUiController.isStatusBarVisible = false
+                //systemUiController.isStatusBarVisible = false
 
                 systemUiController.setStatusBarColor(
                     color = Color.Transparent,

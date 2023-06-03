@@ -1,8 +1,11 @@
 package com.chouten.app.ui.components
 
 import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
@@ -13,6 +16,13 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.animation.core.animateTo
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -168,7 +178,7 @@ fun ModuleSelectorContainer(
                     animatedItemsIndexed(
                         state = animatedList,
                         key = { module -> module.id }
-                    ) { i, module ->
+                    ) { _, module ->
                         val currentItem by rememberUpdatedState(module)
                         val dismissState = rememberDismissState(
                             confirmStateChange = {
@@ -221,70 +231,6 @@ fun ModuleSelectorContainer(
                                 coroutineScope.launch { sheetState.hide() }
                             }
                         }
-
-//                        SwipeToDismiss(
-//                            state = dismissState,
-//                            modifier = Modifier
-//                                .padding(vertical = 1.dp)
-//                                .animateItemPlacement(),
-//                            directions = setOf(DismissDirection.EndToStart),
-//                            dismissThresholds = { FractionalThreshold(0.50f) },
-//                            dismissContent = {
-//                                    ModuleChoice(
-//                                        module.id,
-//                                        module.name,
-//                                        module.meta.author,
-//                                        module.version,
-//                                        module.meta.icon,
-//                                        module.meta.backgroundColor.let {
-//                                            val str = "FF" + it.removePrefix("#")
-//                                            Color(str.toLong(16))
-//                                        },
-//                                        module.meta.foregroundColor.let {
-//                                            val str = "FF" + it.removePrefix("#")
-//                                            Color(str.toLong(16))
-//                                        },
-//                                    ) {
-//                                        ModuleLayer.updateSelectedModule(
-//                                            module.id
-//                                                ?: throw Exception("Module ID not set for ${module.name}"),
-//                                        )
-//                                        coroutineScope.launch { sheetState.hide() }
-//                                    }
-//                            },
-//                            background = {
-//                                val color by animateColorAsState(
-//                                    when (dismissState.targetValue) {
-//                                        DismissValue.Default -> Color.Transparent
-//                                        else -> Color.Red
-//                                    }
-//                                )
-//                                val alignment = Alignment.CenterEnd
-//                                val icon = Icons.Rounded.Delete
-//
-//                                val scale by animateFloatAsState(
-//                                    if (dismissState.targetValue == DismissValue.Default) 0.50f else 0.75f
-//                                )
-//
-//                                Box(
-//                                    Modifier
-//                                        .fillMaxWidth(1F)
-//                                        .height(65.dp)
-//                                        .padding(vertical = 4.dp)
-//                                        .background(color, shape = RoundedCornerShape(12.dp)),
-//                                    contentAlignment = alignment,
-//                                ) {
-//                                    Icon(
-//                                        icon,
-//                                        contentDescription = "Delete Icon",
-//                                        modifier = Modifier
-//                                            .size(40.dp)
-//                                            .scale(scale),
-//                                    )
-//                                }
-//                            },
-//
-//                        )
                     }
                 }
             }
@@ -300,57 +246,7 @@ fun ModuleSelectorContainer(
             Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween
         ) {
 
-            // Expand the module import button in height to show a textfield and cancle and confirm buttons
-
-            if (importPopupState) {
-
-            }
-
-//                AnimatedVisibility(importPopupState) {
-//
-//                AlertDialog(onDismissRequest = {
-//                    importPopupState = false
-//                },
-//                    title = { Text(stringResource(R.string.import_module_header)) },
-//                    text = {
-//                        OutlinedTextField(
-//                            value = importUrl,
-//                            onValueChange = { importUrl = it },
-//                            label = { Text(stringResource(R.string.import_module_desc)) },
-//                            modifier = Modifier.fillMaxWidth(),
-//                            shape = MaterialTheme.shapes.medium,
-//                            singleLine = true,
-//                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-//                            keyboardActions = KeyboardActions(onDone = {
-//                                coroutineScope.launch {
-//                                    ModuleLayer.enqueueRemoteInstall(
-//                                        context,
-//                                        importUrl.text
-//                                    )
-//                                    importUrl = TextFieldValue("")
-//                                }
-//                                importPopupState = false
-//                            })
-//                        )
-//                    },
-//                    confirmButton = {
-//                        FilledTonalButton(colors = ButtonDefaults.buttonColors(
-//                            containerColor = MaterialTheme.colorScheme.primary,
-//                            contentColor = MaterialTheme.colorScheme.onPrimary,
-//                        ), onClick = {
-//                            coroutineScope.launch {
-//                                ModuleLayer.enqueueRemoteInstall(
-//                                    context,
-//                                    importUrl.text
-//                                )
-//                                importUrl = TextFieldValue("")
-//                            }
-//                            importPopupState = false
-//                        }) {
-//                            Text(stringResource(R.string.import_module_button_confirm))
-//                        }
-//                    })
-//            }
+            // Expand the module import button in height to show a textfield, cancel and confirm buttons
 
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -484,28 +380,28 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context
     val iconSize = 25
     val selectors = listOf("Module", "Theme")
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    val expandedHeight = 0.65f
+    val expandedHeight = 0.70f
     val collapsedHeight = 65.dp
 
-    val currentHeightF by animateFloatAsState(
-        if (isAnimated) {
-            expandedHeight
-        } else {
-            // We want collapsed height as a fraction of the screen height
-            // so we can animate it later
-            collapsedHeight.value / screenHeight.value
-        }, animationSpec = tween(
-            durationMillis = 1000, easing = FastOutSlowInEasing
-        )
-    )
-
-    val currentHeight by animateDpAsState(
-        if (isAnimated) {
-            360.dp
-        } else collapsedHeight, animationSpec = tween(
-            durationMillis = 1000, easing = FastOutSlowInEasing
-        )
-    )
+//    val currentHeightF by animateFloatAsState(
+//        if (isAnimated) {
+//            expandedHeight
+//        } else {
+//            // We want collapsed height as a fraction of the screen height
+//            // so we can animate it later
+//            collapsedHeight.value / screenHeight.value
+//        }, animationSpec = tween(
+//            durationMillis = 1000, easing = FastOutSlowInEasing
+//        )
+//    )
+//
+//    val currentHeight by animateDpAsState(
+//        if (isAnimated) {
+//            360.dp
+//        } else collapsedHeight, animationSpec = tween(
+//            durationMillis = 1000, easing = FastOutSlowInEasing
+//        )
+//    )
 
     var importType by remember { mutableStateOf(0) } // 0 = Module, 1 = Theme
 
@@ -522,10 +418,24 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context
                 2.dp, MaterialTheme.colorScheme.onPrimaryContainer, 10.dp
             ),
     ) {
-        if (!isAnimated) {
+        AnimatedVisibility(
+            visible = !isAnimated,
+//            enter = (
+//                animationSpec = tween(
+//                    durationMillis = 1000,
+//                    easing = FastOutSlowInEasing
+//                )
+//            ),
+            exit = shrinkOut(
+                animationSpec = tween(
+                    durationMillis = 1000,
+                    easing = LinearEasing
+                )
+            )
+        ) {
             Button(modifier = Modifier
                 .fillMaxWidth()
-                .height(currentHeight),
+                .wrapContentHeight(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
                 ),
@@ -566,12 +476,20 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context
                         }
                     }
                 })
-        } else {
+        }
+        AnimatedVisibility(
+            visible = isAnimated,
+            enter = expandVertically(
+                animationSpec = tween(1000, easing = LinearEasing)
+        ), exit = shrinkVertically(
+                animationSpec = tween(1000, easing = FastOutSlowInEasing)
+        )) {
+
             val interactionSource = remember { MutableInteractionSource() }
 
             Column(
                 modifier = Modifier
-                    .fillMaxHeight(currentHeightF)
+                    .wrapContentHeight()
                     .padding(15.dp),
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Top
@@ -669,7 +587,7 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context
                 }
 
                 Row(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.End,
                 ) {
@@ -719,7 +637,6 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context
                         )
                     }
                 }
-
             }
         }
     }
