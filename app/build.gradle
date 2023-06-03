@@ -62,13 +62,13 @@ dependencies {
 
     def lifecycle_version = "2.6.1"
     def nav_version = "2.5.3"
-    def media3_version = "1.0.1"
+    def exo_version = "1.0.2"
 
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
-    implementation 'androidx.activity:activity-compose:1.7.0'
+    implementation 'androidx.activity:activity-compose:1.7.2'
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
     implementation "androidx.navigation:navigation-compose:$nav_version"
@@ -78,17 +78,17 @@ dependencies {
     implementation "com.google.accompanist:accompanist-systemuicontroller:$accompanist_version"
 
     // Exoplayer
-    implementation "androidx.media3:media3-exoplayer:1.0.1"
-    implementation "androidx.media3:media3-exoplayer-hls:$media3_version"
-    implementation "androidx.media3:media3-exoplayer-dash:$media3_version"
-    implementation "androidx.media3:media3-datasource-okhttp:$media3_version"
-    implementation "androidx.media3:media3-ui:$media3_version"
-    implementation "androidx.media3:media3-cast:$media3_version"
-    implementation "androidx.media3:media3-transformer:$media3_version"
-    implementation "androidx.media3:media3-decoder:$media3_version"
-    implementation "androidx.media3:media3-datasource:$media3_version"
-    implementation "androidx.media3:media3-common:$media3_version"
-    implementation "androidx.media3:media3-database:$media3_version"
+    implementation "androidx.media3:media3-exoplayer:$exo_version"
+    implementation "androidx.media3:media3-exoplayer-hls:$exo_version"
+    implementation "androidx.media3:media3-exoplayer-dash:$exo_version"
+    implementation "androidx.media3:media3-datasource-okhttp:$exo_version"
+    implementation "androidx.media3:media3-ui:$exo_version"
+    implementation "androidx.media3:media3-cast:$exo_version"
+    implementation "androidx.media3:media3-transformer:$exo_version"
+    implementation "androidx.media3:media3-decoder:$exo_version"
+    implementation "androidx.media3:media3-datasource:$exo_version"
+    implementation "androidx.media3:media3-common:$exo_version"
+    implementation "androidx.media3:media3-database:$exo_version"
 
 
 

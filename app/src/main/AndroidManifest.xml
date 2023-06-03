@@ -11,6 +11,7 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
+        android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -43,6 +44,7 @@
                 android:name="android.service.chooser.chooser_target_service"
                 android:value="androidx.sharetarget.ChooserTargetServiceCompat" />
         </activity>
+        <activity android:name=".ui.views.watch.PlayerActivity" android:screenOrientation="landscape" android:configChanges="keyboardHidden"/>
     </application>
 
 </manifest>
