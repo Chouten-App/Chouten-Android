@@ -112,7 +112,7 @@ fun Navigation(navController: NavHostController) {
             val title = it.arguments?.getString("title") ?: ""
             val url = it.arguments?.getString("url") ?: ""
 
-            // If the InfoPageViewModel is for a different title, we create a new one
+            // If the InfoPageViewModel is for a diff`erent title, we create a new one
             if (infoVm?.getUrl() != url) {
                 println("The urls are different. The old one is ${infoVm?.getUrl()} and the new one is $url")
                 ViewModels.infoVm =
@@ -217,32 +217,32 @@ fun BottomNavigationBar(
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     NavigationBar {
-        items.forEach { item ->
+        items.iterator().forEach { (name, route, activeIcon, inactiveIcon, badgeCount) ->
             // If the item is a subroute of the current route, we consider it selected
             val selected =
-                backStackEntry?.destination?.route?.startsWith(item.route) == true
+                backStackEntry?.destination?.route?.startsWith(route) == true
             val icon: @Composable () -> Unit = {
                 Icon(
                     // Note: If the icon is not provided, the app will crash
-                    imageVector = if (selected) item.activeIcon!! else item.inactiveIcon!!,
-                    contentDescription = stringResource(item.name),
+                    imageVector = if (selected) activeIcon!! else inactiveIcon!!,
+                    contentDescription = stringResource(name),
                     tint = if (selected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             NavigationBarItem(selected = selected,
                 alwaysShowLabel = true,
-                onClick = { onItemClick(item) },
+                onClick = { onItemClick(BottomNavItem(name, route, activeIcon, inactiveIcon, badgeCount)) },
                 icon = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        if (item.badgeCount > 0) {
+                        if (badgeCount > 0) {
                             BadgedBox(badge = {
                                 Badge(
                                     modifier = Modifier.offset((-2).dp, 2.dp),
                                     containerColor = MaterialTheme.colorScheme.error
                                 ) {
                                     val count =
-                                        if (item.badgeCount > 99) "99+" else item.badgeCount.toString()
+                                        if (badgeCount > 99) "99+" else badgeCount.toString()
                                     Text(
                                         text = count,
                                         color = MaterialTheme.colorScheme.onError,
@@ -263,7 +263,7 @@ fun BottomNavigationBar(
                 },
                 label = {
                     Text(
-                        text = stringResource(item.name),
+                        text = stringResource(name),
                         textAlign = TextAlign.Center,
                         color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelMedium

@@ -30,7 +30,7 @@ fun Snackbar() {
     // Observe the Flow of the Snackbar Queue
     val owner = LocalLifecycleOwner.current
     PrimaryDataLayer.snackbarQueue.observe(owner) {
-        it.forEach { snackbarItem ->
+        it.iterator().forEach { snackbarItem ->
             owner.lifecycleScope.launch {
                 snackbarState.showSnackbar(
                     snackbarItem
