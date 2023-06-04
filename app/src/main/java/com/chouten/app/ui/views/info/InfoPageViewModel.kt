@@ -155,4 +155,9 @@ class InfoPageViewModel(
     fun getUrl(): String {
         return url
     }
+
+    override fun onCleared() {
+        webview.destroy()
+        super.onCleared()
+    }
 }

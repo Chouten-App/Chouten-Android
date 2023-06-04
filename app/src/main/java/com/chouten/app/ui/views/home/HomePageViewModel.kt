@@ -38,7 +38,7 @@ class HomePageViewModel(
             loadHomePage()
         }
     }
-    private suspend fun loadHomePage() {
+    suspend fun loadHomePage() {
         val homeModule = ModuleLayer.selectedModule ?: return
         isLoading = true
         homeModule.subtypes.forEach { subtype ->

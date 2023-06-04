@@ -19,10 +19,13 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -30,6 +33,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -76,6 +80,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.zIndex
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -91,11 +96,16 @@ import androidx.media3.ui.PlayerView
 import com.chouten.app.Mapper
 import com.chouten.app.ModuleLayer
 import com.chouten.app.PrimaryDataLayer
+import com.chouten.app.data.ModuleModel
 import com.chouten.app.data.ModuleResponse
 import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.data.WatchResult
 import com.chouten.app.data.WebviewHandler
 import com.chouten.app.formatMinSec
+import com.chouten.app.ui.components.CustomSlider
+import com.chouten.app.ui.components.MaterialSliderColors
+import com.chouten.app.ui.components.MaterialSliderDefaults
+import com.chouten.app.ui.components.SliderBrushColor
 import com.chouten.app.ui.theme.ChoutenTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -106,9 +116,13 @@ class PlayerActivity : ComponentActivity() {
     var url: String = ""
         private set
 
+    private var isInitialized by mutableStateOf(false)
+
     private val _webview = WebviewHandler()
 
     private var _player: ExoPlayer? by mutableStateOf(null)
+
+    private var currentModule: ModuleModel? by mutableStateOf(null)
 
     private val syncLock = Mutex(false)
 
@@ -117,12 +131,15 @@ class PlayerActivity : ComponentActivity() {
         get() = _mediaUrl
 
     private var _mediaTitle: String? by mutableStateOf(null)
-    val mediaTitle: String?
+    private val mediaTitle: String?
         get() = _mediaTitle
 
     private var _episodeTitle: String? by mutableStateOf(null)
-    val episodeTitle: String?
+    private val episodeTitle: String?
         get() = _episodeTitle
+    private var _episodeNumber: Float? by mutableStateOf(null)
+    private val episodeNumber: Float?
+        get() = _episodeNumber
 
     private var _servers by mutableStateOf(listOf<WatchResult.Server>())
     val servers: List<WatchResult.Server>
@@ -145,23 +162,26 @@ class PlayerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         this.hideSystemUI()
         super.onCreate(savedInstanceState)
-        initialization()
+        initialize()
         setContent {
             ChoutenTheme {
                 // A surface container using the 'background' color from the theme
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     content = {
-                        Box(modifier = Modifier
-                            .fillMaxSize()
-                            .padding(it)
-                            .background(Color.Black)) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(it)
+                                .background(Color.Black)
+                        ) {
                             Player(
                                 WatchResult(
                                     sources = _sources,
                                     skips = _skips,
                                     subtitles = _subtitles
-                                ), context = this@PlayerActivity
+                                ),
+                                context = this@PlayerActivity
                             )
                         }
                     }
@@ -179,12 +199,14 @@ class PlayerActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
             controller.hide(WindowInsetsCompat.Type.systemBars())
-            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     }
 
-    private fun initialization() {
+    private fun initialize() {
         println("INITIALIZING PLAYER ACTIVITY")
+        currentModule = ModuleLayer.selectedModule ?: throw Exception("No module selected")
 
         // Both title and url are url-encoded.
         val title = this.intent.getStringExtra("title").also {
@@ -193,15 +215,17 @@ class PlayerActivity : ComponentActivity() {
         this.intent.getStringExtra("episode").also {
             _episodeTitle = it
         }
+        this.intent.getFloatExtra("episodeNumber", 0f).also {
+            _episodeNumber = it
+        }
         val url = this.intent.getStringExtra("url")
 
         // We want to get the info code from the webview handler
         // and then load the page with that code.
-        val currentModule = ModuleLayer.selectedModule
         _webview.initialize(this)
         _webview.updateNextUrl(url)
         currentModule?.subtypes?.forEach { subtype ->
-            currentModule.code?.get(subtype)?.mediaConsume?.forEach { watchFn ->
+            currentModule!!.code?.get(subtype)?.mediaConsume?.forEach { watchFn ->
                 // We need the info function to
                 // be executed synchronously
                 this.lifecycleScope.launch {
@@ -280,113 +304,117 @@ class PlayerActivity : ComponentActivity() {
                 )
                 prepare()
             }
+        }
 
-            _player?.playWhenReady = watchResult.sources.isNotEmpty()
-            _player?.videoScalingMode =
-                C.VIDEO_SCALING_MODE_SCALE_TO_FIT
-            _player?.repeatMode = ExoPlayer.REPEAT_MODE_OFF
+        _player?.playWhenReady = watchResult.sources.isNotEmpty()
+        _player?.videoScalingMode =
+            C.VIDEO_SCALING_MODE_SCALE_TO_FIT
+        _player?.repeatMode = ExoPlayer.REPEAT_MODE_OFF
 
-            LaunchedEffect((context as Activity).requestedOrientation) {
-                context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            }
+        LaunchedEffect((context as Activity).requestedOrientation) {
+            context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        }
 
-            val interactionSource = remember { MutableInteractionSource() }
+        val interactionSource = remember { MutableInteractionSource() }
 
-            var duration by remember { mutableStateOf(0L) }
-            var currentTime by remember { mutableStateOf(_player?.currentPosition?.coerceAtLeast(0L)) }
-            var bufferedPercentage by remember { mutableStateOf(0) }
-            var shouldShowControls by remember { mutableStateOf(false) }
-            var isPlaying by remember { mutableStateOf(_player?.isPlaying) }
-            var playbackState by remember { mutableStateOf(_player?.playbackState) }
+        var duration by remember { mutableStateOf(0L) }
+        var currentTime by remember { mutableStateOf(_player?.currentPosition?.coerceAtLeast(0L)) }
+        var bufferedPercentage by remember { mutableStateOf(0) }
+        var shouldShowControls by remember { mutableStateOf(false) }
+        var isPlaying by remember { mutableStateOf(_player?.isPlaying) }
+        var isBuffering by remember { mutableStateOf(false) }
+        var playbackState by remember { mutableStateOf(_player?.playbackState) }
 
-            Box(modifier = Modifier.fillMaxSize()) {
-                DisposableEffect(key1 = Unit) {
-                    val listener =
-                        object : Player.Listener {
-                            override fun onPlayerError(error: PlaybackException) {
-                                super.onPlayerError(error)
-                                PrimaryDataLayer.enqueueSnackbar(
-                                    SnackbarVisualsWithError(
-                                        "Error playing video",
-                                        false
-                                    )
+        Box(modifier = Modifier.fillMaxSize()) {
+            DisposableEffect(key1 = Unit) {
+                val listener =
+                    object : Player.Listener {
+                        override fun onPlayerError(error: PlaybackException) {
+                            super.onPlayerError(error)
+                            PrimaryDataLayer.enqueueSnackbar(
+                                SnackbarVisualsWithError(
+                                    "Error playing video",
+                                    false
                                 )
-                            }
-
-                            override fun onEvents(player: Player, events: Player.Events) {
-                                super.onEvents(player, events)
-                                duration = player.duration.coerceAtLeast(0L)
-                                bufferedPercentage = player.bufferedPercentage
-                                isPlaying = player.isPlaying
-                                playbackState = player.playbackState
-
-                                // update current time every second
-                                if (player.playbackState == Player.STATE_READY) {
-                                    Handler(Looper.getMainLooper()).postDelayed(
-                                        {
-                                            currentTime = player.currentPosition.coerceAtLeast(0L)
-                                        },
-                                        350
-                                    )
-                                }
-                            }
-                        }
-
-                    _player?.addListener(listener)
-
-                    onDispose {
-                        _player?.removeListener(listener)
-                        _player?.release()
-                    }
-                }
-
-                AndroidView(
-                    modifier = Modifier.clickable(
-                        interactionSource = interactionSource,
-                        indication = null
-                    ) {
-                        shouldShowControls = !shouldShowControls
-                    },
-                    factory = {
-                        PlayerView(context).apply {
-                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
-                            player = _player
-                            useController = false
-                            layoutParams = ViewGroup.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT
                             )
                         }
-                    }
-                )
 
-                PlayerControls(
-                    modifier = Modifier.fillMaxSize(),
-                    title = mediaTitle,
-                    episodeTitle = episodeTitle,
-                    onBackClick = {
-                        context.requestedOrientation =
-                            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                        context.finish()
-                    },
-                    isVisible = { shouldShowControls },
-                    isPlaying = { isPlaying ?: false },
-                    onReplayClick = { _player?.seekBack() },
-                    onPauseToggle = {
-                        if (isPlaying == true) _player?.pause()
-                        else _player?.play()
-                    },
-                    onForwardClick = { _player?.seekForward() },
-                    duration = { duration },
-                    currentTime = { currentTime ?: 0L},
-                    bufferPercentage = { bufferedPercentage},
-                    onSeekChanged = { _player?.seekTo(it.toLong()) }
-                )
+                        override fun onEvents(player: Player, events: Player.Events) {
+                            super.onEvents(player, events)
+                            duration = player.duration.coerceAtLeast(0L)
+                            bufferedPercentage = player.bufferedPercentage
+                            isPlaying = player.isPlaying
+                            playbackState = player.playbackState
+
+                            if (player.playbackState == Player.STATE_READY && !isInitialized) {
+                                isInitialized = true
+                                val handler = Handler(Looper.getMainLooper())
+                                handler.postDelayed(object : Runnable {
+                                    override fun run() {
+                                        currentTime = player.currentPosition.coerceAtLeast(0L)
+                                        handler.postDelayed(this, 350)
+                                    }
+                                }, 350)
+
+                            }
+
+                            isBuffering = player.playbackState == Player.STATE_BUFFERING
+                        }
+                    }
+
+                _player?.addListener(listener)
+
+                onDispose {
+                    _player?.removeListener(listener)
+                    _player?.release()
+                }
             }
-        } else {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .fillMaxSize()
+
+            AndroidView(
+                modifier = Modifier.clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) {
+                    shouldShowControls = !shouldShowControls
+                },
+                factory = {
+                    PlayerView(context).apply {
+                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+                        player = _player
+                        useController = false
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                    }
+                }
+            )
+
+            PlayerControls(
+                modifier = Modifier.fillMaxSize(),
+                title = mediaTitle,
+                // episode number is a float, check if it's a whole number and if it is, cast it to an int
+                episodeTitle = "${if ((episodeNumber?.rem(1) ?: 0) == 0f) episodeNumber?.toInt() else episodeNumber}: $episodeTitle",
+                currentModule = currentModule?.name,
+              //  resulotion = _player.trackSelectionParameters?.get(0)?.maxVideoWidth ?: 0,
+                onBackClick = {
+                    context.requestedOrientation =
+                        ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    context.finish()
+                },
+                isVisible = { shouldShowControls },
+                isPlaying = { isPlaying ?: false },
+                isBuffering = { isBuffering },
+                onReplayClick = { _player?.seekBack() },
+                onPauseToggle = {
+                    if (isPlaying == true) _player?.pause()
+                    else _player?.play()
+                },
+                onForwardClick = { _player?.seekForward() },
+                duration = { duration },
+                currentTime = { currentTime ?: 0L },
+                bufferPercentage = { bufferedPercentage },
+                onSeekChanged = { _player?.seekTo(it.toLong()) }
             )
         }
     }
@@ -417,9 +445,11 @@ fun PlayerControls(
     modifier: Modifier = Modifier,
     title: String?,
     episodeTitle: String?,
+    currentModule: String?,
     onBackClick: () -> Unit,
     isVisible: () -> Boolean,
     isPlaying: () -> Boolean,
+    isBuffering: () -> Boolean,
     onReplayClick: () -> Unit,
     onPauseToggle: () -> Unit,
     onForwardClick: () -> Unit,
@@ -434,7 +464,7 @@ fun PlayerControls(
 
     AnimatedVisibility(
         modifier = modifier,
-        visible = visible,
+        visible = visible || isBuffering(),
         enter = fadeIn(),
         exit = fadeOut()
     ) {
@@ -453,6 +483,7 @@ fun PlayerControls(
                     ),
                 title = title ?: "",
                 episodeTitle = episodeTitle,
+                currentModule = currentModule,
                 onBackClick = onBackClick
             )
 
@@ -461,6 +492,7 @@ fun PlayerControls(
                     .align(Alignment.Center)
                     .fillMaxWidth(),
                 isPlaying = isPlaying,
+                isBuffering = isBuffering,
                 onReplayClick = onReplayClick,
                 onPauseToggle = onPauseToggle,
                 onForwardClick = onForwardClick,
@@ -487,8 +519,9 @@ fun PlayerControls(
 @Composable
 fun TopControls(
     modifier: Modifier = Modifier,
-    title: String,
+    title: String?,
     episodeTitle: String?,
+    currentModule: String?,
     onBackClick: () -> Unit
 ) {
     Row(
@@ -508,19 +541,24 @@ fun TopControls(
         Column(
             modifier = Modifier
                 .weight(1f)
+                .fillMaxWidth()
                 .align(Alignment.CenterVertically)
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
             if (episodeTitle != null) {
                 Text(
                     text = episodeTitle,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            if (title != null) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -536,14 +574,16 @@ fun TopControls(
             horizontalAlignment = Alignment.End
         ) {
             Text(
-                text = "Zoro.to",
+                text = currentModule ?: "No Module",
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = "1920x1080",
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -555,6 +595,7 @@ fun TopControls(
 fun CenterControls(
     modifier: Modifier = Modifier,
     isPlaying: () -> Boolean,
+    isBuffering: () -> Boolean,
     onReplayClick: () -> Unit,
     onPauseToggle: () -> Unit,
     onForwardClick: () -> Unit
@@ -584,15 +625,34 @@ fun CenterControls(
 
             Spacer(modifier = Modifier.width(90.dp))
 
-            //pause/play toggle button
-            IconButton(modifier = Modifier.size(80.dp), onClick = onPauseToggle) {
-                Icon(
-                    modifier = Modifier.fillMaxSize(),
-                    imageVector = if (isVideoPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                    contentDescription = "Replay"
-                )
-            }
 
+
+            Box {
+                // somehow if you don't use the fully qualified name, it doesn't work :/
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = isBuffering(),
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .zIndex(1f),
+                        strokeWidth = 4.dp,
+                        color = Color.White
+                    )
+                }
+
+                //pause/play toggle button
+                IconButton(modifier = Modifier.size(80.dp), onClick = onPauseToggle) {
+                    Icon(
+                        modifier = Modifier.fillMaxSize(),
+                        imageVector = if (isVideoPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        contentDescription = "Replay"
+                    )
+                }
+
+            }
             Spacer(modifier = Modifier.width(90.dp))
 
             //forward button
@@ -634,7 +694,7 @@ fun BottomControls(
         if (isBeingDragged) 10.dp
         else 6.dp,
         animationSpec = tween(
-            durationMillis = 1000, easing = FastOutSlowInEasing
+            durationMillis = 1000, easing = LinearEasing
         )
     )
 
@@ -705,59 +765,104 @@ fun BottomControls(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(10.dp)
+                .height(20.dp)
         ) {
             // buffer bar
-            Slider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(sliderHeight)
-                    .background(shape = RoundedCornerShape(10.dp), color = Color.Transparent),
+//            Slider(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(sliderHeight)
+//                    .background(shape = RoundedCornerShape(10.dp), color = Color.Transparent),
+//                value = buffer.toFloat(),
+//                enabled = false,
+//                valueRange = 0f..100f,
+//                colors =
+//                SliderDefaults.colors(
+//                    activeTrackColor = Color.White.copy(alpha = 0.4F),
+//                    inactiveTrackColor = Color.White.copy(alpha = 0.4F),
+//                ),
+//                interactionSource = interactionSource,
+//                onValueChange = {},
+//                thumb = {
+//                    SliderDefaults.Thumb(
+//                        interactionSource = interactionSource,
+//                        thumbSize = DpSize.Zero
+//                    )
+//                }
+//            )
+
+            CustomSlider(
                 value = buffer.toFloat(),
-                enabled = false,
+                onValueChange = { _, _ -> },
                 valueRange = 0f..100f,
-                colors =
-                SliderDefaults.colors(
-                    activeTrackColor = Color.White.copy(alpha = 0.4F),
-                    inactiveTrackColor = Color.White.copy(alpha = 0.4F),
+                trackHeight = sliderHeight,
+                thumbRadius = 0.dp,
+                colors = MaterialSliderDefaults.customColors(
+                    activeTrackColor = SliderBrushColor(color = Color.White.copy(alpha = 0.4F)),
+                    inactiveTrackColor = SliderBrushColor(color = Color.White.copy(alpha = 0.4F)),
+                    thumbColor = SliderBrushColor(color = Color.Transparent),
+                    activeTickColor = SliderBrushColor(color = Color.Transparent),
+                    inactiveTickColor = SliderBrushColor(color = Color.Transparent),
+                    disabledActiveTrackColor = SliderBrushColor(color = Color.Transparent),
+                    disabledInactiveTrackColor = SliderBrushColor(color = Color.Transparent),
+                    disabledThumbColor = SliderBrushColor(color = Color.Transparent),
+                    disabledActiveTickColor = SliderBrushColor(color = Color.Transparent),
+                    disabledInactiveTickColor = SliderBrushColor(color = Color.Transparent),
                 ),
-                interactionSource = interactionSource,
-                onValueChange = {},
-                thumb = {
-                    SliderDefaults.Thumb(
-                        interactionSource = interactionSource,
-                        thumbSize = DpSize.Zero
-                    )
-                }
             )
-            // seek bar
-            Slider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(sliderHeight)
-                    .background(shape = RoundedCornerShape(10.dp), color = Color.Transparent),
+
+            CustomSlider(
                 value = videoTime.toFloat(),
-                onValueChange = {
+                onValueChange = { float, _ ->
                     isBeingDragged = true
-                    onSeekChanged(it)
+                    onSeekChanged(float)
                 },
-                onValueChangeFinished = {
-                    isBeingDragged = false
-                },
+                onValueChangeFinished = { isBeingDragged = false },
                 valueRange = 0f..duration.toFloat(),
-                colors =
-                SliderDefaults.colors(
-                    activeTrackColor = MaterialTheme.colorScheme.primary,
-                    inactiveTrackColor = Color.Transparent,
+                trackHeight = sliderHeight,
+                thumbRadius = 0.dp,
+                colors = MaterialSliderDefaults.customColors(
+                    activeTrackColor = SliderBrushColor(color = MaterialTheme.colorScheme.primary),
+                    inactiveTrackColor = SliderBrushColor(color = Color.Transparent),
+                    thumbColor = SliderBrushColor(color = Color.Transparent),
+                    activeTickColor = SliderBrushColor(color = Color.Transparent),
+                    inactiveTickColor = SliderBrushColor(color = Color.Transparent),
+                    disabledActiveTrackColor = SliderBrushColor(color = Color.Transparent),
+                    disabledInactiveTrackColor = SliderBrushColor(color = Color.Transparent),
+                    disabledThumbColor = SliderBrushColor(color = Color.Transparent),
+                    disabledActiveTickColor = SliderBrushColor(color = Color.Transparent),
+                    disabledInactiveTickColor = SliderBrushColor(color = Color.Transparent),
                 ),
-                interactionSource = interactionSource,
-                thumb = {
-                    SliderDefaults.Thumb(
-                        interactionSource = interactionSource,
-                        thumbSize = DpSize.Zero
-                    )
-                }
             )
+
+            // seek bar
+//            Slider(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(sliderHeight)
+//                    .background(shape = RoundedCornerShape(10.dp), color = Color.Transparent),
+//                value = videoTime.toFloat(),
+//                onValueChange = {
+//                    isBeingDragged = true
+//                    onSeekChanged(it)
+//                },
+//                onValueChangeFinished = {
+//                    isBeingDragged = false
+//                },
+//                valueRange = 0f..duration.toFloat(),
+//                colors =
+//                SliderDefaults.colors(
+//                    activeTrackColor = MaterialTheme.colorScheme.primary,
+//                    inactiveTrackColor = Color.Transparent,
+//                ),
+//                interactionSource = interactionSource,
+//                thumb = {
+//                    SliderDefaults.Thumb(
+//                        interactionSource = interactionSource,
+//                        thumbSize = DpSize.Zero
+//                    )
+//                }
+//            )
         }
     }
 }

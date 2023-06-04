@@ -28,10 +28,10 @@ lateinit var App: MainActivity
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        actionBar?.hide()
-        //WindowCompat.setDecorFitsSystemWindows(window, false)
-
         super.onCreate(savedInstanceState)
+        actionBar?.hide()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         preferenceHandler = PreferenceManager(this)
 
         App = this@MainActivity

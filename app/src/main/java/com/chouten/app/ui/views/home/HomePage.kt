@@ -1,5 +1,6 @@
 package com.chouten.app.ui.views.home
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
@@ -56,16 +57,21 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.chouten.app.ModuleLayer
 import com.chouten.app.data.HomeResult
 import com.chouten.app.data.WebviewHandler
 import com.chouten.app.ui.components.ModuleSelectorContainer
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import com.valentinilk.shimmer.shimmer
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.net.URLEncoder
 import java.util.Locale
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomePage(
@@ -76,6 +82,13 @@ fun HomePage(
     ),
 ) {
     val scrollState = rememberScrollState()
+
+    if (provider.homeResults.isEmpty() && ModuleLayer.selectedModule != null) {
+        provider.viewModelScope.launch {
+            provider.loadHomePage()
+        }
+    }
+
     Column(
         Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -83,7 +96,7 @@ fun HomePage(
     ) {
         ModuleSelectorContainer(context = navController.context) {
             AnimatedVisibility(
-                provider.isLoading,
+                provider.isLoading && ModuleLayer.selectedModule != null,
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface)
