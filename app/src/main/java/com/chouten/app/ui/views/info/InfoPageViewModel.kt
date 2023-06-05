@@ -31,6 +31,11 @@ class InfoPageViewModel(
     val hasLoadedInfoText: Boolean
         get() = hasLoadedInfo
 
+    private var hasLoadedMediaEpisodes by mutableStateOf(false)
+    val hasLoadedEpisodes: Boolean
+        get() = hasLoadedMediaEpisodes
+
+
     private var altTitles by mutableStateOf(listOf<String>())
     val altTitlesText: List<String>
         get() = altTitles
@@ -120,6 +125,7 @@ class InfoPageViewModel(
                                         res
                                     )
                                 infoResult = listOf(results.result)
+                                hasLoadedMediaEpisodes = true
                             } catch (e: Exception) {
                                 PrimaryDataLayer.enqueueSnackbar(
                                     SnackbarVisualsWithError(

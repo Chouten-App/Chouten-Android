@@ -7,21 +7,33 @@ import android.content.Intent
 import android.net.NetworkCapabilities.*
 import android.net.Uri
 import android.os.*
+import android.os.Build.VERSION.SDK_INT
 import android.provider.Settings
 import android.util.Log
 import android.view.*
 import android.view.animation.*
 import android.widget.*
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.composed
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.IntSize
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.view.*
@@ -249,3 +261,35 @@ internal fun scale(
  */
 fun calculateFraction(start: Float, end: Float, pos: Float) =
     (if (end - start == 0f) 0f else (pos - start) / (end - start)).coerceIn(0f, 1f)
+
+fun Modifier.shimmerEffect(): Modifier = composed {
+    var size by remember { mutableStateOf(IntSize.Zero) }
+
+    val transition = rememberInfiniteTransition()
+    val startOffsetX by transition.animateFloat(
+        initialValue = -2 * size.width.toFloat(),
+        targetValue = 2 * size.width.toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2000, easing = LinearEasing),
+        )
+    )
+
+    background(
+        brush = Brush.linearGradient(
+            colors = listOf(
+                MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+                Color(0xFF8F8B8B),
+                MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+            ),
+            start = Offset(startOffsetX, 0f),
+            end = Offset(startOffsetX + size.width.toFloat(), size.height.toFloat())
+        )
+    ).onGloballyPositioned {
+        size = it.size
+    }
+}
+
+//inline fun <reified T : Parcelable> Intent.parcelable(key: String): T? = when {
+//    SDK_INT >= 33 -> getParcelableExtra(key, T::class.java)
+//    else -> @Suppress("DEPRECATION") getParcelableExtra(key) as? T
+//}

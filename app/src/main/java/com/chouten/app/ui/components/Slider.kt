@@ -39,24 +39,10 @@ import com.chouten.app.calculateFraction
 import com.chouten.app.scale
 import com.google.common.math.Quantiles.scale
 
+
+/* source: https://github.com/SmartToolFactory/Compose-Colorful-Sliders */
+
 /**
- * Sliders allow users to make selections from a range of values.
- *
- * Sliders reflect a range of values along a bar, from which users may select a single value.
- * They are ideal for adjusting settings such as volume, brightness, or applying image filters.
- **
- * Use continuous sliders to allow users to make meaningful selections that don’t
- * require a specific value:
- **
- * You can allow the user to choose only between predefined set of values by specifying the amount
- * of steps between min and max values:
- *
- * Material Slider allows to choose height for track and thumb radius and selection between
- * [Color] or [Brush] using [SliderBrushColor]. If brush of [SliderBrushColor.brush] is
- * not null gradient
- * provided in this [Brush] is used for drawing otherwise solid color
- * [SliderBrushColor.solidColor] is used.
- *
  * @param value current value of the Slider. If outside of [valueRange] provided, value will be
  * coerced to this range.
  * @param onValueChange lambda that returns value, position of **thumb** as [Offset], vertical

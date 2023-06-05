@@ -16,16 +16,14 @@ import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -33,7 +31,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -43,7 +40,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.Dns
@@ -59,8 +55,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -76,7 +70,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -89,13 +82,13 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.chouten.app.Mapper
 import com.chouten.app.ModuleLayer
 import com.chouten.app.PrimaryDataLayer
+import com.chouten.app.data.InfoResult
 import com.chouten.app.data.ModuleModel
 import com.chouten.app.data.ModuleResponse
 import com.chouten.app.data.SnackbarVisualsWithError
@@ -103,13 +96,12 @@ import com.chouten.app.data.WatchResult
 import com.chouten.app.data.WebviewHandler
 import com.chouten.app.formatMinSec
 import com.chouten.app.ui.components.CustomSlider
-import com.chouten.app.ui.components.MaterialSliderColors
 import com.chouten.app.ui.components.MaterialSliderDefaults
 import com.chouten.app.ui.components.SliderBrushColor
 import com.chouten.app.ui.theme.ChoutenTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
-
+import kotlinx.serialization.Serializable
 
 class PlayerActivity : ComponentActivity() {
 
@@ -141,6 +133,10 @@ class PlayerActivity : ComponentActivity() {
     private val episodeNumber: Float?
         get() = _episodeNumber
 
+    private var _currentEpisodeIndex: Int? by mutableStateOf(null)
+    private val currentEpisodeIndex: Int?
+        get() = _currentEpisodeIndex
+
     private var _servers by mutableStateOf(listOf<WatchResult.Server>())
     val servers: List<WatchResult.Server>
         get() = _servers
@@ -159,6 +155,7 @@ class PlayerActivity : ComponentActivity() {
 
     private val handler = Handler(Looper.getMainLooper())
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         this.hideSystemUI()
         super.onCreate(savedInstanceState)
@@ -204,6 +201,7 @@ class PlayerActivity : ComponentActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun initialize() {
         println("INITIALIZING PLAYER ACTIVITY")
         currentModule = ModuleLayer.selectedModule ?: throw Exception("No module selected")
@@ -215,8 +213,17 @@ class PlayerActivity : ComponentActivity() {
         this.intent.getStringExtra("episode").also {
             _episodeTitle = it
         }
-        this.intent.getFloatExtra("episodeNumber", 0f).also {
+        this.intent.getFloatExtra("episodeNumber", -1f).also {
             _episodeNumber = it
+        }
+        // TODO: We need to get the episodes from the intent
+//        this.intent.parcelable<>("episodes").also {
+//            val episodes = it
+//           println("EPISODES: $episodes")
+//        }
+
+        this.intent.getIntExtra("currentEpisodeIndex", -1).also {
+            _currentEpisodeIndex = it
         }
         val url = this.intent.getStringExtra("url")
 
@@ -420,8 +427,8 @@ class PlayerActivity : ComponentActivity() {
     }
 
     override fun onPause() {
-        super.onPause()
         _player?.pause()
+        super.onPause()
     }
 
     override fun onStop() {
@@ -674,7 +681,6 @@ fun CenterControls(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomControls(
     modifier: Modifier = Modifier,
@@ -767,30 +773,7 @@ fun BottomControls(
                 .fillMaxWidth()
                 .height(20.dp)
         ) {
-            // buffer bar
-//            Slider(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(sliderHeight)
-//                    .background(shape = RoundedCornerShape(10.dp), color = Color.Transparent),
-//                value = buffer.toFloat(),
-//                enabled = false,
-//                valueRange = 0f..100f,
-//                colors =
-//                SliderDefaults.colors(
-//                    activeTrackColor = Color.White.copy(alpha = 0.4F),
-//                    inactiveTrackColor = Color.White.copy(alpha = 0.4F),
-//                ),
-//                interactionSource = interactionSource,
-//                onValueChange = {},
-//                thumb = {
-//                    SliderDefaults.Thumb(
-//                        interactionSource = interactionSource,
-//                        thumbSize = DpSize.Zero
-//                    )
-//                }
-//            )
-
+            // buffer slider
             CustomSlider(
                 value = buffer.toFloat(),
                 onValueChange = { _, _ -> },
@@ -811,6 +794,7 @@ fun BottomControls(
                 ),
             )
 
+            // seek bar
             CustomSlider(
                 value = videoTime.toFloat(),
                 onValueChange = { float, _ ->
@@ -834,35 +818,6 @@ fun BottomControls(
                     disabledInactiveTickColor = SliderBrushColor(color = Color.Transparent),
                 ),
             )
-
-            // seek bar
-//            Slider(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(sliderHeight)
-//                    .background(shape = RoundedCornerShape(10.dp), color = Color.Transparent),
-//                value = videoTime.toFloat(),
-//                onValueChange = {
-//                    isBeingDragged = true
-//                    onSeekChanged(it)
-//                },
-//                onValueChangeFinished = {
-//                    isBeingDragged = false
-//                },
-//                valueRange = 0f..duration.toFloat(),
-//                colors =
-//                SliderDefaults.colors(
-//                    activeTrackColor = MaterialTheme.colorScheme.primary,
-//                    inactiveTrackColor = Color.Transparent,
-//                ),
-//                interactionSource = interactionSource,
-//                thumb = {
-//                    SliderDefaults.Thumb(
-//                        interactionSource = interactionSource,
-//                        thumbSize = DpSize.Zero
-//                    )
-//                }
-//            )
         }
     }
 }
