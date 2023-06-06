@@ -7,7 +7,6 @@ plugins {
 android {
     namespace 'com.chouten.app'
     compileSdk 33
-    compileSdkPreview "UpsideDownCake"
 
     defaultConfig {
         applicationId "com.chouten.app"
