@@ -122,7 +122,12 @@ fun HomePage(
                 for (result in provider.homeResults) {
                     when (result.type.lowercase(Locale.getDefault())) {
                         "carousel" -> {
-                            val pagerState = rememberPagerState(0)
+                            val pagerState = rememberPagerState(
+                                initialPage = 0,
+                                initialPageOffsetFraction = 0f
+                            ) {
+                                result.data.size
+                            }
 
                             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
                                 val maxHeight = maxHeight
@@ -135,7 +140,6 @@ fun HomePage(
                                         .fillMaxWidth()
                                         .align(Alignment.TopCenter)
                                         .height(topHeight),
-                                    pageCount = result.data.size,
                                     state = pagerState,
 
                                     ) {

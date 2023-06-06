@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
+import com.chouten.app.data.InfoResult
 import com.chouten.app.ui.components.ShimmerEpisodes
 import com.chouten.app.ui.components.ShimmerInfo
 import com.chouten.app.ui.views.watch.PlayerActivity
@@ -79,6 +80,7 @@ import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import com.valentinilk.shimmer.shimmer
 import org.json.JSONObject
+import java.io.Serializable
 
 @SuppressLint("RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -113,7 +115,7 @@ fun InfoPage(
         targetValue = if (leftOffset >= 0) IntOffset.Zero else if (scrollState.value >= 700) IntOffset(
             leftOffset,
             0
-        ) else IntOffset(-(LocalConfiguration.current.screenWidthDp * 3), 0),
+        ) else IntOffset(-(LocalConfiguration.current.screenWidthDp * 4), 0),
         animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
     )
 
@@ -330,10 +332,14 @@ fun InfoPage(
                                                             item.number
                                                         )
                                                         // need a way to pass the list of episodes to the player
-//                                                        intent.putExtra(
-//                                                            "episodes",
-//                                                            provider.infoResults.toTypedArray()
-//                                                        )
+                                                        intent.putExtra(
+                                                            "episodes",
+                                                            provider.infoResults.map {
+                                                                it.map { episode ->
+                                                                    episode.toString()
+                                                                }
+                                                            }.toString()
+                                                        )
 
                                                         intent.putExtra("currentEpisodeIndex", provider.infoResults[0].indexOf(item))
                                                         startActivity(

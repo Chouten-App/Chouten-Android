@@ -37,7 +37,6 @@ import java.util.Locale
 class ModuleDataLayer {
 
     var selectedModule by mutableStateOf<ModuleModel?>(null)
-        private set
     var availableModules = mutableStateListOf<ModuleModel>()
         private set
 
@@ -287,6 +286,7 @@ class ModuleDataLayer {
 
     suspend fun updateSelectedModule(moduleId: String) {
         val module = availableModules[moduleId]
+        selectedModule = module
         println("Updating to ${module.name}")
 
         val moduleSearch = App.lifecycleScope.async {

@@ -13,20 +13,32 @@ import android.util.Log
 import android.view.*
 import android.view.animation.*
 import android.widget.*
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.with
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.Interaction
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
@@ -42,6 +54,8 @@ import com.chouten.app.data.AppPaths
 import com.chouten.app.data.ModuleModel
 import com.chouten.app.data.RequestCodes
 import com.chouten.app.data.SnackbarVisualsWithError
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import java.io.*
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -289,7 +303,9 @@ fun Modifier.shimmerEffect(): Modifier = composed {
     }
 }
 
-//inline fun <reified T : Parcelable> Intent.parcelable(key: String): T? = when {
-//    SDK_INT >= 33 -> getParcelableExtra(key, T::class.java)
-//    else -> @Suppress("DEPRECATION") getParcelableExtra(key) as? T
-//}
+// Remove ripple effect from clickable elements
+class NoRippleInteractionSource : MutableInteractionSource {
+    override val interactions: Flow<Interaction> = emptyFlow()
+    override suspend fun emit(interaction: Interaction) {}
+    override fun tryEmit(interaction: Interaction) = true
+}

@@ -91,7 +91,7 @@ class WebviewHandler {
             var responseCode = -1
             lateinit var response: ByteArray
             while (counter < 2 || responseCode != 200) {
-                if (headers == null) headers = mapOf()
+                if (headers == null) headers = mapOf("User-Agent" to "Chouten")
                 val _response = when (request?.method) {
                     "GET" -> client.get(url, headers)
                     "POST" -> client.post(url, headers, request?.body)

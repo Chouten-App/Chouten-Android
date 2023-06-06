@@ -9,7 +9,7 @@ data class ModuleModel(
     // something that needs to be defined within the JSON
     val type: String, // TODO: Better checking to only allow for Source/Meta module types
     val subtypes: List<String>,
-    val name: String,
+    var name: String,
     val version: String,
     val formatVersion: Int,
     val updateUrl: String,
@@ -70,6 +70,7 @@ data class ModuleModel(
                         + this.meta.hashCode()
                 )
     }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -138,7 +139,8 @@ data class InfoResult(
     val mediaType: String,
     val seasons: List<Season>?,
     val mediaList: List<List<MediaItem>>
-) {
+){
+
     @Serializable
     data class Titles(
         val primary: String,
@@ -152,7 +154,9 @@ data class InfoResult(
         val title: String?,
         val description: String?,
         val image: String?,
-    )
+    ) {
+        override fun toString() = "{\"url\": \"$url\", \"number\": $number, \"title\": \"$title\", \"description\": \"$description\", \"image\": \"$image\"}"
+    }
 
     @Serializable
     data class Season(

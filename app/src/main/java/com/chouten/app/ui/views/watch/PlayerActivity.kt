@@ -17,20 +17,29 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -62,14 +71,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -83,10 +96,12 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.chouten.app.Mapper
 import com.chouten.app.ModuleLayer
+import com.chouten.app.NoRippleInteractionSource
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.data.InfoResult
 import com.chouten.app.data.ModuleModel
@@ -101,7 +116,9 @@ import com.chouten.app.ui.components.SliderBrushColor
 import com.chouten.app.ui.theme.ChoutenTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.serializer
 
 class PlayerActivity : ComponentActivity() {
 
@@ -136,6 +153,10 @@ class PlayerActivity : ComponentActivity() {
     private var _currentEpisodeIndex: Int? by mutableStateOf(null)
     private val currentEpisodeIndex: Int?
         get() = _currentEpisodeIndex
+
+    private var episodesLists: List<List<InfoResult.MediaItem>> by mutableStateOf(listOf())
+    private val episodes: List<InfoResult.MediaItem>
+        get() = episodesLists[0]
 
     private var _servers by mutableStateOf(listOf<WatchResult.Server>())
     val servers: List<WatchResult.Server>
@@ -216,11 +237,9 @@ class PlayerActivity : ComponentActivity() {
         this.intent.getFloatExtra("episodeNumber", -1f).also {
             _episodeNumber = it
         }
-        // TODO: We need to get the episodes from the intent
-//        this.intent.parcelable<>("episodes").also {
-//            val episodes = it
-//           println("EPISODES: $episodes")
-//        }
+        this.intent.getStringExtra("episodes").also {
+            episodesLists = Mapper.parse(it ?: throw Exception("No episodes found"))
+        }
 
         this.intent.getIntExtra("currentEpisodeIndex", -1).also {
             _currentEpisodeIndex = it
@@ -403,7 +422,7 @@ class PlayerActivity : ComponentActivity() {
                 // episode number is a float, check if it's a whole number and if it is, cast it to an int
                 episodeTitle = "${if ((episodeNumber?.rem(1) ?: 0) == 0f) episodeNumber?.toInt() else episodeNumber}: $episodeTitle",
                 currentModule = currentModule?.name,
-              //  resulotion = _player.trackSelectionParameters?.get(0)?.maxVideoWidth ?: 0,
+                //  resolution = _player.trackSelectionParameters?.get(0)?.maxVideoWidth ?: 0,
                 onBackClick = {
                     context.requestedOrientation =
                         ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -421,7 +440,27 @@ class PlayerActivity : ComponentActivity() {
                 duration = { duration },
                 currentTime = { currentTime ?: 0L },
                 bufferPercentage = { bufferedPercentage },
-                onSeekChanged = { _player?.seekTo(it.toLong()) }
+                onSeekChanged = { _player?.seekTo(it.toLong()) },
+                onNextEpisode = {
+                    if (currentEpisodeIndex!!.plus(1) == episodes.size) return@PlayerControls
+                    finish();
+                    // check if the next episode is null, using the currentEpisodeIndex + 1 and episodes list
+                    val nextEpisode = episodes[currentEpisodeIndex!!.plus(1)]
+
+                    startActivity(
+                        intent
+                            .putExtra("title", mediaTitle)
+                            .putExtra("episode", nextEpisode.title)
+                            .putExtra("url", nextEpisode.url)
+                            .putExtra("episodeNumber", nextEpisode.number)
+                            .putExtra("currentEpisodeIndex", currentEpisodeIndex!!.plus(1))
+                            .putExtra("episodes", episodesLists.map {
+                                it.map { episode ->
+                                    episode.toString()
+                                }
+                            }.toString())
+                    );
+                },
             )
         }
     }
@@ -463,7 +502,8 @@ fun PlayerControls(
     duration: () -> Long,
     currentTime: () -> Long,
     bufferPercentage: () -> Int,
-    onSeekChanged: (timeMs: Float) -> Unit
+    onSeekChanged: (timeMs: Float) -> Unit,
+    onNextEpisode: () -> Unit,
 ) {
     val visible = remember(isVisible()) {
         isVisible()
@@ -517,6 +557,7 @@ fun PlayerControls(
                 currentTime = currentTime,
                 bufferPercentage = bufferPercentage,
                 onSeekChanged = onSeekChanged,
+                onNextEpisode = onNextEpisode,
             )
 
         }
@@ -598,6 +639,8 @@ fun TopControls(
     }
 }
 
+@SuppressLint("UnusedContentLambdaTargetStateParameter")
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun CenterControls(
     modifier: Modifier = Modifier,
@@ -612,6 +655,12 @@ fun CenterControls(
         isPlaying()
     }
 
+    var currentReplayIconRotation by remember { mutableStateOf(0f) }
+    val rotation = remember { Animatable(currentReplayIconRotation) }
+    val coroutineScope = rememberCoroutineScope()
+
+    var replayText by remember { mutableStateOf("10") }
+
     //black overlay across the video player
     Box(modifier = modifier.background(Color.Transparent)) {
         Row(
@@ -621,18 +670,96 @@ fun CenterControls(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            //replay button
-            IconButton(modifier = Modifier.size(40.dp), onClick = onReplayClick) {
+
+            IconButton(
+                modifier = Modifier.size(40.dp), onClick = {
+                onReplayClick()
+
+                coroutineScope.launch {
+
+                    // slide the text horizontally to the left, and add a +10 to the text
+                    replayText = "+$replayText"
+
+                    rotation.animateTo(
+                        targetValue = currentReplayIconRotation - 20f,
+                        animationSpec =  tween(
+                                durationMillis = 300,
+                                easing = LinearEasing
+                            ),
+                    ) {
+                        currentReplayIconRotation = value
+                    }
+                    // reset the rotation
+                    rotation.animateTo(
+                        targetValue = currentReplayIconRotation + 20f,
+                        animationSpec =  tween(
+                                durationMillis = 300,
+                                easing = LinearEasing
+                            ),
+                    ) {
+                        currentReplayIconRotation = value
+                    }
+                }
+
+            }, interactionSource = NoRippleInteractionSource()
+            ) {
+                AnimatedContent(targetState = "", transitionSpec = {
+                    if (targetState.toInt() > initialState.toInt()) {
+                        slideInHorizontally(
+                            initialOffsetX = { -it * 2 },
+                            animationSpec = tween(
+                                durationMillis = 1000,
+                                easing = LinearEasing
+                            )
+                        ) togetherWith
+                                slideOutHorizontally(
+                                    targetOffsetX = { it },
+                                    animationSpec = tween(
+                                        durationMillis = 300,
+                                        easing = LinearEasing
+                                    )
+                                )
+                    } else {
+                       // replayText = replayText.removePrefix("+")
+                        slideInHorizontally(
+                            initialOffsetX = { it },
+                            animationSpec = tween(
+                                durationMillis = 300,
+                                easing = LinearEasing
+                            )
+                        ) togetherWith
+                                slideOutHorizontally(
+                                    targetOffsetX = { -it },
+                                    animationSpec = tween(
+                                        durationMillis = 300,
+                                        easing = LinearEasing
+                                    )
+                                )
+                    }
+                }) {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(start = 10.dp, end = 10.dp, top = 15.dp, bottom = 10.dp)
+                            .zIndex(1f),
+                        text = replayText,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
                 Icon(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .rotate(rotation.value),
                     imageVector = Icons.Rounded.Replay,
                     contentDescription = "Replay"
                 )
             }
 
             Spacer(modifier = Modifier.width(90.dp))
-
-
 
             Box {
                 // somehow if you don't use the fully qualified name, it doesn't work :/
@@ -644,7 +771,7 @@ fun CenterControls(
                     CircularProgressIndicator(
                         modifier = Modifier
                             .size(80.dp)
-                            .zIndex(1f),
+                            .zIndex(2f),
                         strokeWidth = 4.dp,
                         color = Color.White
                     )
@@ -671,6 +798,19 @@ fun CenterControls(
                         rotationY = 180f
                     }, onClick = onForwardClick
             ) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 10.dp, end = 10.dp, top = 15.dp, bottom = 10.dp)
+                        .zIndex(1f)
+                        .graphicsLayer { rotationY = -180f },
+                    text = "10",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+
                 Icon(
                     modifier = Modifier.fillMaxSize(),
                     imageVector = Icons.Rounded.Replay,
@@ -687,13 +827,13 @@ fun BottomControls(
     duration: () -> Long,
     currentTime: () -> Long,
     bufferPercentage: () -> Int,
-    onSeekChanged: (timeMs: Float) -> Unit
+    onSeekChanged: (timeMs: Float) -> Unit,
+    onNextEpisode: () -> Unit
 ) {
     val duration = remember(duration()) { duration() }
     val videoTime = remember(currentTime()) { currentTime() }
     val buffer = remember(bufferPercentage()) { bufferPercentage() }
 
-    val interactionSource = MutableInteractionSource()
     var isBeingDragged by remember { mutableStateOf(false) }
 
     val sliderHeight by animateDpAsState(
@@ -720,6 +860,7 @@ fun BottomControls(
             )
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+
                 IconButton(
                     modifier = Modifier.size(40.dp),
                     onClick = {},
@@ -757,12 +898,12 @@ fun BottomControls(
 
                 IconButton(
                     modifier = Modifier.size(40.dp),
-                    onClick = {}
+                    onClick = onNextEpisode,
                 ) {
                     Icon(
                         modifier = Modifier.fillMaxSize(),
                         imageVector = Icons.Rounded.FastForward,
-                        contentDescription = "Replay"
+                        contentDescription = "Next Episode"
                     )
                 }
             }
@@ -820,4 +961,16 @@ fun BottomControls(
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewPlayerControls() {
+    CenterControls(
+        isPlaying = { true },
+        isBuffering = { false },
+        onReplayClick = { },
+        onPauseToggle = { },
+        onForwardClick = { },
+    )
 }

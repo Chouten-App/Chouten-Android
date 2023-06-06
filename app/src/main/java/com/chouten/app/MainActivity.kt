@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
+import com.chouten.app.data.DataLayer
 import com.chouten.app.ui.components.DownloadedOnlyBannerBackgroundColor
 import com.chouten.app.ui.components.IncognitoModeBannerBackgroundColor
 import com.chouten.app.ui.theme.ChoutenTheme
@@ -28,24 +29,27 @@ lateinit var App: MainActivity
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
+
         super.onCreate(savedInstanceState)
+        App = this@MainActivity
+
         actionBar?.hide()
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         preferenceHandler = PreferenceManager(this)
 
-        App = this@MainActivity
+        checkPermissions()
+        createAppDirectory()
+
         initializeNetwork(applicationContext)
         initializeRepositories()
 
-        checkPermissions()
-        createAppDirectory()
         lifecycleScope.launch(Dispatchers.IO) {
             ModuleLayer.loadModules()
         }
 
         if (intent != null) handleSharedIntent(intent)
-        installSplashScreen()
         setContent {
             val incognito = preferenceHandler.isIncognito
             val downloadOnly = preferenceHandler.isOfflineMode
