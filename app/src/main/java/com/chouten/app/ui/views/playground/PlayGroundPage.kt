@@ -19,7 +19,7 @@ import androidx.navigation.NavController
 
 class BrowserWebViewClient : WebViewClient() {
     private val videoRegex =
-        "\\.(mp4|mp4v|mpv|m1v|m4v|mpg|mpg2|mpeg|xvid|webm|3gp|avi|mov|mkv|ogg|ogv|ogm|m3u8|mpd|ism(?:[vc]|/manifest)?)(?:[\\?#]|$)".toRegex(
+        "\\.(mp4|mp4v|mpv|m1v|m4v|mpg|mpg2|mpeg|xvid|webm|3gp|avi|mov|mkv|ogg|ogv|ogm|m3u8|mpd|ism(?:[vc]|/manifest)?)(?:[?#]|$)".toRegex(
             RegexOption.IGNORE_CASE
         )
 
@@ -54,10 +54,6 @@ class BrowserWebViewClient : WebViewClient() {
             // add url to list
             Log.d("WebViewClient", "Found video: $uri\nMime type: $mimeType")
         }
-    }
-
-    private fun processURL(uri: String) {
-        processURL(uri, null)
     }
 
     @Deprecated("Deprecated in Java")
@@ -109,6 +105,7 @@ fun PlayGroundPage(
     }
 }
 
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun BrowserView(url: String) {
     AndroidView(
