@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -46,13 +47,14 @@ val IndexingBannerBackgroundColor
 fun WarningBanner(
     @StringRes textRes: Int,
     modifier: Modifier = Modifier,
+    backgroundColor: Color = MaterialTheme.colorScheme.error,
     topPadding: Dp = 0.dp
 ) {
     Text(
         text = stringResource(textRes),
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.error)
+            .background(backgroundColor)
             .padding(top = topPadding + 8.dp, bottom = 8.dp),
         color = MaterialTheme.colorScheme.onError,
         style = MaterialTheme.typography.bodyMedium,

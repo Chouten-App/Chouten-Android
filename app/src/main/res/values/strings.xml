@@ -60,4 +60,6 @@
     <string name="log__desc">View module logs</string>
     <string name="log__action_clear">Clear Logs</string>
     <string name="log__placeholder">No logs… Yay?</string>
+    <string name="nothing" />
+    <string name="navbar_playground">Playground</string>
 </resources>

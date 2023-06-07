@@ -37,6 +37,7 @@ import com.chouten.app.ui.views.home.HomePage
 import com.chouten.app.ui.views.home.HomePageViewModel
 import com.chouten.app.ui.views.info.InfoPage
 import com.chouten.app.ui.views.info.InfoPageViewModel
+import com.chouten.app.ui.views.playground.PlayGroundPage
 import com.chouten.app.ui.views.search.SearchPage
 import com.chouten.app.ui.views.search.SearchPageViewModel
 import com.chouten.app.ui.views.settings.MorePage
@@ -94,7 +95,11 @@ fun Navigation(navController: NavHostController) {
             ViewModels.searchVm?.let {
                 SearchPage(navController, it)
             }
-
+        }
+        composable(
+            route = Screen.PlayGroundPage.route
+        ) {
+            PlayGroundPage(navController)
         }
         composable(
             // The route will be dynamic, with params:

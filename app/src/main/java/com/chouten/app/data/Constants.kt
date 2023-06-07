@@ -3,9 +3,11 @@ package com.chouten.app.data
 import android.os.Build
 import android.os.Environment
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessibleForward
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.AccessibleForward
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Search
@@ -71,6 +73,12 @@ object NavigationItems {
         route = "search/",
         activeIcon = Icons.Filled.Search,
         inactiveIcon = Icons.Outlined.Search,
+    )
+    val PlayGroundPage = BottomNavItem(
+        name = R.string.navbar_playground,
+        route = "playground/",
+        activeIcon = Icons.Filled.AccessibleForward,
+        inactiveIcon = Icons.Outlined.AccessibleForward,
     )
     val MorePage = BottomNavItem(
         name = R.string.navbar_more,
