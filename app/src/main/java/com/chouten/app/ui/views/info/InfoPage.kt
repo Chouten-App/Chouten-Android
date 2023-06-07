@@ -91,9 +91,11 @@ fun InfoPage(
 ) {
     val scrollState = rememberScrollState()
     val gradient = Brush.verticalGradient(
-        0f to MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
-        0.6f to MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-        1f to MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+        0f to MaterialTheme.colorScheme.surface.copy(alpha = 0.1f),
+        0.5f to MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+        0.7f to MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+        0.8f to MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+        1f to MaterialTheme.colorScheme.surface.copy(alpha = 1.0f),
     )
 
     var isDescriptionBoxExpanded by rememberSaveable { mutableStateOf(false) }

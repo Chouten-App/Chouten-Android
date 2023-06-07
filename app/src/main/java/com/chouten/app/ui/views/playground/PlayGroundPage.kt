@@ -5,19 +5,21 @@ import android.util.Log
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
+import com.google.accompanist.web.AccompanistWebViewClient
+import com.google.accompanist.web.WebView
+import com.google.accompanist.web.rememberWebViewState
 
-class BrowserWebViewClient : WebViewClient() {
+class BrowserWebViewClient : AccompanistWebViewClient() {
     private val videoRegex =
         "\\.(mp4|mp4v|mpv|m1v|m4v|mpg|mpg2|mpeg|xvid|webm|3gp|avi|mov|mkv|ogg|ogv|ogm|m3u8|mpd|ism(?:[vc]|/manifest)?)(?:[?#]|$)".toRegex(
             RegexOption.IGNORE_CASE
@@ -48,7 +50,6 @@ class BrowserWebViewClient : WebViewClient() {
 
 
     private fun processURL(uri: String, view: WebView?) {
-        Log.d("WebViewClient", "Processing URL: $uri")
         val mimeType = getVideoMimeType(uri)
         if (mimeType != null) {
             // add url to list
@@ -89,7 +90,8 @@ class BrowserWebViewClient : WebViewClient() {
 fun PlayGroundPage(
     navController: NavController
 ) {
-    var url = "https://google.com"
+    var url = "https://google.com/"
+    val state = rememberWebViewState(url = url)
     Column {
         OutlinedTextField(
             value = url,
@@ -99,24 +101,19 @@ fun PlayGroundPage(
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            label = { Text(text = "URL") }
         )
-        var Browser = BrowserView(url)
-    }
-}
-
-@SuppressLint("SetJavaScriptEnabled")
-@Composable
-fun BrowserView(url: String) {
-    AndroidView(
-        factory = { context ->
-            WebView(context).apply {
-                settings.javaScriptEnabled = true
-                settings.mediaPlaybackRequiresUserGesture = true
-                webViewClient = BrowserWebViewClient()
-                loadUrl(url)
+        WebView(
+            state = state,
+            captureBackPresses = true,
+            modifier = Modifier.fillMaxSize(),
+            client = BrowserWebViewClient(),
+            onCreated = {
+                it.settings.javaScriptEnabled = true
+                it.settings.mediaPlaybackRequiresUserGesture = true
+                it.settings.domStorageEnabled = true
             }
-        },
-        modifier = Modifier.fillMaxSize()
-    )
+        )
+    }
 }
