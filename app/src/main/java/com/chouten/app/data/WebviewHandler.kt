@@ -64,6 +64,7 @@ class WebviewHandler {
     }
 
     fun destroy() {
+        webview.clearCache(true)
         webview.destroy()
     }
 
@@ -81,11 +82,12 @@ class WebviewHandler {
         }?.toMap()
 
         val url = let {
-            val url = request?.url ?: nextUrl
-            if (request == null) request = ModuleModel.ModuleCode.ModuleCodeblock.ModuleRequest(url, "GET", listOf(), null)
+            val url = if (request?.url?.isEmpty() == true) nextUrl else request?.url ?: nextUrl
+            if (request == null || request?.url?.isEmpty() == true) request =
+                ModuleModel.ModuleCode.ModuleCodeblock.ModuleRequest(url, "GET", listOf(), null)
             url
         }
-        println("Requesting $url")
+        println("Requesting $url & Uses api: ${codeblock.usesApi}")
         val data: ByteArray = try {
             var counter = 0
             var responseCode = -1
@@ -97,7 +99,7 @@ class WebviewHandler {
                     "POST" -> client.post(url, headers, request?.body)
                     "PUT" -> client.put(url, headers, request?.body)
                     "DELETE" -> client.delete(url, headers)
-                    else -> throw Exception("Invalid request type ${request?.method}")
+                    else -> client.get(url, headers)
                 }
                 counter += 1
                 responseCode = _response.code
@@ -106,36 +108,27 @@ class WebviewHandler {
             }
             response
         } catch (e: Exception) {
-            if (request != null) {
-                PrimaryDataLayer.enqueueSnackbar(
-                    SnackbarVisualsWithError(
-                        "Failed to load data from ${request?.url}",
-                        true
-                    )
+            LogLayer.addLogEntry(
+                LogEntry(
+                    title = "Failed to load data from ${request?.url}",
+                    message = e.stackTraceToString(),
+                    isError = true
                 )
-            }
-            if (request != null) {
-                LogLayer.addLogEntry(
-                    LogEntry(
-                        title = "Failed to load data from ${request?.url}",
-                        message = e.stackTraceToString(),
-                        isError = true
-                    )
-                )
-            }
+            )
+
 
             e.printStackTrace()
             return false
         }
 
 
-            LogLayer.addLogEntry(
-                LogEntry(
-                    title = "Loading data from ${request?.url}",
-                    message = "Request Type: ${request?.method}\nUses API? ${codeblock.usesApi}",
-                    isError = false
-                )
+        LogLayer.addLogEntry(
+            LogEntry(
+                title = "Loading data from ${request?.url}",
+                message = "Request Type: ${request?.method}\nUses API? ${codeblock.usesApi}",
+                isError = false
             )
+        )
 
 
         // The webview expects a Base64 encoded string
@@ -175,7 +168,7 @@ class WebviewHandler {
                     val url = URLDecoder.decode(it, "UTF-8")
                     "<script src=\"$url\"></script>"
                 } ?: ""
-                    }
+            }
                     </head>
                     <body>
                         <div id="chouten"></div>
@@ -224,7 +217,6 @@ class WebviewHandler {
                 } else {
                     Pair("Info", false)
                 }
-                println("Current module: "+ModuleLayer.selectedModule?.name)
                 LogLayer.addLogEntry(
                     LogEntry(
                         title = logType,
@@ -245,7 +237,10 @@ class WebviewHandler {
     /**
      * Inject the given javascript into the webview
      */
-    suspend fun inject(javascript: ModuleModel.ModuleCode.ModuleCodeblock, immediate: Boolean = false): String {
+    suspend fun inject(
+        javascript: ModuleModel.ModuleCode.ModuleCodeblock,
+        immediate: Boolean = false
+    ): String {
         //println("Running code: ${javascript.code}")
         var results = ""
         // If there's already an injection in progress
@@ -284,7 +279,6 @@ class WebviewHandler {
             callLock.unlock()
             // check if immediate is true, and if so, unlock the injection lock and return
             if (immediate) {
-                println(it)
                 results = it ?: ""
                 injectionLock.unlock()
                 return@evaluateJavascript
@@ -309,11 +303,21 @@ class WebviewHandler {
             // print the html page
             document.querySelectorAll("#chouten > p").forEach((el) => {
                 var json = JSON.parse(el.innerText);
-                console.log("INSIDE: " + JSON.stringify(json));
                 if (Array.isArray(json.result) || Array.isArray(json)) results.result.push(...(Array.isArray(json) ? json : json.result));
-                else results.result = json.result;
+                else results.result = json.result ? json.result : [json];
                 results.nextUrl = JSON.parse(el.innerText).nextUrl;
             });
+            
+            if ((results == null || results.result.length == 0) && !results.nextUrl) {
+                 var json = JSON.parse(document.getElementById("json-result").getAttribute("data-json"))
+                 console.log(document.getElementById("json-result").getAttribute("data-json"));
+                 console.log(document.getElementById("json-result"));
+                 if (Array.isArray(json.result) || Array.isArray(json)) results.result.push(...(Array.isArray(json) ? json : json.result));
+                 else results.result = json.result ? json.result : [json];
+                 results.nextUrl = json.nextUrl;
+             
+            }
+       
             // Clear the chouten div
             document.getElementById("chouten").innerHTML = "";
             if (results == null || results.result.length == 0) {

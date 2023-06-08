@@ -11,6 +11,7 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
+        android:requestLegacyExternalStorage="true"
         android:fullBackupContent="@xml/backup_rules"
         android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_chouten_launcher"
@@ -45,7 +46,6 @@
                 android:name="android.service.chooser.chooser_target_service"
                 android:value="androidx.sharetarget.ChooserTargetServiceCompat" />
         </activity>
-        <activity android:name=".ui.views.watch.PlayerActivity" android:screenOrientation="landscape" android:configChanges="keyboardHidden"/>
+        <activity android:name=".ui.views.watch.PlayerActivity" android:screenOrientation="landscape" android:configChanges="keyboardHidden" android:theme="@style/Theme.AppCompat.NoActionBar"/>
     </application>
-
 </manifest>

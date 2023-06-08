@@ -61,6 +61,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.chouten.app.ModuleLayer
 import com.chouten.app.data.HomeResult
+import com.chouten.app.data.ModuleDataLayer
 import com.chouten.app.data.WebviewHandler
 import com.chouten.app.ui.components.ModuleSelectorContainer
 import com.skydoves.landscapist.ImageOptions
@@ -83,12 +84,13 @@ fun HomePage(
 ) {
     val scrollState = rememberScrollState()
 
-    if (provider.homeResults.isEmpty() && ModuleLayer.selectedModule != null) {
+    if ((provider.homeResults.isEmpty() && !provider.isLoading) || (provider.loadedModule?.name != ModuleLayer.selectedModule?.name)) {
+        println("loading home page")
         provider.viewModelScope.launch {
-            provider.loadHomePage()
+            provider.initialize()
         }
     }
-
+    println(provider.isLoading)
     Column(
         Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -96,7 +98,7 @@ fun HomePage(
     ) {
         ModuleSelectorContainer(context = navController.context) {
             AnimatedVisibility(
-                provider.isLoading && ModuleLayer.selectedModule != null,
+                provider.isLoading,
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface)

@@ -106,4 +106,10 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         handleSharedIntent(intent)
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        println("Destroying Activity")
+        ModuleLayer.webviewHandler.destroy()
+    }
 }

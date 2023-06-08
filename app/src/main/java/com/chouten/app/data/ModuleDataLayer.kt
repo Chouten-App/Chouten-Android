@@ -44,7 +44,7 @@ class ModuleDataLayer {
         Funnels.integerFunnel(), 100, 0.05
     )
 
-    private val webviewHandler = WebviewHandler()
+    val webviewHandler = WebviewHandler()
 
     private fun reInitialize(context: Context) {
         webviewHandler.reset(context)
@@ -162,8 +162,14 @@ class ModuleDataLayer {
 
         // get files that end with .js and sor them by the number in the file name. (e.g. code.js, code1.js, code2.js)
         val files = File(moduleDir).listFiles { _, name -> name.endsWith(".js") }
-            ?.sortedBy { it.name.substringBefore(".js").toIntOrNull() ?: 0 }
+            ?.sortedWith { o1, o2 -> // sortedBy somehow doesn't work on android 9 which causes episodes to be empty
+                val o1Number = o1.name.substringAfter("code").substringBefore(".js").toIntOrNull() ?: 0
+                val o2Number = o2.name.substringAfter("code").substringBefore(".js").toIntOrNull() ?: 0
+                o1Number.compareTo(o2Number)
+            }
             ?: throw IOException("No Search files found")
+
+        println(files)
 
         files.forEach {
             val code = it.readText()
@@ -188,7 +194,7 @@ class ModuleDataLayer {
                 code = code.substringBefore("function logic()") + "requestData();",
                 removeScripts = false,
                 allowExternalScripts = false,
-                usesApi = true
+                usesApi = false
             ),
             true
         )
@@ -267,7 +273,7 @@ class ModuleDataLayer {
             // TODO: Are we going to select the next module in the list? Or just deselect?
             if (selectedModule == module) {
                 selectedModule = null
-                preferenceHandler.selectedModule = -1
+                preferenceHandler.selectedModule = null
             }
 
         } catch (e: Exception) {
@@ -287,7 +293,12 @@ class ModuleDataLayer {
     suspend fun updateSelectedModule(moduleId: String) {
         val module = availableModules[moduleId]
         selectedModule = module
+        preferenceHandler.selectedModule = module.toString()
         println("Updating to ${module.name}")
+
+        val moduleHome = App.lifecycleScope.async {
+            getModuleCode(module, "Home")
+        }
 
         val moduleSearch = App.lifecycleScope.async {
             getModuleCode(module, "Search")
@@ -297,22 +308,17 @@ class ModuleDataLayer {
            getModuleCode(module, "Info")
         }
 
-        val moduleHome = App.lifecycleScope.async {
-            getModuleCode(module, "Home")
-        }
-
         val moduleMediaConsume = App.lifecycleScope.async {
             getModuleCode(module, "Media")
         }
 
-        val search = moduleSearch.await()
         val home = moduleHome.await()
+        val search = moduleSearch.await()
         val info = moduleInfo.await()
         val mediaConsume = moduleMediaConsume.await()
         module.code = mapOf("anime" to ModuleModel.ModuleCode(search = search, home = home, info = info, mediaConsume = mediaConsume))
 
         selectedModule = module
-        preferenceHandler.selectedModule = selectedModule.hashCode()
     }
 
     suspend fun loadModules() {
@@ -344,14 +350,16 @@ class ModuleDataLayer {
                 }
             }
 
-            preferenceHandler.selectedModule.let { selected ->
-                availableModules.forEach { module ->
-                    if (module.hashCode() == selected) {
-                        //update the selected module
-                        App.lifecycleScope.launch {
-                            updateSelectedModule(module.id)
+            if (preferenceHandler.selectedModule?.isBlank() != true) {
+                (Mapper.parse<ModuleModel>(preferenceHandler.selectedModule!!)).let { selected ->
+                    availableModules.forEach { module ->
+                        if (module.id == selected.id) {
+                            //update the selected module
+                            App.lifecycleScope.launch {
+                                updateSelectedModule(module.id)
+                            }
+                            return@forEach
                         }
-                        return@forEach
                     }
                 }
             }
@@ -413,7 +421,10 @@ class ModuleDataLayer {
             while (!hasUserPermission) {
                 delay(100)
             }
-            if (!hasPermission) return@withContext
+            if (!hasPermission) {
+                removeModule(module)
+                return@withContext
+            }
             saveModule(context, module)
             bloomFilter.put(module.hashCode())
             availableModules += module

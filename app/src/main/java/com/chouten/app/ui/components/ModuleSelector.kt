@@ -111,8 +111,7 @@ import kotlin.math.roundToInt
 
 
 @OptIn(
-    ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalFoundationApi::class
+    ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class
 )
 @Composable
 fun ModuleSelectorContainer(
@@ -177,7 +176,7 @@ fun ModuleSelectorContainer(
                 ) {
                     animatedItemsIndexed(
                         state = animatedList,
-                        key = { module -> module.id }
+                        key = { module -> module.hashCode() }
                     ) { _, module ->
                         val currentItem by rememberUpdatedState(module)
                         val dismissState = rememberDismissState(

@@ -113,7 +113,7 @@ fun createAppDirectory() {
 }
 
 fun checkPermissions() {
-    val requiresFilesPerms = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+    val requiresFilesPerms = if (SDK_INT >= Build.VERSION_CODES.R) {
         !Environment.isExternalStorageManager()
     } else {
         // Check for storage permissions
@@ -133,7 +133,7 @@ fun checkPermissions() {
                 confirmButtonAction = {
                     startActivityForResult(
                         App,
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        if (SDK_INT >= Build.VERSION_CODES.R) {
                             Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
                                 data = Uri.parse("package:${App.packageName}")
                             }
@@ -308,4 +308,13 @@ class NoRippleInteractionSource : MutableInteractionSource {
     override val interactions: Flow<Interaction> = emptyFlow()
     override suspend fun emit(interaction: Interaction) {}
     override fun tryEmit(interaction: Interaction) = true
+}
+
+fun String.replaceLast(oldValue: String, newValue: String): String {
+    val lastIndex = this.lastIndexOf(oldValue)
+    if (lastIndex < 0) {
+        return this
+    }
+
+    return this.substring(0, lastIndex) + newValue + this.substring(lastIndex + oldValue.length)
 }

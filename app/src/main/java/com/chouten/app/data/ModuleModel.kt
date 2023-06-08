@@ -1,5 +1,6 @@
 package com.chouten.app.data
 
+import com.chouten.app.replaceLast
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -25,7 +26,21 @@ data class ModuleModel(
         @SerialName("baseURL") val baseUrl: String,
         @SerialName("bgColor") val backgroundColor: String,
         @SerialName("fgColor") val foregroundColor: String,
-    )
+    ) {
+        override fun toString(): String {
+            return "{\"author\": \"$author\", \"description\": \"$description\", \"icon\": \"$icon\", \"lang\": ${lang.map { 
+                "\"$it\""
+            }}, \"baseURL\": \"$baseUrl\", \"bgColor\": \"$backgroundColor\", \"fgColor\": \"$foregroundColor\"}"
+        }
+    }
+
+    override fun toString(): String {
+        return "{\"id\": \"$id\", \"type\": \"$type\", \"subtypes\": ${
+            subtypes.map {
+                "\"$it\""
+            }
+        }, \"name\": \"$name\", \"version\": \"$version\", \"formatVersion\": $formatVersion, \"updateUrl\": \"$updateUrl\", \"general\": $meta}"
+    }
 
     @Serializable
     data class ModuleCode(
@@ -42,7 +57,7 @@ data class ModuleModel(
             val usesApi: Boolean? = false,
             val imports: List<String>? = listOf(),
             // not set within the JSON
-            val code: String? = null,
+            var code: String? = null,
         ) {
             @Serializable
             data class ModuleRequest(
@@ -50,13 +65,33 @@ data class ModuleModel(
                 var method: String, // "POST", "GET", "PUT" and "DELETE"
                 val headers: List<ModuleKVPair>,
                 val body: String? // The body of the Request
-            )
+            ) {
+                override fun toString(): String {
+                    return "{\"url\": \"$url\", \"method\": \"$method\", \"headers\": $headers, \"body\": \"$body\"}"
+                }
+            }
 
             @Serializable
             data class ModuleKVPair(
                 val key: String,
                 val value: String
-            )
+            ) {
+                override fun toString(): String {
+                    return "{\"key\": \"$key\", \"value\": \"$value\"}"
+                }
+            }
+
+            override fun toString(): String {
+                return "{\"request\": ${request.toString()}, \"removeScripts\": $removeScripts, \"allowExternalScripts\": $allowExternalScripts, \"usesApi\": $usesApi, \"imports\": ${
+                    imports?.map {
+                        "\"$it\""
+                    }
+                }, \"code\": \"$code\"}"
+            }
+        }
+
+        override fun toString(): String {
+            return "{\"home\": $home, \"search\": $search, \"info\": $info, \"mediaConsume\": $mediaConsume}"
         }
     }
 
@@ -138,8 +173,13 @@ data class InfoResult(
     val totalMediaCount: Int?,
     val mediaType: String,
     val seasons: List<Season>?,
-    val mediaList: List<List<MediaItem>>
-){
+    val mediaList: List<MediaListItem>
+) {
+    @Serializable
+    data class MediaListItem(
+        val title: String,
+        val list: List<MediaItem>
+    )
 
     @Serializable
     data class Titles(
@@ -155,7 +195,8 @@ data class InfoResult(
         val description: String?,
         val image: String?,
     ) {
-        override fun toString() = "{\"url\": \"$url\", \"number\": $number, \"title\": \"$title\", \"description\": \"$description\", \"image\": \"$image\"}"
+        override fun toString() =
+            "{\"url\": \"$url\", \"number\": $number, \"title\": \"$title\", \"description\": \"$description\", \"image\": \"$image\"}"
     }
 
     @Serializable
@@ -171,6 +212,13 @@ data class WatchResult(
     val subtitles: List<Subtitles>,
     val skips: List<SkipTimes>
 ) {
+
+    @Serializable
+    data class ServerData(
+        val title: String,
+        val list: List<Server>
+    )
+
     @Serializable
     data class Server(
         val name: String,

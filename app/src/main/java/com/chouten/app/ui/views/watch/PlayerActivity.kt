@@ -69,6 +69,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -93,12 +94,15 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
+import androidx.media3.ui.SubtitleView
 import com.chouten.app.Mapper
 import com.chouten.app.ModuleLayer
 import com.chouten.app.NoRippleInteractionSource
@@ -116,10 +120,6 @@ import com.chouten.app.ui.components.SliderBrushColor
 import com.chouten.app.ui.theme.ChoutenTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.serializer
-
 class PlayerActivity : ComponentActivity() {
 
     var url: String = ""
@@ -158,8 +158,8 @@ class PlayerActivity : ComponentActivity() {
     private val episodes: List<InfoResult.MediaItem>
         get() = episodesLists[0]
 
-    private var _servers by mutableStateOf(listOf<WatchResult.Server>())
-    val servers: List<WatchResult.Server>
+    private var _servers by mutableStateOf(listOf<WatchResult.ServerData>())
+    val servers: List<WatchResult.ServerData>
         get() = _servers
 
     private var _sources by mutableStateOf(listOf<WatchResult.Source>())
@@ -180,7 +180,8 @@ class PlayerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         this.hideSystemUI()
         super.onCreate(savedInstanceState)
-        initialize()
+        this.initialize()
+
         setContent {
             ChoutenTheme {
                 // A surface container using the 'background' color from the theme
@@ -211,7 +212,7 @@ class PlayerActivity : ComponentActivity() {
     private fun hideSystemUI() {
         actionBar?.hide()
         window.setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
+            WindowManager.LayoutParams.FLAG_FULLSCREEN or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
         )
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -220,6 +221,13 @@ class PlayerActivity : ComponentActivity() {
             controller.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
+
+        // hide navigation bar
+        window.decorView.systemUiVisibility = (
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            or View.SYSTEM_UI_FLAG_FULLSCREEN
+        )
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -272,7 +280,7 @@ class PlayerActivity : ComponentActivity() {
 
                     try {
                         val results =
-                            Mapper.parse<ModuleResponse<List<WatchResult.Server>>>(
+                            Mapper.parse<ModuleResponse<List<WatchResult.ServerData>>>(
                                 res
                             )
                         _webview.updateNextUrl(results.nextUrl)
@@ -328,6 +336,21 @@ class PlayerActivity : ComponentActivity() {
                         )
                     )
                 )
+                    val subtitle = watchResult.subtitles[0]
+//                    addMediaItem(
+//                        MediaItem.Builder()
+//                            .setUri(Uri.parse(subtitle.url))
+//                            .setMimeType("vtt")
+//                            .setSubtitles(listOf(
+//                                MediaItem.Subtitle(
+//                                    Uri.parse(subtitle.url),
+//                                    MimeTypes.TEXT_VTT,
+//                                    subtitle.language
+//                                )
+//                            ))
+//                            .build()
+//                    )
+
                 prepare()
             }
         }
@@ -582,6 +605,7 @@ fun TopControls(
                 modifier = Modifier.fillMaxSize(),
                 imageVector = Icons.Rounded.ChevronLeft,
                 contentDescription = "Back",
+                tint = Color.White
             )
         }
 
@@ -595,9 +619,11 @@ fun TopControls(
             if (episodeTitle != null) {
                 Text(
                     text = episodeTitle,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = Color.White
+                    ),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
 
@@ -605,7 +631,7 @@ fun TopControls(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall.copy(
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        color = Color.White.copy(alpha = 0.8f)
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -623,14 +649,16 @@ fun TopControls(
         ) {
             Text(
                 text = currentModule ?: "No Module",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = Color.White
+                ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = "1920x1080",
                 style = MaterialTheme.typography.titleSmall.copy(
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    color = Color.White.copy(alpha = 0.8f)
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -655,7 +683,7 @@ fun CenterControls(
         isPlaying()
     }
 
-    var currentReplayIconRotation by remember { mutableStateOf(0f) }
+    var currentReplayIconRotation by remember { mutableFloatStateOf(0f) }
     val rotation = remember { Animatable(currentReplayIconRotation) }
     val coroutineScope = rememberCoroutineScope()
 
@@ -703,59 +731,62 @@ fun CenterControls(
 
             }, interactionSource = NoRippleInteractionSource()
             ) {
-                AnimatedContent(targetState = "", transitionSpec = {
-                    if (targetState.toInt() > initialState.toInt()) {
-                        slideInHorizontally(
-                            initialOffsetX = { -it * 2 },
-                            animationSpec = tween(
-                                durationMillis = 1000,
-                                easing = LinearEasing
-                            )
-                        ) togetherWith
-                                slideOutHorizontally(
-                                    targetOffsetX = { it },
-                                    animationSpec = tween(
-                                        durationMillis = 300,
-                                        easing = LinearEasing
-                                    )
-                                )
-                    } else {
-                       // replayText = replayText.removePrefix("+")
-                        slideInHorizontally(
-                            initialOffsetX = { it },
-                            animationSpec = tween(
-                                durationMillis = 300,
-                                easing = LinearEasing
-                            )
-                        ) togetherWith
-                                slideOutHorizontally(
-                                    targetOffsetX = { -it },
-                                    animationSpec = tween(
-                                        durationMillis = 300,
-                                        easing = LinearEasing
-                                    )
-                                )
-                    }
-                }) {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(start = 10.dp, end = 10.dp, top = 15.dp, bottom = 10.dp)
-                            .zIndex(1f),
-                        text = replayText,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-                }
+//                AnimatedContent(targetState = "", transitionSpec = {
+//                    if (targetState.toInt() > initialState.toInt()) {
+//                        slideInHorizontally(
+//                            initialOffsetX = { -it * 2 },
+//                            animationSpec = tween(
+//                                durationMillis = 1000,
+//                                easing = LinearEasing
+//                            )
+//                        ) togetherWith
+//                                slideOutHorizontally(
+//                                    targetOffsetX = { it },
+//                                    animationSpec = tween(
+//                                        durationMillis = 300,
+//                                        easing = LinearEasing
+//                                    )
+//                                )
+//                    } else {
+//                       // replayText = replayText.removePrefix("+")
+//                        slideInHorizontally(
+//                            initialOffsetX = { it },
+//                            animationSpec = tween(
+//                                durationMillis = 300,
+//                                easing = LinearEasing
+//                            )
+//                        ) togetherWith
+//                                slideOutHorizontally(
+//                                    targetOffsetX = { -it },
+//                                    animationSpec = tween(
+//                                        durationMillis = 300,
+//                                        easing = LinearEasing
+//                                    )
+//                                )
+//                    }
+//                }) {
+//
+//                }
+
+                Text(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 10.dp, end = 10.dp, top = 15.dp, bottom = 10.dp)
+                        .zIndex(1f),
+                    text = replayText,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
 
                 Icon(
                     modifier = Modifier
                         .fillMaxSize()
                         .rotate(rotation.value),
                     imageVector = Icons.Rounded.Replay,
-                    contentDescription = "Replay"
+                    contentDescription = "Replay",
+                    tint = Color.White
                 )
             }
 
@@ -782,7 +813,8 @@ fun CenterControls(
                     Icon(
                         modifier = Modifier.fillMaxSize(),
                         imageVector = if (isVideoPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        contentDescription = "Replay"
+                        contentDescription = "Replay",
+                        tint = Color.White
                     )
                 }
 
@@ -814,7 +846,8 @@ fun CenterControls(
                 Icon(
                     modifier = Modifier.fillMaxSize(),
                     imageVector = Icons.Rounded.Replay,
-                    contentDescription = "Replay"
+                    contentDescription = "Replay",
+                    tint = Color.White
                 )
             }
         }
@@ -841,7 +874,7 @@ fun BottomControls(
         else 6.dp,
         animationSpec = tween(
             durationMillis = 1000, easing = LinearEasing
-        )
+        ), label = "slider height"
     )
 
     Column(modifier = modifier.padding(bottom = 20.dp)) {
@@ -854,7 +887,7 @@ fun BottomControls(
             Text(
                 modifier = Modifier,
                 text = "${videoTime.formatMinSec()} / ${duration.formatMinSec()}",
-                color = MaterialTheme.colorScheme.onSurface,
+                color = Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
             )
@@ -869,6 +902,7 @@ fun BottomControls(
                         modifier = Modifier.fillMaxSize(0.70F),
                         imageVector = Icons.Rounded.Dns,
                         contentDescription = "Replay",
+                        tint = Color.White
                     )
                 }
 
@@ -882,6 +916,7 @@ fun BottomControls(
                         modifier = Modifier.fillMaxSize(0.70F),
                         imageVector = Icons.Rounded.WebStories,
                         contentDescription = "Replay",
+                        tint = Color.White
                     )
                 }
 
@@ -893,6 +928,7 @@ fun BottomControls(
                         modifier = Modifier.fillMaxSize(0.70F),
                         imageVector = Icons.Rounded.Settings,
                         contentDescription = "Replay",
+                        tint = Color.White
                     )
                 }
 
@@ -903,7 +939,8 @@ fun BottomControls(
                     Icon(
                         modifier = Modifier.fillMaxSize(),
                         imageVector = Icons.Rounded.FastForward,
-                        contentDescription = "Next Episode"
+                        contentDescription = "Next Episode",
+                        tint = Color.White
                     )
                 }
             }

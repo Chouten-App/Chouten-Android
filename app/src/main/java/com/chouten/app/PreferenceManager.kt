@@ -33,9 +33,8 @@ class PreferenceManager(context: Context) :
         false
     )
 
-    var selectedModule by intPreference(
-        Preferences.SelectedModule,
-        -1
+    var selectedModule by stringPreference(
+        Preferences.SelectedModule
     )
 
     var themeType by enumPreference(

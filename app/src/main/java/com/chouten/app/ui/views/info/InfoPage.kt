@@ -21,11 +21,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -50,6 +52,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -97,7 +100,7 @@ fun InfoPage(
     )
 
     var isDescriptionBoxExpanded by rememberSaveable { mutableStateOf(false) }
-    var descriptionLineCount by rememberSaveable { mutableStateOf(0) }
+    var descriptionLineCount by rememberSaveable { mutableIntStateOf(0) }
 
     val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
 
@@ -109,17 +112,19 @@ fun InfoPage(
             scrollState.value * 2,
             0
         ) else IntOffset.Zero,
-        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing), label = "offsetX"
     )
     val topBarOffset by animateIntOffsetAsState(
         targetValue = if (leftOffset >= 0) IntOffset.Zero else if (scrollState.value >= 700) IntOffset(
             leftOffset,
             0
         ) else IntOffset(-(LocalConfiguration.current.screenWidthDp * 4), 0),
-        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing), label = "topBarOffset"
     )
 
     ShimmerInfo(
+        modifier = Modifier
+            .navigationBarsPadding(),
         isLoading = !provider.hasLoadedInfoText,
         contentAfterLoading = {
             Column(
@@ -127,7 +132,7 @@ fun InfoPage(
                     .verticalScroll(scrollState)
                     .fillMaxSize()
             ) {
-                Box(Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxSize().navigationBarsPadding()) {
                     Box(
                         Modifier
                             .fillMaxWidth()
@@ -305,7 +310,7 @@ fun InfoPage(
                                     Modifier.heightIn(max = 600.dp),
                                     verticalArrangement = Arrangement.spacedBy(20.dp)
                                 ) {
-                                    itemsIndexed(items = provider.infoResults[0]) { _, item ->
+                                    itemsIndexed(items = provider.infoResults[0].list) { _, item ->
                                         Column(
                                             Modifier
                                                 .fillMaxWidth()
@@ -335,13 +340,13 @@ fun InfoPage(
                                                         intent.putExtra(
                                                             "episodes",
                                                             provider.infoResults.map {
-                                                                it.map { episode ->
+                                                                it.list.map { episode ->
                                                                     episode.toString()
                                                                 }
                                                             }.toString()
                                                         )
 
-                                                        intent.putExtra("currentEpisodeIndex", provider.infoResults[0].indexOf(item))
+                                                        intent.putExtra("currentEpisodeIndex", provider.infoResults[0].list.indexOf(item))
                                                         startActivity(
                                                             navController.context,
                                                             intent,

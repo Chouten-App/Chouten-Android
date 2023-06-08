@@ -2,6 +2,7 @@ package com.chouten.app.ui.views.info
 
 import android.content.Context
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -56,7 +57,7 @@ class InfoPageViewModel(
     val statusText: String
         get() = status
 
-    private var mediaCount by mutableStateOf(0)
+    private var mediaCount by mutableIntStateOf(0)
     val mediaCountText: Int
         get() = mediaCount
 
@@ -64,8 +65,8 @@ class InfoPageViewModel(
     val mediaTypeText: String
         get() = mediaType
 
-    private var infoResult by mutableStateOf(listOf(listOf<InfoResult.MediaItem>()))
-    val infoResults: List<List<InfoResult.MediaItem>>
+    private var infoResult by mutableStateOf(listOf<InfoResult.MediaListItem>())
+    val infoResults: List<InfoResult.MediaListItem>
         get() = infoResult
 
     init {
@@ -79,8 +80,12 @@ class InfoPageViewModel(
         webview.initialize(context)
         webview.updateNextUrl(decodedUrl)
         currentModule?.subtypes?.forEach { subtype ->
+            println("InfoPageViewModel: subtype is $subtype")
             val infoFns = currentModule.code?.get(subtype)?.info
-            infoFns?.forEach { infoFn ->
+            if (infoFns != null) {
+                println("The info functions are ${infoFns.size}")
+            }
+            infoFns?.forEachIndexed { index, infoFn ->
                 // We need the info function to
                 // be executed synchronously
                 viewModelScope.launch {
@@ -100,9 +105,8 @@ class InfoPageViewModel(
                         return@launch
                     }
 
-                    // use regex to convert things like \\" to "
                     try {
-                        println("The JSON received was $res")
+                        println("The JSON received on $index was $res")
                         try {
                             val results =
                                 Mapper.parse<ModuleResponse<InfoResult>>(res)
@@ -119,12 +123,13 @@ class InfoPageViewModel(
                             mediaType = result.mediaType
                             hasLoadedInfo = true
                         } catch (e: Exception) {
+                            println("EPISODES: $res")
                             try {
                                 val results =
-                                    Mapper.parse<ModuleResponse<List<InfoResult.MediaItem>>>(
+                                    Mapper.parse<ModuleResponse<List<InfoResult.MediaListItem>>>(
                                         res
                                     )
-                                infoResult = listOf(results.result)
+                                infoResult = results.result
                                 hasLoadedMediaEpisodes = true
                             } catch (e: Exception) {
                                 PrimaryDataLayer.enqueueSnackbar(

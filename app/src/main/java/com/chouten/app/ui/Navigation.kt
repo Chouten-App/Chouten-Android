@@ -65,6 +65,7 @@ fun Navigation(navController: NavHostController) {
         PrimaryDataLayer.isNavigationShown = when (currentRoute) {
             "info/{title}/{url}",
             "watch/{title}/{name}/{url}" -> false
+
             else -> true
         }
 
@@ -232,7 +233,17 @@ fun BottomNavigationBar(
 
             NavigationBarItem(selected = selected,
                 alwaysShowLabel = true,
-                onClick = { onItemClick(BottomNavItem(name, route, activeIcon, inactiveIcon, badgeCount)) },
+                onClick = {
+                    onItemClick(
+                        BottomNavItem(
+                            name,
+                            route,
+                            activeIcon,
+                            inactiveIcon,
+                            badgeCount
+                        )
+                    )
+                },
                 icon = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         if (badgeCount > 0) {

@@ -52,7 +52,9 @@ fun SearchPage(
     )
 ) {
     val lazygridScroll = rememberLazyGridState()
-    Box {
+    Box(
+        modifier = Modifier.statusBarsPadding()
+    ) {
         AnimatedVisibility(
             ModuleLayer.selectedModule?.name != null,
             modifier = Modifier
