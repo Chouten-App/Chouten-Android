@@ -32,37 +32,37 @@ class BrowserWebViewClient : AccompanistWebViewClient() {
     private fun getVideoMimeType(uri: String): String? {
         if (uri.isEmpty()) return null
 
-        val matcher = videoRegex.find(uri)
-
-        return when (matcher?.groupValues?.getOrNull(1)) {
-            "mp4", "mp4v", "m4v" -> "video/mp4"
-            "mpv" -> "video/MPV"
-            "m1v", "mpg", "mpg2", "mpeg" -> "video/mpeg"
-            "xvid" -> "video/x-xvid"
-            "webm" -> "video/webm"
-            "3gp" -> "video/3gpp"
-            "avi" -> "video/x-msvideo"
-            "mov" -> "video/quicktime"
-            "mkv" -> "video/x-mkv"
-            "ogg", "ogv", "ogm" -> "video/ogg"
-            "m3u8" -> "application/x-mpegURL"
-            "mpd" -> "application/dash+xml"
-            "ism", "ism/manifest", "ismv", "ismc" -> "application/vnd.ms-sstr+xml"
-            else -> null
+        return videoRegex.find(uri)?.groupValues?.getOrNull(1)?.let { mimeType ->
+            when (mimeType) {
+                "mp4", "mp4v", "m4v" -> "video/mp4"
+                "mpv" -> "video/MPV"
+                "m1v", "mpg", "mpg2", "mpeg" -> "video/mpeg"
+                "xvid" -> "video/x-xvid"
+                "webm" -> "video/webm"
+                "3gp" -> "video/3gpp"
+                "avi" -> "video/x-msvideo"
+                "mov" -> "video/quicktime"
+                "mkv" -> "video/x-mkv"
+                "ogg", "ogv", "ogm" -> "video/ogg"
+                "m3u8" -> "application/x-mpegURL"
+                "mpd" -> "application/dash+xml"
+                "ism", "ism/manifest", "ismv", "ismc" -> "application/vnd.ms-sstr+xml"
+                else -> null
+            }
         }
     }
 
     private fun getSubtitleMimeType(uri: String): String? {
         if (uri.isEmpty()) return null
 
-        val matcher = subtitleRegex.find(uri)
-
-        return when (matcher?.groupValues?.getOrNull(1)) {
-            "srt" -> "application/srt"//MimeTypes.APPLICATION_SUBRIP
-            "vtt" -> "text/vtt"//MimeTypes.TEXT_VTT         !!!!Warning!!!! this format is sometimes used for things other than subtitles
-            "ass" -> "text/ssa"//MimeTypes.TEXT_SSA
-            "ttml", "dfxp", "xml" -> "application/ttml"//MimeTypes.APPLICATION_TTML
-            else -> null
+        return subtitleRegex.find(uri)?.groupValues?.getOrNull(1)?.let { mimeType ->
+            when (mimeType) {
+                "srt" -> "application/srt" //MimeTypes.APPLICATION_SUBRIP
+                "vtt" -> "text/vtt" //MimeTypes.TEXT_VTT         !!!!Warning!!!! this format is sometimes used for things other than subtitles
+                "ass" -> "text/ssa" //MimeTypes.TEXT_SSA
+                "ttml", "dfxp", "xml" -> "application/ttml" //MimeTypes.APPLICATION_TTML
+                else -> null
+            }
         }
     }
 
