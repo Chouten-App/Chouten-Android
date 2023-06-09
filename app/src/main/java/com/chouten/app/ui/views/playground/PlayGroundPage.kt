@@ -15,6 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.chouten.app.PrimaryDataLayer
+import com.chouten.app.data.SnackbarVisualsWithError
 import com.google.accompanist.web.AccompanistWebViewClient
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
@@ -24,6 +26,8 @@ class BrowserWebViewClient : AccompanistWebViewClient() {
         "\\.(mp4|mp4v|mpv|m1v|m4v|mpg|mpg2|mpeg|xvid|webm|3gp|avi|mov|mkv|ogg|ogv|ogm|m3u8|mpd|ism(?:[vc]|/manifest)?)(?:[?#]|$)".toRegex(
             RegexOption.IGNORE_CASE
         )
+    private val subtitleRegex =
+        "\\.(srt|vtt|ass|ttml|dfxp|xml)(?:[?#]|\$)".toRegex(RegexOption.IGNORE_CASE)
 
     private fun getVideoMimeType(uri: String): String? {
         if (uri.isEmpty()) return null
@@ -48,12 +52,42 @@ class BrowserWebViewClient : AccompanistWebViewClient() {
         }
     }
 
+    private fun getSubtitleMimeType(uri: String): String? {
+        if (uri.isEmpty()) return null
+
+        val matcher = subtitleRegex.find(uri)
+
+        return when (matcher?.groupValues?.getOrNull(1)) {
+            "srt" -> "application/srt"//MimeTypes.APPLICATION_SUBRIP
+            "vtt" -> "text/vtt"//MimeTypes.TEXT_VTT         !!!!Warning!!!! this format is sometimes used for things other than subtitles
+            "ass" -> "text/ssa"//MimeTypes.TEXT_SSA
+            "ttml", "dfxp", "xml" -> "application/ttml"//MimeTypes.APPLICATION_TTML
+            else -> null
+        }
+    }
 
     private fun processURL(uri: String, view: WebView?) {
-        val mimeType = getVideoMimeType(uri)
-        if (mimeType != null) {
-            // add url to list
-            Log.d("WebViewClient", "Found video: $uri\nMime type: $mimeType")
+        //check if video
+        val videoMimeType = getVideoMimeType(uri)
+        if (videoMimeType != null) {
+            // TODO: add url to list or smth here
+            Log.d("WebViewClient", "Found video: $uri\nMime type: $videoMimeType")
+            PrimaryDataLayer.enqueueSnackbar(
+                SnackbarVisualsWithError(
+                    "Found Video URL: $uri", false
+                )
+            )
+        }
+        //check if subtitle
+        val subMimeType = getSubtitleMimeType(uri)
+        if (subMimeType != null) {
+            // TODO: add url to list or smth here
+            Log.d("WebViewClient", "Found subtitle: $uri\nMime type: $subMimeType")
+            PrimaryDataLayer.enqueueSnackbar(
+                SnackbarVisualsWithError(
+                    "Found Subtitle URL: $uri", false
+                )
+            )
         }
     }
 
@@ -111,8 +145,10 @@ fun PlayGroundPage(
             client = BrowserWebViewClient(),
             onCreated = {
                 it.settings.javaScriptEnabled = true
-                it.settings.mediaPlaybackRequiresUserGesture = true
+                it.settings.mediaPlaybackRequiresUserGesture = true //TODO: make preference
                 it.settings.domStorageEnabled = true
+                it.settings.builtInZoomControls = true
+                it.settings.displayZoomControls = false
             }
         )
     }
