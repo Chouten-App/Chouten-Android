@@ -4,17 +4,20 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.navigation.compose.rememberNavController
 import com.chouten.app.data.DataLayer
 import com.chouten.app.data.LogDataLayer
@@ -43,6 +46,10 @@ fun ChoutenApp() {
     val navController = rememberNavController()
     val alerts = PrimaryDataLayer.alertQueue.asStateFlow()
 
+    val density = LocalDensity.current
+    val mainInsets = WindowInsets.statusBars
+    val mainInsetsTop = mainInsets.getTop(density)
+
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
         AppStateBanners(
             downloadedOnlyMode = preferenceHandler.isOfflineMode,
@@ -50,6 +57,7 @@ fun ChoutenApp() {
             indexing = false,
             modifier = Modifier.windowInsetsPadding(scaffoldInsets),
         )
+        Spacer(Modifier.windowInsetsPadding(WindowInsets(top = mainInsetsTop)))
     },
         contentWindowInsets = scaffoldInsets,
         bottomBar = {
