@@ -1,7 +1,9 @@
 package com.chouten.app.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +29,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,14 +48,21 @@ fun SettingsToggle(
     defaultValue: Boolean = false
 ) {
     var toggleState by rememberSaveable { mutableStateOf(defaultValue) }
-    SettingsItem(modifier.clickable {
-        preference.onToggle?.invoke(!toggleState)
-        onCheckedChange.invoke(!toggleState)
-        toggleState = !toggleState
-    },
-        { preference.icon?.let { Icon(it, stringResource(preference.text)) } },
-        { Text(stringResource(preference.text)) },
-        { preference.secondaryText?.let { Text(stringResource(it)) } }) {
+    val interactionSource = remember { MutableInteractionSource() }
+
+    SettingsItem(
+        modifier = modifier.clickable(
+            interactionSource = interactionSource,
+            indication = LocalIndication.current
+        ) {
+            preference.onToggle?.invoke(!toggleState)
+            onCheckedChange.invoke(!toggleState)
+            toggleState = !toggleState
+        },
+        icon = { preference.icon?.let { Icon(it, stringResource(preference.text)) } },
+        text = { Text(stringResource(preference.text)) },
+        secondaryText = { preference.secondaryText?.let { Text(stringResource(it)) } }
+    ) {
         Switch(
             enabled = preference.constraints?.let { it() } != false,
             checked = toggleState,
@@ -60,7 +70,9 @@ fun SettingsToggle(
                 preference.onToggle?.invoke(toggleState)
                 onCheckedChange.invoke(it)
                 toggleState = it
-            })
+            },
+            interactionSource = interactionSource
+        )
     }
 }
 
