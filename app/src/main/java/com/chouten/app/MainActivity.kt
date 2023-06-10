@@ -13,7 +13,6 @@ import androidx.compose.ui.graphics.luminance
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
-import com.chouten.app.data.DataLayer
 import com.chouten.app.ui.components.DownloadedOnlyBannerBackgroundColor
 import com.chouten.app.ui.components.IncognitoModeBannerBackgroundColor
 import com.chouten.app.ui.theme.ChoutenTheme
@@ -61,11 +60,9 @@ class MainActivity : ComponentActivity() {
                 else -> MaterialTheme.colorScheme.surface
             }
             LaunchedEffect(systemUiController, statusBarBackgroundColor) {
-                //systemUiController.isStatusBarVisible = false
-
                 systemUiController.setStatusBarColor(
                     color = Color.Transparent,
-                    darkIcons = statusBarBackgroundColor.luminance() > 0.5,
+                    darkIcons = statusBarBackgroundColor.luminance() < 0.5,
                     transformColorForLightContent = { Color.Black },
                 )
             }
