@@ -120,6 +120,7 @@ import com.chouten.app.ui.components.SliderBrushColor
 import com.chouten.app.ui.theme.ChoutenTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+
 class PlayerActivity : ComponentActivity() {
 
     var url: String = ""
@@ -224,10 +225,10 @@ class PlayerActivity : ComponentActivity() {
 
         // hide navigation bar
         window.decorView.systemUiVisibility = (
-            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            or View.SYSTEM_UI_FLAG_FULLSCREEN
-        )
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_FULLSCREEN
+                )
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -336,20 +337,21 @@ class PlayerActivity : ComponentActivity() {
                         )
                     )
                 )
-                    val subtitle = watchResult.subtitles[0]
-//                    addMediaItem(
-//                        MediaItem.Builder()
-//                            .setUri(Uri.parse(subtitle.url))
-//                            .setMimeType("vtt")
-//                            .setSubtitles(listOf(
-//                                MediaItem.Subtitle(
-//                                    Uri.parse(subtitle.url),
-//                                    MimeTypes.TEXT_VTT,
-//                                    subtitle.language
-//                                )
-//                            ))
-//                            .build()
-//                    )
+                val subtitle = watchResult.subtitles[0]
+
+                addMediaItem(
+                    MediaItem.Builder()
+                        .setUri(Uri.parse(subtitle.url))
+                        .setMimeType(MimeTypes.TEXT_VTT)
+                        .setSubtitles(listOf(
+                            MediaItem.Subtitle(
+                                Uri.parse(subtitle.url),
+                                MimeTypes.TEXT_VTT,
+                                subtitle.language
+                            )
+                        ))
+                        .build()
+                )
 
                 prepare()
             }
@@ -701,35 +703,35 @@ fun CenterControls(
 
             IconButton(
                 modifier = Modifier.size(40.dp), onClick = {
-                onReplayClick()
+                    onReplayClick()
 
-                coroutineScope.launch {
+                    coroutineScope.launch {
 
-                    // slide the text horizontally to the left, and add a +10 to the text
-                    replayText = "+$replayText"
+                        // slide the text horizontally to the left, and add a +10 to the text
+                        replayText = "+$replayText"
 
-                    rotation.animateTo(
-                        targetValue = currentReplayIconRotation - 20f,
-                        animationSpec =  tween(
+                        rotation.animateTo(
+                            targetValue = currentReplayIconRotation - 20f,
+                            animationSpec = tween(
                                 durationMillis = 300,
                                 easing = LinearEasing
                             ),
-                    ) {
-                        currentReplayIconRotation = value
-                    }
-                    // reset the rotation
-                    rotation.animateTo(
-                        targetValue = currentReplayIconRotation + 20f,
-                        animationSpec =  tween(
+                        ) {
+                            currentReplayIconRotation = value
+                        }
+                        // reset the rotation
+                        rotation.animateTo(
+                            targetValue = currentReplayIconRotation + 20f,
+                            animationSpec = tween(
                                 durationMillis = 300,
                                 easing = LinearEasing
                             ),
-                    ) {
-                        currentReplayIconRotation = value
+                        ) {
+                            currentReplayIconRotation = value
+                        }
                     }
-                }
 
-            }, interactionSource = NoRippleInteractionSource()
+                }, interactionSource = NoRippleInteractionSource()
             ) {
 //                AnimatedContent(targetState = "", transitionSpec = {
 //                    if (targetState.toInt() > initialState.toInt()) {
