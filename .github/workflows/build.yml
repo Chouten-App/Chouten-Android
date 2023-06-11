@@ -56,4 +56,4 @@ jobs:
         uses: actions/upload-artifact@v3.0.0
         with:
           name: Chouten
-          path: "app/build/outputs/apk/debug/Chouten_${{env.version_name}}.apk"
+          path: "app/build/outputs/apk/release/Chouten_${{env.version_name}}.apk"
