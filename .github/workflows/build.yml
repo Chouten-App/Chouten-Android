@@ -40,10 +40,10 @@ jobs:
 
       # Show information about the APK's signing certificates
       - name: Verify Signature
-        run: $ANDROID_SDK_ROOT/build-tools/33.0.1/apksigner verify --print-certs app/build/outputs/apk/release/Chouten_${{ github.event.inputs.version }}.apk
+        run: $ANDROID_SDK_ROOT/build-tools/33.0.1/apksigner verify --print-certs app/build/outputs/apk/debug/Chouten.apk
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3.0.0
         with:
           name: Chouten
-          path: "app/build/outputs/apk/debug/Chouten_${{ github.event.inputs.version }}.apk"
+          path: "app/build/outputs/apk/debug/Chouten.apk"

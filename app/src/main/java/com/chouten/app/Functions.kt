@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.*
 import android.view.animation.*
 import android.widget.*
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ContentTransform
@@ -47,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntSize
 import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.view.*
 import com.chouten.app.data.AlertData
@@ -112,16 +114,22 @@ fun createAppDirectory() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.R)
 fun checkPermissions() {
     val requiresFilesPerms = if (SDK_INT >= Build.VERSION_CODES.R) {
-        !Environment.isExternalStorageManager()
+        !Environment.isExternalStorageManager() && !Environment.isExternalStorageLegacy()
     } else {
         // Check for storage permissions
-        val permission = ActivityCompat.checkSelfPermission(
-            App,
-            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+        val permissions = arrayOf(
+            android.Manifest.permission.MANAGE_EXTERNAL_STORAGE,
         )
-        permission != android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        permissions.any {
+            ActivityCompat.checkSelfPermission(
+                App,
+                it
+            ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
     }
 
     if (requiresFilesPerms) {
