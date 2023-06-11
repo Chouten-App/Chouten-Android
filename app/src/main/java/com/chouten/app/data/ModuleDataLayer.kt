@@ -28,8 +28,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.BufferedOutputStream
 import java.io.BufferedReader
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
 import java.util.Locale
@@ -220,46 +222,91 @@ class ModuleDataLayer {
     }
 
     suspend fun enqueueFileInstall(intent: Intent, context: Context) {
-        if (intent.clipData != null) {
-            val clipdata: ClipData = intent.clipData!!
-            val itemCount: Int = clipdata.itemCount
-            for (i in 0 until itemCount) {
-                val uri: Uri = clipdata.getItemAt(i).uri
+        if (intent.clipData == null) return
 
-                val resolver: ContentResolver = context.contentResolver
-                val inputStream = resolver.openInputStream(uri)
-                val reader = BufferedReader(InputStreamReader(inputStream))
-                val json = StringBuilder()
-                var line: String?
-                withContext(Dispatchers.IO) {
-                    while (reader.readLine().also { line = it } != null) {
-                        json.append(line)
+        val fileUrl = intent.clipData?.getItemAt(0)?.uri?.toString() ?: return
+
+        val modulePath =
+            AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (fileUrl.toUri().lastPathSegment?.removeSuffix(
+                ".module"
+            )
+                ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() } + ".cache")
+
+        try {
+
+            // create a temporary file
+            val tempFile = withContext(Dispatchers.IO) {
+                File.createTempFile("checkout", ".zip", context.cacheDir)
+            }
+
+            withContext(Dispatchers.IO) {
+                context.applicationContext.contentResolver.openInputStream(fileUrl.toUri())?.use {
+                    // Write the bytes into a buffer
+                    // and then use a buffered writer to write the bytes to the file
+                    val buffer = ByteArray(4 * 1024)
+                    val bufferedOutputStream = BufferedOutputStream(FileOutputStream(tempFile))
+                    var read: Int
+                    while (it.read(buffer).also { read = it } != -1) {
+                        bufferedOutputStream.write(buffer, 0, read)
                     }
-                    inputStream?.close()
-                }
+                    bufferedOutputStream.flush()
 
-                try {
-                    val module = Mapper.parse<ModuleModel>(json.toString())
-
-                    // At the moment we will not allow installs which are the same.
-                    // In the future, we may allow modules which have different versions
-                    // to be installed side by side.
-                    if (isModuleExisting(module)) throw IOException("Module already installed")
-
-                    addModule(context, module)
-                } catch (e: Exception) {
-                    PrimaryDataLayer.enqueueSnackbar(
-                        SnackbarVisualsWithError(
-                            e.localizedMessage ?: "Could not install module",
-                            true,
-                        )
-                    )
-                    e.localizedMessage?.let {
-                        Log.e("IMPORT ERROR", it)
-                        e.printStackTrace()
-                    }
+                    // close the streams
+                    bufferedOutputStream.close()
+                    it.close()
                 }
             }
+
+            // unzip the file
+            withContext(Dispatchers.IO) {
+                UnzipUtils.unzip(tempFile, modulePath)
+                tempFile.delete()
+            }
+
+            val module = getMetadata(modulePath)
+
+            if (isModuleExisting(module)) {
+                // remove the .cache folder
+                val moduleFolder = File(modulePath)
+                moduleFolder.deleteRecursively()
+
+                throw IOException("Module already exists")
+            }
+
+            // rename the folder to the module name
+            val moduleFolder = File(modulePath)
+            val newModuleFolder = File(moduleFolder.parent, module.name)
+            moduleFolder.renameTo(newModuleFolder)
+
+            // Use MediaScannerConnection to scan the file so that it shows up in the file manager
+            MediaScannerConnection.scanFile(
+                context,
+                arrayOf(newModuleFolder.absolutePath),
+                null,
+                null
+            )
+
+            addModule(context, module)
+
+        } catch (e: Exception) {
+            // remove the temporary file if it exists
+            if (e is IOException) {
+                val tempFile = File(context.cacheDir, "checkout.zip")
+                if (tempFile.exists()) tempFile.delete()
+
+                // delete .cache folder if it exists
+                val moduleFolder = File(modulePath)
+                if (moduleFolder.exists()) moduleFolder.deleteRecursively()
+            }
+
+            PrimaryDataLayer.enqueueSnackbar(
+                SnackbarVisualsWithError(
+                    e.localizedMessage ?: "Could not download module",
+                    true,
+                    // TODO: Add more details on button click
+                )
+            )
+            e.localizedMessage?.let { Log.e("MODULE INSTALL", it) }
         }
     }
 

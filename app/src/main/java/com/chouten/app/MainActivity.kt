@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
                             this@MainActivity, intent
                         )
 
-                        "application/json" ->
+                        "application/octet-stream" ->
                             ModuleLayer.enqueueFileInstall(
                                 intent, this@MainActivity
                             )
