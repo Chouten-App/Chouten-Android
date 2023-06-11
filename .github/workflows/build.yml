@@ -45,7 +45,7 @@ jobs:
 
       - name: Get version
         run: |
-          echo "${{steps.android_version.outputs}}"
+          echo ${{steps.android_version.outputs}}
           echo "version_name=${{steps.android_version.outputs.VERSION_NAME}}" >> $GITHUB_ENV
 
       # Show information about the APK's signing certificates
