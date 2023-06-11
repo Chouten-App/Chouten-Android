@@ -502,13 +502,12 @@ fun InfoPage(
         }
     )
 
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopEnd) {
+    Box(modifier = Modifier.fillMaxSize().padding(top = systemBarsPadding.calculateTopPadding() * 2, end = 16.dp), contentAlignment = Alignment.TopEnd) {
         IconButton(
             onClick = {
                 navController.popBackStack()
             },
             modifier = Modifier
-                .padding(top = systemBarsPadding.calculateTopPadding() * 2, end = 16.dp)
                 .clip(
                     CircleShape
                 )
