@@ -108,7 +108,7 @@ fun InfoPage(
     val leftOffset =
         -(LocalConfiguration.current.screenWidthDp * 2) + (scrollState.value * 1.1).toInt()
     val offsetX by animateIntOffsetAsState(
-        targetValue = if (leftOffset >= 0) IntOffset(
+        targetValue = if (scrollState.value >= 700) IntOffset(
             scrollState.value * 2,
             0
         ) else IntOffset.Zero,
