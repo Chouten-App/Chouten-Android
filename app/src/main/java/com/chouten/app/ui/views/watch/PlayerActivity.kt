@@ -4,16 +4,21 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
+import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
+import android.view.accessibility.CaptioningManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -21,9 +26,11 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -49,6 +56,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.Dns
@@ -63,13 +75,18 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -77,10 +94,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -88,12 +108,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -231,7 +253,6 @@ class PlayerActivity : ComponentActivity() {
                 )
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun initialize() {
         println("INITIALIZING PLAYER ACTIVITY")
         currentModule = ModuleLayer.selectedModule ?: throw Exception("No module selected")
@@ -330,27 +351,24 @@ class PlayerActivity : ComponentActivity() {
 
         if (watchResult.sources.isNotEmpty() && _player != null) {
             _player?.apply {
-                setMediaItem(
-                    MediaItem.fromUri(
-                        Uri.parse(
-                            watchResult.sources[0].file
-                        )
-                    )
-                )
-                val subtitle = watchResult.subtitles[0]
+                val subtitle = watchResult.subtitles.find {
+                    it.language == "English"
+                }
+                if (subtitle == null) watchResult.subtitles[0]
 
-                addMediaItem(
+                setMediaItem(
                     MediaItem.Builder()
-                        .setUri(Uri.parse(subtitle.url))
-                        .setMimeType(MimeTypes.TEXT_VTT)
-                        .setSubtitles(listOf(
-                            MediaItem.Subtitle(
-                                Uri.parse(subtitle.url),
-                                MimeTypes.TEXT_VTT,
-                                subtitle.language
+                        .setUri(watchResult.sources[0].file)
+                        .setSubtitleConfigurations(
+                            listOf(
+                                SubtitleConfiguration.Builder(Uri.parse(subtitle?.url))
+                                    .setMimeType(MimeTypes.TEXT_VTT)
+                                    .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+                                    .build()
                             )
-                        ))
+                        )
                         .build()
+
                 )
 
                 prepare()
@@ -368,9 +386,9 @@ class PlayerActivity : ComponentActivity() {
 
         val interactionSource = remember { MutableInteractionSource() }
 
-        var duration by remember { mutableStateOf(0L) }
+        var duration by remember { mutableLongStateOf(0L) }
         var currentTime by remember { mutableStateOf(_player?.currentPosition?.coerceAtLeast(0L)) }
-        var bufferedPercentage by remember { mutableStateOf(0) }
+        var bufferedPercentage by remember { mutableIntStateOf(0) }
         var shouldShowControls by remember { mutableStateOf(false) }
         var isPlaying by remember { mutableStateOf(_player?.isPlaying) }
         var isBuffering by remember { mutableStateOf(false) }
@@ -414,7 +432,6 @@ class PlayerActivity : ComponentActivity() {
                     }
 
                 _player?.addListener(listener)
-
                 onDispose {
                     _player?.removeListener(listener)
                     _player?.release()
@@ -430,13 +447,36 @@ class PlayerActivity : ComponentActivity() {
                 },
                 factory = {
                     PlayerView(context).apply {
-                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                         player = _player
                         useController = false
                         layoutParams = ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
+
+                        subtitleView?.apply {
+                            setPadding(0, 0, 0, 80)
+                            setFixedTextSize(
+                                TypedValue.COMPLEX_UNIT_DIP,
+                                20f
+                            )
+                            setStyle(
+                                CaptionStyleCompat(
+                                    Color.White.toArgb(),
+                                    Color.Black.copy(alpha = 0.2f).toArgb(),
+                                    Color.Transparent.toArgb(),
+                                    CaptionStyleCompat.EDGE_TYPE_NONE,
+                                    Color.White.toArgb(),
+                                    Typeface.DEFAULT_BOLD
+                                )
+                            )
+
+                            setApplyEmbeddedStyles(true)
+                            setApplyEmbeddedFontSizes(true)
+
+                            setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * 1.1f) // hehe need to make it bigger
+                        }
                     }
                 }
             )
@@ -486,6 +526,7 @@ class PlayerActivity : ComponentActivity() {
                             }.toString())
                     );
                 },
+                onSettingsClick = {/* TODO */}
             )
         }
     }
@@ -529,6 +570,7 @@ fun PlayerControls(
     bufferPercentage: () -> Int,
     onSeekChanged: (timeMs: Float) -> Unit,
     onNextEpisode: () -> Unit,
+    onSettingsClick: () -> Unit,
 ) {
     val visible = remember(isVisible()) {
         isVisible()
@@ -583,6 +625,7 @@ fun PlayerControls(
                 bufferPercentage = bufferPercentage,
                 onSeekChanged = onSeekChanged,
                 onNextEpisode = onNextEpisode,
+                onSettingsClick = onSettingsClick
             )
 
         }
@@ -670,7 +713,6 @@ fun TopControls(
 }
 
 @SuppressLint("UnusedContentLambdaTargetStateParameter")
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun CenterControls(
     modifier: Modifier = Modifier,
@@ -863,7 +905,8 @@ fun BottomControls(
     currentTime: () -> Long,
     bufferPercentage: () -> Int,
     onSeekChanged: (timeMs: Float) -> Unit,
-    onNextEpisode: () -> Unit
+    onNextEpisode: () -> Unit,
+    onSettingsClick: () -> Unit,
 ) {
     val duration = remember(duration()) { duration() }
     val videoTime = remember(currentTime()) { currentTime() }
@@ -924,7 +967,7 @@ fun BottomControls(
 
                 IconButton(
                     modifier = Modifier.size(40.dp),
-                    onClick = {},
+                    onClick = onSettingsClick,
                 ) {
                     Icon(
                         modifier = Modifier.fillMaxSize(0.70F),
@@ -1000,16 +1043,4 @@ fun BottomControls(
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewPlayerControls() {
-    CenterControls(
-        isPlaying = { true },
-        isBuffering = { false },
-        onReplayClick = { },
-        onPauseToggle = { },
-        onForwardClick = { },
-    )
 }
