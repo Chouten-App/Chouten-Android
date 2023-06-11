@@ -52,4 +52,4 @@ jobs:
       - name: Upload the APK to Discord
         shell: bash
         run: |
-          curl-F "debug=@app/build/outputs/apk/release/Chouten.apk" ${{ secrets.DISCORD_WEBHOOK_URL }}
+          curl -F "debug=@app/build/outputs/apk/release/Chouten.apk" ${{ secrets.DISCORD_WEBHOOK_URL }}
