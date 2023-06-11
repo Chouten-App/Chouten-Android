@@ -1,7 +1,9 @@
 package com.chouten.app
 
+import android.content.ClipData
 import android.content.Intent
 import android.content.Intent.ACTION_SEND
+import android.content.Intent.ACTION_VIEW
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -10,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
@@ -77,27 +80,35 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleSharedIntent(intent: Intent?) {
-        when (ACTION_SEND) {
-            intent?.action -> {
-                Log.d("INTENT", "$intent")
-                // Enqueue the Resource
-                lifecycleScope.launch {
-                    when (intent.type) {
-                        "text/plain" -> ModuleLayer.enqueueRemoteInstall(
-                            this@MainActivity, intent
-                        )
+        Log.d("INTENT", "$intent")
+        // Enqueue the Resource
+        lifecycleScope.launch {
+            when (intent?.type) {
+                "text/plain" -> ModuleLayer.enqueueRemoteInstall(
+                    this@MainActivity, intent
+                )
 
-                        "application/octet-stream" ->
-                            ModuleLayer.enqueueFileInstall(
-                                intent, this@MainActivity
-                            )
+                "application/octet-stream" ->
+                    ModuleLayer.enqueueFileInstall(
+                        intent, this@MainActivity
+                    )
 
-                        else -> Log.d(
-                            "IMPORT",
-                            "Import type `${intent.type}` not yet implemented"
-                        )
-                    }
-                }
+                else -> Log.d(
+                    "IMPORT",
+                    "Import type `${intent?.type}` not yet implemented"
+                )
+            }
+
+            // If the file is opened in a file manager, the intent will be null
+            // so we need to check for that
+            if (intent != null && intent.action == ACTION_VIEW) {
+                val contentUrl = intent.dataString
+                // Set the clipdata to the content url
+                val clipData = ClipData.newRawUri("Content URL", contentUrl?.toUri())
+                intent.clipData = clipData
+                ModuleLayer.enqueueFileInstall(
+                    intent, this@MainActivity
+                )
             }
         }
     }
