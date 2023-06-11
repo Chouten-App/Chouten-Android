@@ -40,7 +40,6 @@ jobs:
 
       # Show information about the APK's signing certificates
       - name: Verify Signature
-        # get the path where the apk was built from the previous step and replace it here
         run: $ANDROID_SDK_ROOT/build-tools/33.0.1/apksigner verify --print-certs app/build/outputs/apk/release/Chouten.apk
 
       - name: Upload a Build Artifact
