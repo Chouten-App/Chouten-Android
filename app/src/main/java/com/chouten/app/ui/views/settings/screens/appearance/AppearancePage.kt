@@ -23,12 +23,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.R
+import com.chouten.app.ThemeLayer
 import com.chouten.app.data.AppThemeType
 import com.chouten.app.data.Preferences
 import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.preferenceHandler
 import com.chouten.app.ui.components.SettingsChoice
 import com.chouten.app.ui.components.SettingsItem
+import com.chouten.app.ui.components.SettingsListChoice
 import com.chouten.app.ui.components.SettingsToggle
 
 
@@ -71,7 +73,8 @@ fun AppearancePage() {
             }, title = {
                 Text(text = stringResource(R.string.export_theme__title))
             }, text = {
-                OutlinedTextField(value = themeName.value,
+                OutlinedTextField(
+                    value = themeName.value,
                     onValueChange = { themeName.value = it },
                     label = {
                         Text(
@@ -123,6 +126,35 @@ fun AppearancePage() {
                 Icons.Default.CopyAll, stringResource(R.string.export_theme__desc)
             )
         }
+        SettingsListChoice(
+            preference = Preferences.Settings.selectedTheme,
+            possibleValues = ThemeLayer.getThemeNames(),
+            defaultValue = ThemeLayer.availableThemes.find { it.hashCode() == preferenceHandler.selectedTheme }?.first
+                ?: "Default",
+            title = { Text(text = stringResource(R.string.theme)) },
+            onClose = {},
+            // This preview is very very laggy
+//            onPreviewSelection = {
+//                if (it == "Default") {
+//                    preferenceHandler.selectedTheme = -1
+//                } else {
+//                    val theme = ThemeLayer.availableThemes.first { theme ->
+//                        theme.first == it
+//                    }
+//                    ThemeLayer.setTheme(theme)
+//                }
+//            },
+            onSelection = {
+                if (it == "Default") {
+                    preferenceHandler.selectedTheme = -1
+                } else {
+                    val theme = ThemeLayer.availableThemes.first { theme ->
+                        theme.first == it
+                    }
+                    ThemeLayer.setTheme(theme)
+                }
+            }
+        )
         SettingsChoice(preference = Preferences.Settings.themeType,
             onPreferenceChange = { updated ->
                 preferenceHandler.themeType = updated

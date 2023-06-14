@@ -48,6 +48,10 @@
     <string name="export_theme__label">Theme Name</string>
     <string name="export_theme__error">Could not export Theme</string>
 
+    <string name="theme">Theme</string>
+    <string name="selected_theme__title">Change Selected Theme</string>
+    <string name="selected_theme__desc">Change the currently selected theme</string>
+
     <string name="appearance__title">Appearance</string>
     <string name="appearance__desc">Light/Dark/System</string>
 

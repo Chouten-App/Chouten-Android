@@ -10,6 +10,7 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Search
 import com.chouten.app.R
+import com.chouten.app.ThemeLayer
 import com.chouten.app.ui.BottomNavItem
 import java.io.File
 
@@ -50,6 +51,11 @@ object Preferences {
             R.string.appearance__title,
             R.string.appearance__desc,
             preference = Pair("themeType", Enum),
+        )
+        val selectedTheme = ChoutenSetting(
+            R.string.selected_theme__title,
+            R.string.selected_theme__desc,
+            preference = Pair("selectedTheme", Int),
         )
         val dns = ChoutenSetting(
             R.string.dns__title,

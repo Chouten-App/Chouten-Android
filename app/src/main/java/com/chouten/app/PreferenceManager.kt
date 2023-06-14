@@ -37,6 +37,11 @@ class PreferenceManager(context: Context) :
         Preferences.SelectedModule
     )
 
+    var selectedTheme by intPreference(
+        Preferences.Settings.selectedTheme.preference.first,
+        -1
+    )
+
     var themeType by enumPreference(
         Preferences.Settings.themeType.preference.first,
         AppThemeType.SYSTEM

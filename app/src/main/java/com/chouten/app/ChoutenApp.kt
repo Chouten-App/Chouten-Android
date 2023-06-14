@@ -24,6 +24,7 @@ import com.chouten.app.data.DataLayer
 import com.chouten.app.data.LogDataLayer
 import com.chouten.app.data.ModuleDataLayer
 import com.chouten.app.data.NavigationItems
+import com.chouten.app.data.ThemeDataLayer
 import com.chouten.app.ui.BottomNavigationBar
 import com.chouten.app.ui.Navigation
 import com.chouten.app.ui.components.AppStateBanners
@@ -33,11 +34,13 @@ import kotlinx.coroutines.flow.asStateFlow
 
 lateinit var ModuleLayer: ModuleDataLayer
 lateinit var LogLayer: LogDataLayer
+lateinit var ThemeLayer: ThemeDataLayer
 val PrimaryDataLayer = DataLayer()
 
 fun initializeRepositories() {
     ModuleLayer = ModuleDataLayer()
     LogLayer = LogDataLayer()
+    ThemeLayer = ThemeDataLayer()
 }
 
 @Composable

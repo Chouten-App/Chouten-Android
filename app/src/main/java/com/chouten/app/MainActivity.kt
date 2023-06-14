@@ -50,6 +50,7 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             ModuleLayer.loadModules()
+            ThemeLayer.loadThemes()
         }
 
         if (intent != null) handleSharedIntent(intent)

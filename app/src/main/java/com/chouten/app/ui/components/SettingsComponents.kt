@@ -86,7 +86,6 @@ inline fun <reified T : Enum<T>> SettingsChoice(
             onPreviewSelection = { onPreviewSelectionChange(it) })
     }
 }
-
 @Composable
 inline fun <reified T : Enum<T>> SettingsChoicePopup(
     visible: Boolean,
@@ -132,6 +131,67 @@ inline fun <reified T : Enum<T>> SettingsChoicePopup(
                 Text(stringResource(R.string.confirm))
             }
         })
+    }
+}
+
+// This one does not use enums
+// as they cannot be modified at runtime
+@Composable
+fun <T> SettingsListChoice(
+    preference: ChoutenSetting,
+    modifier: Modifier = Modifier,
+    possibleValues: List<T>,
+    defaultValue: T,
+    title: @Composable () -> Unit,
+    onClose: () -> Unit,
+    onSelection: (T) -> Unit,
+    onPreviewSelection: (T) -> Unit = {},
+) {
+    var isOpen by rememberSaveable {
+        mutableStateOf(false)
+    }
+    var selected by rememberSaveable {
+        mutableStateOf(defaultValue)
+    }
+
+    SettingsItem(modifier.clickable {
+        isOpen = true
+    },
+        { preference.icon?.let { Icon(it, stringResource(preference.text)) } },
+        { Text(stringResource(preference.text)) },
+        { preference.secondaryText?.let { Text(stringResource(it)) } }) {
+        AnimatedVisibility(visible = isOpen) {
+            AlertDialog(onDismissRequest = {
+                isOpen = false
+            }, title = title, text = {
+                Column {
+                    possibleValues.forEach { v ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selected = v
+                                    onPreviewSelection(v)
+                                }, verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = v == selected, onClick = {
+                                selected = v
+                                onPreviewSelection(v)
+                            })
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                possibleValues.find { it == v }.toString(),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+            }, confirmButton = {
+                TextButton(onClick = { onClose(); onSelection(selected); isOpen = false }) {
+                    Text(stringResource(R.string.confirm))
+                }
+            })
+        }
     }
 }
 
