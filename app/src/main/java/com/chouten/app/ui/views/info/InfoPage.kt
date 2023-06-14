@@ -332,6 +332,14 @@ fun InfoPage(
                                                         }.toString()
                                                     )
 
+                                                    intent.putStringArrayListExtra("mediaItems",
+                                                        provider.infoResults[0].list.map {
+                                                            Mapper.json.encodeToJsonElement(it)
+                                                        }.map {
+                                                            it.toString()
+                                                        } as ArrayList<String>
+                                                    )
+
                                                     intent.putExtra("currentEpisodeIndex", provider.infoResults[0].list.indexOf(item))
                                                     ContextCompat.startActivity(
                                                         navController.context,

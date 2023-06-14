@@ -142,6 +142,15 @@ import com.chouten.app.ui.components.SliderBrushColor
 import com.chouten.app.ui.theme.ChoutenTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import android.util.Log
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.ui.draw.clip
+import com.chouten.app.ui.components.EpisodeItem
+import com.google.accompanist.adaptive.HorizontalTwoPaneStrategy
+import com.google.accompanist.adaptive.TwoPane
+import com.google.accompanist.adaptive.TwoPaneStrategy
 
 class PlayerActivity : ComponentActivity() {
 
@@ -196,6 +205,10 @@ class PlayerActivity : ComponentActivity() {
     private var _skips by mutableStateOf(listOf<WatchResult.SkipTimes>())
     val skips: List<WatchResult.SkipTimes>
         get() = _skips
+
+    private var _mediaList by mutableStateOf(listOf<InfoResult.MediaItem>())
+    val mediaList: List<InfoResult.MediaItem>
+        get() = _mediaList
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -275,6 +288,12 @@ class PlayerActivity : ComponentActivity() {
             _currentEpisodeIndex = it
         }
         val url = this.intent.getStringExtra("url")
+
+        this._mediaList = this.intent.getStringArrayListExtra("mediaItems")?.map {
+            Mapper.parse<InfoResult.MediaItem>(it)
+        } ?: listOf()
+
+        Log.d("PlayerActivity", "Media list: ${_mediaList}")
 
         // We want to get the info code from the webview handler
         // and then load the page with that code.
@@ -393,142 +412,184 @@ class PlayerActivity : ComponentActivity() {
         var isPlaying by remember { mutableStateOf(_player?.isPlaying) }
         var isBuffering by remember { mutableStateOf(false) }
         var playbackState by remember { mutableStateOf(_player?.playbackState) }
+        var isMediaListOpen by remember { mutableStateOf(false) }
+        val splitAmount by animateFloatAsState(targetValue = if (isMediaListOpen) 0.6f else 1f)
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            DisposableEffect(key1 = Unit) {
-                val listener =
-                    object : Player.Listener {
-                        override fun onPlayerError(error: PlaybackException) {
-                            super.onPlayerError(error)
-                            PrimaryDataLayer.enqueueSnackbar(
-                                SnackbarVisualsWithError(
-                                    "Error playing video",
-                                    false
+        TwoPane(
+            first = {
+                DisposableEffect(key1 = mediaTitle) {
+                    val listener =
+                        object : Player.Listener {
+                            override fun onPlayerError(error: PlaybackException) {
+                                super.onPlayerError(error)
+                                PrimaryDataLayer.enqueueSnackbar(
+                                    SnackbarVisualsWithError(
+                                        "Error playing video",
+                                        false
+                                    )
                                 )
-                            )
-                        }
-
-                        override fun onEvents(player: Player, events: Player.Events) {
-                            super.onEvents(player, events)
-                            duration = player.duration.coerceAtLeast(0L)
-                            bufferedPercentage = player.bufferedPercentage
-                            isPlaying = player.isPlaying
-                            playbackState = player.playbackState
-
-                            if (player.playbackState == Player.STATE_READY && !isInitialized) {
-                                isInitialized = true
-                                val handler = Handler(Looper.getMainLooper())
-                                handler.postDelayed(object : Runnable {
-                                    override fun run() {
-                                        currentTime = player.currentPosition.coerceAtLeast(0L)
-                                        handler.postDelayed(this, 350)
-                                    }
-                                }, 350)
-
                             }
 
-                            isBuffering = player.playbackState == Player.STATE_BUFFERING
-                        }
-                    }
+                            override fun onEvents(player: Player, events: Player.Events) {
+                                super.onEvents(player, events)
+                                duration = player.duration.coerceAtLeast(0L)
+                                bufferedPercentage = player.bufferedPercentage
+                                isPlaying = player.isPlaying
+                                playbackState = player.playbackState
 
-                _player?.addListener(listener)
-                onDispose {
-                    _player?.removeListener(listener)
-                    _player?.release()
-                }
-            }
+                                if (player.playbackState == Player.STATE_READY && !isInitialized) {
+                                    isInitialized = true
+                                    val handler = Handler(Looper.getMainLooper())
+                                    handler.postDelayed(object : Runnable {
+                                        override fun run() {
+                                            currentTime = player.currentPosition.coerceAtLeast(0L)
+                                            handler.postDelayed(this, 350)
+                                        }
+                                    }, 350)
 
-            AndroidView(
-                modifier = Modifier.clickable(
-                    interactionSource = interactionSource,
-                    indication = null
-                ) {
-                    shouldShowControls = !shouldShowControls
-                },
-                factory = {
-                    PlayerView(context).apply {
-                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                        player = _player
-                        useController = false
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-
-                        subtitleView?.apply {
-                            setPadding(0, 0, 0, 80)
-                            setFixedTextSize(
-                                TypedValue.COMPLEX_UNIT_DIP,
-                                20f
-                            )
-                            setStyle(
-                                CaptionStyleCompat(
-                                    Color.White.toArgb(),
-                                    Color.Black.copy(alpha = 0.2f).toArgb(),
-                                    Color.Transparent.toArgb(),
-                                    CaptionStyleCompat.EDGE_TYPE_NONE,
-                                    Color.White.toArgb(),
-                                    Typeface.DEFAULT_BOLD
-                                )
-                            )
-
-                            setApplyEmbeddedStyles(true)
-                            setApplyEmbeddedFontSizes(true)
-
-                            setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * 1.1f) // hehe need to make it bigger
-                        }
-                    }
-                }
-            )
-
-            PlayerControls(
-                modifier = Modifier.fillMaxSize(),
-                title = mediaTitle,
-                // episode number is a float, check if it's a whole number and if it is, cast it to an int
-                episodeTitle = "${if ((episodeNumber?.rem(1) ?: 0) == 0f) episodeNumber?.toInt() else episodeNumber}: $episodeTitle",
-                currentModule = currentModule?.name,
-                //  resolution = _player.trackSelectionParameters?.get(0)?.maxVideoWidth ?: 0,
-                onBackClick = {
-                    context.requestedOrientation =
-                        ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                    context.finish()
-                },
-                isVisible = { shouldShowControls },
-                isPlaying = { isPlaying ?: false },
-                isBuffering = { isBuffering },
-                onReplayClick = { _player?.seekBack() },
-                onPauseToggle = {
-                    if (isPlaying == true) _player?.pause()
-                    else _player?.play()
-                },
-                onForwardClick = { _player?.seekForward() },
-                duration = { duration },
-                currentTime = { currentTime ?: 0L },
-                bufferPercentage = { bufferedPercentage },
-                onSeekChanged = { _player?.seekTo(it.toLong()) },
-                onNextEpisode = {
-                    if (currentEpisodeIndex!!.plus(1) == episodes.size) return@PlayerControls
-                    finish();
-                    // check if the next episode is null, using the currentEpisodeIndex + 1 and episodes list
-                    val nextEpisode = episodes[currentEpisodeIndex!!.plus(1)]
-
-                    startActivity(
-                        intent
-                            .putExtra("title", mediaTitle)
-                            .putExtra("episode", nextEpisode.title)
-                            .putExtra("url", nextEpisode.url)
-                            .putExtra("episodeNumber", nextEpisode.number)
-                            .putExtra("currentEpisodeIndex", currentEpisodeIndex!!.plus(1))
-                            .putExtra("episodes", episodesLists.map {
-                                it.map { episode ->
-                                    episode.toString()
                                 }
-                            }.toString())
-                    );
-                },
-                onSettingsClick = {/* TODO */}
-            )
-        }
+
+                                isBuffering = player.playbackState == Player.STATE_BUFFERING
+                            }
+                        }
+
+                    _player?.addListener(listener)
+                    onDispose {
+                        _player?.removeListener(listener)
+                        _player?.release()
+                    }
+                }
+
+                AndroidView(
+                    modifier = Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null
+                    ) {
+                        shouldShowControls = !shouldShowControls
+                    },
+                    factory = {
+                        PlayerView(context).apply {
+                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                            player = _player
+                            useController = false
+                            layoutParams = ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+
+                            subtitleView?.apply {
+                                setPadding(0, 0, 0, 80)
+                                setFixedTextSize(
+                                    TypedValue.COMPLEX_UNIT_DIP,
+                                    20f
+                                )
+                                setStyle(
+                                    CaptionStyleCompat(
+                                        Color.White.toArgb(),
+                                        Color.Black.copy(alpha = 0.2f).toArgb(),
+                                        Color.Transparent.toArgb(),
+                                        CaptionStyleCompat.EDGE_TYPE_NONE,
+                                        Color.White.toArgb(),
+                                        Typeface.DEFAULT_BOLD
+                                    )
+                                )
+
+                                setApplyEmbeddedStyles(true)
+                                setApplyEmbeddedFontSizes(true)
+
+                                setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * 1.1f) // hehe need to make it bigger
+                            }
+                        }
+                    }
+                )
+
+                PlayerControls(
+                    modifier = Modifier.fillMaxSize(),
+                    title = mediaTitle,
+                    // episode number is a float, check if it's a whole number and if it is, cast it to an int
+                    episodeTitle = "${if ((episodeNumber?.rem(1) ?: 0) == 0f) episodeNumber?.toInt() else episodeNumber}: $episodeTitle",
+                    currentModule = currentModule?.name,
+                    //  resolution = _player.trackSelectionParameters?.get(0)?.maxVideoWidth ?: 0,
+                    onBackClick = {
+                        context.requestedOrientation =
+                            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                        context.finish()
+                    },
+                    isVisible = { shouldShowControls },
+                    isPlaying = { isPlaying ?: false },
+                    isBuffering = { isBuffering },
+                    onReplayClick = { _player?.seekBack() },
+                    onPauseToggle = {
+                        if (isPlaying == true) _player?.pause()
+                        else _player?.play()
+                    },
+                    onForwardClick = { _player?.seekForward() },
+                    duration = { duration },
+                    currentTime = { currentTime ?: 0L },
+                    bufferPercentage = { bufferedPercentage },
+                    onSeekChanged = { _player?.seekTo(it.toLong()) },
+                    onNextEpisode = {
+                        if (currentEpisodeIndex!!.plus(1) == episodes.size) return@PlayerControls
+                        finish();
+                        // check if the next episode is null, using the currentEpisodeIndex + 1 and episodes list
+                        val nextEpisode = episodes[currentEpisodeIndex!!.plus(1)]
+
+                        startActivity(
+                            intent
+                                .putExtra("title", mediaTitle)
+                                .putExtra("episode", nextEpisode.title)
+                                .putExtra("url", nextEpisode.url)
+                                .putExtra("episodeNumber", nextEpisode.number)
+                                .putExtra("currentEpisodeIndex", currentEpisodeIndex!!.plus(1))
+                                .putExtra("episodes", episodesLists.map {
+                                    it.map { episode ->
+                                        episode.toString()
+                                    }
+                                }.toString())
+                        );
+                    },
+                    onMediaListClick = {
+                        isMediaListOpen = !isMediaListOpen
+                    },
+                    onSettingsClick = {/* TODO */ }
+                )
+            },
+            second = {
+                LazyColumn(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(8.dp)
+                        .clip(MaterialTheme.shapes.medium),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(mediaList) { media ->
+                        EpisodeItem(
+                            item = media, imageAlternative = "",
+                            Modifier
+                                .clickable {
+                                    // Set the current episode to the one that was clicked
+                                    _currentEpisodeIndex = mediaList.indexOf(media)
+                                    _episodeNumber = media.number
+                                    _episodeTitle = media.title
+                                }
+                                .then(
+                                    if (mediaList.indexOf(media) == currentEpisodeIndex) {
+                                        Modifier.background(MaterialTheme.colorScheme.inverseOnSurface)
+                                    } else {
+                                        Modifier.background(
+                                            MaterialTheme.colorScheme.surfaceColorAtElevation(
+                                                3.dp
+                                            )
+                                        )
+                                    }
+                                )
+                        )
+                    }
+                }
+            },
+            strategy = HorizontalTwoPaneStrategy(splitAmount),
+            displayFeatures = listOf()
+        )
     }
 
     override fun onPause() {
@@ -570,6 +631,7 @@ fun PlayerControls(
     bufferPercentage: () -> Int,
     onSeekChanged: (timeMs: Float) -> Unit,
     onNextEpisode: () -> Unit,
+    onMediaListClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
     val visible = remember(isVisible()) {
@@ -625,6 +687,7 @@ fun PlayerControls(
                 bufferPercentage = bufferPercentage,
                 onSeekChanged = onSeekChanged,
                 onNextEpisode = onNextEpisode,
+                onMediaListClick = onMediaListClick,
                 onSettingsClick = onSettingsClick
             )
 
@@ -906,6 +969,7 @@ fun BottomControls(
     bufferPercentage: () -> Int,
     onSeekChanged: (timeMs: Float) -> Unit,
     onNextEpisode: () -> Unit,
+    onMediaListClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
     val duration = remember(duration()) { duration() }
@@ -955,7 +1019,7 @@ fun BottomControls(
                     modifier = Modifier
                         .size(40.dp)
                         .rotate(-90F),
-                    onClick = {},
+                    onClick = onMediaListClick,
                 ) {
                     Icon(
                         modifier = Modifier.fillMaxSize(0.70F),

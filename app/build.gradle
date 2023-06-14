@@ -90,6 +90,7 @@ dependencies {
 
     // Accompanist
     implementation "com.google.accompanist:accompanist-systemuicontroller:$accompanist_version"
+    implementation "com.google.accompanist:accompanist-adaptive:$accompanist_version"
 
     // Exoplayer
     implementation "androidx.media3:media3-exoplayer:$exo_version"
