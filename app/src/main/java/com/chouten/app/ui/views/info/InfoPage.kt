@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,20 +24,15 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.AppBarDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -49,7 +43,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -73,17 +66,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat.startActivity
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import com.chouten.app.data.InfoResult
+import com.chouten.app.Mapper
+import com.chouten.app.ui.components.EpisodeItem
 import com.chouten.app.ui.components.ShimmerEpisodes
 import com.chouten.app.ui.components.ShimmerInfo
 import com.chouten.app.ui.views.watch.PlayerActivity
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
-import com.valentinilk.shimmer.shimmer
-import org.json.JSONObject
-import java.io.Serializable
+import kotlinx.serialization.json.encodeToJsonElement
 
 @SuppressLint("RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -311,141 +303,47 @@ fun InfoPage(
                                     verticalArrangement = Arrangement.spacedBy(20.dp)
                                 ) {
                                     itemsIndexed(items = provider.infoResults[0].list) { _, item ->
-                                        Column(
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .clip(MaterialTheme.shapes.medium)
-                                                .background(
-                                                    MaterialTheme.colorScheme.surfaceColorAtElevation(
-                                                        3.dp
+                                        EpisodeItem(
+                                            item,
+                                            provider.thumbnailUrl,
+                                            Modifier.clickable {
+                                                if (provider.mediaTypeText.lowercase() == "episodes") {
+                                                    val intent = Intent(
+                                                        navController.context,
+                                                        PlayerActivity::class.java
                                                     )
-                                                )
-                                                .clickable {
-                                                    if (provider.mediaTypeText.lowercase() == "episodes") {
-                                                        val intent = Intent(
-                                                            navController.context,
-                                                            PlayerActivity::class.java
-                                                        )
-                                                        intent.putExtra(
-                                                            "title",
-                                                            provider.getTitle()
-                                                        )
-                                                        intent.putExtra("episode", item.title)
-                                                        intent.putExtra("url", item.url)
-                                                        intent.putExtra(
-                                                            "episodeNumber",
-                                                            item.number
-                                                        )
-                                                        // need a way to pass the list of episodes to the player
-                                                        intent.putExtra(
-                                                            "episodes",
-                                                            provider.infoResults.map {
-                                                                it.list.map { episode ->
-                                                                    episode.toString()
-                                                                }
-                                                            }.toString()
-                                                        )
+                                                    intent.putExtra(
+                                                        "title",
+                                                        provider.getTitle()
+                                                    )
+                                                    intent.putExtra("episode", item.title)
+                                                    intent.putExtra("url", item.url)
+                                                    intent.putExtra(
+                                                        "episodeNumber",
+                                                        item.number
+                                                    )
+                                                    // need a way to pass the list of episodes to the player
+                                                    intent.putExtra(
+                                                        "episodes",
+                                                        provider.infoResults.map {
+                                                            it.list.map { episode ->
+                                                                episode.toString()
+                                                            }
+                                                        }.toString()
+                                                    )
 
-                                                        intent.putExtra("currentEpisodeIndex", provider.infoResults[0].list.indexOf(item))
-                                                        startActivity(
-                                                            navController.context,
-                                                            intent,
-                                                            null
-                                                        )
-                                                        //navController.navigate("watch/${titleEncoded}/${episodeEncoded}/${urlEncoded}")
-                                                    } else {
-                                                        throw Error("Reading not yet implemented")
-                                                    }
-                                                }) {
-                                            Row(
-                                                horizontalArrangement = Arrangement.spacedBy(
-                                                    12.dp
-                                                )
-                                            ) {
-                                                GlideImage(
-                                                    modifier = Modifier
-                                                        .width(160.dp)
-                                                        .height(90.dp)
-                                                        .clip(MaterialTheme.shapes.medium),
-                                                    imageModel = {
-                                                        item.image ?: provider.thumbnailUrl
-                                                    },
-                                                    imageOptions = ImageOptions(
-                                                        contentScale = ContentScale.Crop,
-                                                        alignment = Alignment.Center,
-                                                        contentDescription = "${item.title} Thumbnail",
-                                                    ),
-                                                    loading = {
-                                                        Box(
-                                                            Modifier
-                                                                .shimmer()
-                                                                .matchParentSize()
-                                                                .background(MaterialTheme.colorScheme.onSurface)
-                                                        )
-                                                    },
-                                                )
-                                                Column(Modifier.heightIn(max = 90.dp)) {
-                                                    Column(
-                                                        modifier = Modifier.fillMaxHeight(
-                                                            0.7F
-                                                        ),
-                                                        verticalArrangement = Arrangement.SpaceAround
-                                                    ) {
-                                                        Text(
-                                                            item.title ?: "Episode 1",
-                                                            color = MaterialTheme.colorScheme.onSurface,
-                                                            fontSize = 15.sp,
-                                                            lineHeight = 16.sp,
-                                                            fontWeight = FontWeight.SemiBold,
-                                                            maxLines = 2,
-                                                            overflow = TextOverflow.Ellipsis
-                                                        )
-                                                    }
-                                                    Row(
-                                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .padding(
-                                                                bottom = 6.dp, end = 6.dp
-                                                            )
-                                                    ) {
-                                                        Text(
-                                                            "Episode ${
-                                                                item.number.toString()
-                                                                    .substringBefore(".0")
-                                                            }",
-                                                            color = MaterialTheme.colorScheme.onSurface.copy(
-                                                                0.7F
-                                                            ),
-                                                            fontSize = 12.sp,
-                                                            fontWeight = FontWeight.SemiBold
-                                                        )
-
-                                                        Text(
-                                                            "24 mins",
-                                                            color = MaterialTheme.colorScheme.onSurface.copy(
-                                                                0.7F
-                                                            ),
-                                                            fontSize = 12.sp,
-                                                            fontWeight = FontWeight.SemiBold
-                                                        )
-                                                    }
+                                                    intent.putExtra("currentEpisodeIndex", provider.infoResults[0].list.indexOf(item))
+                                                    ContextCompat.startActivity(
+                                                        navController.context,
+                                                        intent,
+                                                        null
+                                                    )
+                                                    //navController.navigate("watch/${titleEncoded}/${episodeEncoded}/${urlEncoded}")
+                                                } else {
+                                                    throw Error("Reading not yet implemented")
                                                 }
                                             }
-                                            if (item.description?.isNotBlank() == true) {
-                                                Text(
-                                                    "${item.description}",
-                                                    color = MaterialTheme.colorScheme.onSurface.copy(
-                                                        0.7F
-                                                    ),
-                                                    fontSize = 12.sp,
-                                                    lineHeight = MaterialTheme.typography.bodySmall.lineHeight,
-                                                    maxLines = 4,
-                                                    overflow = TextOverflow.Ellipsis,
-                                                    modifier = Modifier.padding(all = 12.dp)
-                                                )
-                                            }
-                                        }
+                                        )
                                     }
                                 }
                             }
