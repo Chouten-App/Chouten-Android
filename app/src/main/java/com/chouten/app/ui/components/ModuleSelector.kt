@@ -45,13 +45,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FractionalThreshold
 import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Download
-import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -69,8 +68,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.SwipeableDefaults
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -88,6 +94,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -98,12 +105,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.lifecycleScope
+import com.chouten.app.App
 import com.chouten.app.ModuleLayer
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.R
+import com.chouten.app.data.ModuleDataLayer
 import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.toBoolean
 import com.chouten.app.ui.theme.dashedBorder
+import com.google.android.datatransport.runtime.dagger.Module
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
@@ -119,12 +130,6 @@ fun ModuleSelectorContainer(
     modifier: Modifier = Modifier,
     children: @Composable () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(
-        initialValue = ModalBottomSheetValue.Hidden,
-        confirmValueChange = { it != ModalBottomSheetValue.Expanded },
-        skipHalfExpanded = true,
-    )
-
     var importPopupState by rememberSaveable { mutableStateOf(false) }
     var isAnimated by remember { mutableStateOf(false) }
 
@@ -133,148 +138,159 @@ fun ModuleSelectorContainer(
 
     val animatedList by updateAnimatedItemsState(newList = ModuleLayer.availableModules.map { it })
 
-    ModalBottomSheetLayout(
-        modifier = modifier, sheetState = sheetState, sheetContent = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(15.dp, 0.dp, 15.dp, 25.dp),
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceAround,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                ) {
-                    BottomSheetDefaults.DragHandle()
-                }
-                Text(
-                    stringResource(R.string.module_selection_header),
-                    fontSize = MaterialTheme.typography.headlineSmall.fontSize,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(Modifier.height(5.dp))
-                Text(
-                    stringResource(R.string.module_selection_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(0.7F),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(.8F)
-                )
-                Spacer(Modifier.height(20.dp))
-                ModuleImportButton(onClick = {
-                    importPopupState = !importPopupState
-                    isAnimated = !isAnimated
-                }, isAnimated = isAnimated, context = context)
+    val scope = rememberCoroutineScope()
+    val scaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = SheetState(
+            skipHiddenState = false, skipPartiallyExpanded = false, initialValue = SheetValue.Hidden
+        )
+    )
 
-                LazyColumn(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceEvenly,
-                ) {
-                    animatedItemsIndexed(
-                        state = animatedList,
-                        key = { module -> module.hashCode() }
-                    ) { _, module ->
-                        val currentItem by rememberUpdatedState(module)
-                        val dismissState = rememberDismissState(
-                            confirmStateChange = {
-                                when (it) {
-                                    DismissValue.DismissedToStart -> {
-                                        println("Removing module ${currentItem.name}")
-                                        ModuleLayer.removeModule(currentItem)
-                                        true
-                                    }
+    val isSheetVisible = remember { mutableStateOf(scaffoldState.bottomSheetState.isVisible) }
+    isSheetVisible.value = true
+    // We need the height of the screen so we can do a % of it
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val sheetProportion = if (ModuleLayer.availableModules.count() > 5) {
+        0.8f
+    } else 0.35f
+    val sheetPeekHeight = remember { screenHeight * sheetProportion }
 
-                                    else -> false
-                                }
-                            }
+    Box {
+        // This will act as our scrim
+        AnimatedVisibility(isSheetVisible.value, Modifier.fillMaxSize()) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.scrim)
+                .clickable {
+                    coroutineScope.launch {
+                        scaffoldState.bottomSheetState.hide()
+                    }
+                })
+        }
+
+        BottomSheetScaffold(scaffoldState = scaffoldState,
+            sheetPeekHeight = sheetPeekHeight,
+            sheetContent = {
+                Box {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.SpaceEvenly,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(15.dp, 0.dp, 15.dp, 25.dp),
+                    ) {
+                        Text(
+                            stringResource(R.string.module_selection_header),
+                            fontSize = MaterialTheme.typography.headlineSmall.fontSize,
+                            fontWeight = FontWeight.Bold
                         )
+                        Spacer(Modifier.height(5.dp))
+                        Text(
+                            stringResource(R.string.module_selection_description),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(0.7F),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(.8F)
+                        )
+                        Spacer(Modifier.height(20.dp))
+                        ModuleImportButton(onClick = {
+                            importPopupState = !importPopupState
+                            isAnimated = !isAnimated
+                        }, isAnimated = isAnimated, context = context)
 
-                        SwipeActions(
-                            endActionsConfig = SwipeActionsConfig(
-                                threshold = 0.5f,
-                                background = MaterialTheme.colorScheme.error,
-                                icon = Icons.Rounded.Delete,
-                                stayDismissed = true,
-                                iconTint = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
-                                onDismiss = {
-                                    println("Removing module ${currentItem.name}")
-                                    ModuleLayer.removeModule(currentItem)
-                                }
-
-                            ),
+                        LazyColumn(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.SpaceEvenly,
                         ) {
-                            ModuleChoice(
-                                module.id,
-                                module.name,
-                                module.meta.author,
-                                module.version,
-                                module.meta.icon,
-                                module.meta.backgroundColor.let {
-                                    val str = "FF" + it.removePrefix("#")
-                                    Color(str.toLong(16))
-                                },
-                                module.meta.foregroundColor.let {
-                                    val str = "FF" + it.removePrefix("#")
-                                    Color(str.toLong(16))
-                                },
-                            ) {
-                                coroutineScope.launch {
-                                    ModuleLayer.updateSelectedModule(
-                                        module.id
-                                    )
+                            animatedItemsIndexed(state = animatedList,
+                                key = { module -> module.hashCode() }) { _, module ->
+                                val currentItem by rememberUpdatedState(module)
+                                val dismissState = rememberDismissState(confirmStateChange = {
+                                    when (it) {
+                                        DismissValue.DismissedToStart -> {
+                                            println("Removing module ${currentItem.name}")
+                                            ModuleLayer.removeModule(currentItem)
+                                            true
+                                        }
+
+                                        else -> false
+                                    }
+                                })
+
+                                SwipeActions(
+                                    endActionsConfig = SwipeActionsConfig(threshold = 0.5f,
+                                        background = MaterialTheme.colorScheme.error,
+                                        icon = Icons.Rounded.Delete,
+                                        stayDismissed = true,
+                                        iconTint = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+                                        onDismiss = {
+                                            println("Removing module ${currentItem.name}")
+                                            ModuleLayer.removeModule(currentItem)
+                                        }
+
+                                    ),
+                                ) {
+                                    ModuleChoice(
+                                        module.id,
+                                        module.name,
+                                        module.meta.author,
+                                        module.version,
+                                        module.meta.icon,
+                                        module.meta.backgroundColor.let {
+                                            val str = "FF" + it.removePrefix("#")
+                                            Color(str.toLong(16))
+                                        },
+                                        module.meta.foregroundColor.let {
+                                            val str = "FF" + it.removePrefix("#")
+                                            Color(str.toLong(16))
+                                        },
+                                    ) {
+                                        coroutineScope.launch {
+                                            ModuleLayer.updateSelectedModule(
+                                                module.id
+                                            )
+                                        }
+                                        coroutineScope.launch { scaffoldState.bottomSheetState.hide() }
+                                    }
                                 }
-                                coroutineScope.launch { sheetState.hide() }
                             }
                         }
                     }
                 }
-            }
-            Divider(
-                modifier = Modifier.padding(16.dp, 0.dp),
-            )
-        }, sheetBackgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
-            3.dp
-        ), //TODO: Replace with something else, cuz deprecated soon (elevation lv 2)
-        sheetShape = RoundedCornerShape(28.dp, 28.dp, 0.dp, 0.dp)
-    ) {
-        Column(
-            Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween
-        ) {
-
-            // Expand the module import button in height to show a textfield, cancel and confirm buttons
-
-            Box(
-                modifier = Modifier.fillMaxSize(),
+            }) {
+            Column(
+                Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // We want the elevated button
-                // to "float" above the rest of the content
-                FloatingActionButton(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                        .zIndex(Float.MAX_VALUE),
-                    onClick = {
-                        coroutineScope.launch {
-                            if (sheetState.isVisible) {
-                                sheetState.hide()
-                            } else sheetState.show()
-                        }
-                    },
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                // Expand the module import button in height to show a textfield, cancel and confirm buttons
+                Box(
+                    modifier = Modifier.fillMaxSize(),
                 ) {
-                    Text(
-                        text = ModuleLayer.selectedModule?.name ?: noModuleSelected,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(16.dp)
-                    )
+                    // We want the elevated button
+                    // to "float" above the rest of the content
+                    FloatingActionButton(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(16.dp)
+                            .zIndex(Float.MAX_VALUE),
+                        onClick = {
+                            scope.launch {
+                                if (scaffoldState.bottomSheetState.isVisible) {
+                                    scaffoldState.bottomSheetState.hide()
+                                } else scaffoldState.bottomSheetState.show()
+                            }
+                        },
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    ) {
+                        Text(
+                            text = ModuleLayer.selectedModule?.name ?: noModuleSelected,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                    children()
                 }
-                children()
             }
         }
     }
@@ -427,8 +443,7 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context
 //            ),
             exit = shrinkOut(
                 animationSpec = tween(
-                    durationMillis = 1000,
-                    easing = LinearEasing
+                    durationMillis = 1000, easing = LinearEasing
                 )
             )
         ) {
@@ -477,12 +492,12 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context
                 })
         }
         AnimatedVisibility(
-            visible = isAnimated,
-            enter = expandVertically(
+            visible = isAnimated, enter = expandVertically(
                 animationSpec = tween(1000, easing = LinearEasing)
-        ), exit = shrinkVertically(
+            ), exit = shrinkVertically(
                 animationSpec = tween(1000, easing = FastOutSlowInEasing)
-        )) {
+            )
+        ) {
 
             val interactionSource = remember { MutableInteractionSource() }
 
@@ -551,9 +566,7 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context
                     verticalArrangement = Arrangement.spacedBy(10.dp)
 
                 ) {
-                    SegmentedControl(
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                    SegmentedControl(modifier = Modifier.fillMaxWidth(),
                         items = selectors,
                         cornerRadius = 50,
                         itemWidth = 140.dp,
@@ -586,7 +599,9 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context
                 }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp),
                     verticalAlignment = Alignment.Bottom,
                     horizontalArrangement = Arrangement.End,
                 ) {
