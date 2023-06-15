@@ -615,7 +615,7 @@ fun ModuleImportButton(onClick: () -> Unit, isAnimated: Boolean = false, context
                                     coroutineScope.launch {
                                         ModuleLayer.enqueueRemoteInstall(
                                             context,
-                                            importFromUrlText.text,
+                                            importFromUrlText.text.trim(),
                                         )
                                     }
                                 }
