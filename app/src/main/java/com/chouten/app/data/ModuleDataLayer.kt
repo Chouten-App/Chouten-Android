@@ -92,18 +92,28 @@ class ModuleDataLayer {
                 tempFile.delete()
             }
 
+            // Check if the module folder was nested
+
+            // in a folder
+            var moduleFolder = File(modulePath)
+            val moduleFolderContents = moduleFolder.listFiles()
+            if (moduleFolderContents?.size == 1) {
+                val nestedFolder = moduleFolderContents[0]
+                if (nestedFolder.isDirectory) {
+                    nestedFolder.renameTo(moduleFolder)
+                    moduleFolder = nestedFolder
+                }
+            }
+
             val module = getMetadata(modulePath)
 
             if (isModuleExisting(module)) {
                 // remove the .cache folder
-                val moduleFolder = File(modulePath)
                 moduleFolder.deleteRecursively()
 
                 throw IOException("Module already exists")
             }
 
-            // rename the folder to the module name
-            val moduleFolder = File(modulePath)
             val newModuleFolder = File(moduleFolder.parent, module.name)
             moduleFolder.renameTo(newModuleFolder)
 
@@ -140,6 +150,7 @@ class ModuleDataLayer {
     }
 
     private fun getMetadata(folderUrl: String): ModuleModel {
+        println("Folder name is $folderUrl")
         val metadataFile = File("$folderUrl/metadata.json")
 
         if (!metadataFile.exists()) throw IOException("Metadata file does not exist")
