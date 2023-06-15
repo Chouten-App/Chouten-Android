@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 data class ModuleModel(
     var id: String, // The ID provided by the module
     // something that needs to be defined within the JSON
-    val type: String, // TODO: Better checking to only allow for Source/Meta module types
+    val type: ModuleType,
     val subtypes: List<String>,
     var name: String,
     val version: String,
@@ -93,6 +93,12 @@ data class ModuleModel(
         override fun toString(): String {
             return "{\"home\": $home, \"search\": $search, \"info\": $info, \"mediaConsume\": $mediaConsume}"
         }
+    }
+
+    @Serializable
+    enum class ModuleType() {
+        @SerialName("source") SOURCE,
+        @SerialName("meta") META
     }
 
     override fun hashCode(): Int {
