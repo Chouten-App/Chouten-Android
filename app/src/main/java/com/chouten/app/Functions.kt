@@ -114,14 +114,14 @@ fun createAppDirectory() {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.R)
 fun checkPermissions() {
     val requiresFilesPerms = if (SDK_INT >= Build.VERSION_CODES.R) {
         !Environment.isExternalStorageManager() && !Environment.isExternalStorageLegacy()
     } else {
         // Check for storage permissions
         val permissions = arrayOf(
-            android.Manifest.permission.MANAGE_EXTERNAL_STORAGE,
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
 
         permissions.any {
