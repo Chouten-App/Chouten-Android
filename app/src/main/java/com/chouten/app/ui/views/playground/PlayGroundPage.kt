@@ -1,6 +1,10 @@
 package com.chouten.app.ui.views.playground
 
 import android.annotation.SuppressLint
+import android.graphics.drawable.shapes.RoundRectShape
+import android.graphics.drawable.shapes.Shape
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -9,10 +13,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.chouten.app.PrimaryDataLayer
@@ -20,8 +31,11 @@ import com.chouten.app.data.SnackbarVisualsWithError
 import com.google.accompanist.web.AccompanistWebViewClient
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
-class BrowserWebViewClient : AccompanistWebViewClient() {
+class BrowserWebViewClient(private val callback: (String) -> Unit) : AccompanistWebViewClient() {
     private val videoRegex =
         "\\.(mp4|mp4v|mpv|m1v|m4v|mpg|mpg2|mpeg|xvid|webm|3gp|avi|mov|mkv|ogg|ogv|ogm|m3u8|mpd|ism(?:[vc]|/manifest)?)(?:[?#]|$)".toRegex(
             RegexOption.IGNORE_CASE
@@ -66,7 +80,7 @@ class BrowserWebViewClient : AccompanistWebViewClient() {
         }
     }
 
-    private fun processURL(uri: String, view: WebView?) {
+    private fun processURL(uri: String, view: WebView?): Boolean {
         //check if video
         val videoMimeType = getVideoMimeType(uri)
         if (videoMimeType != null) {
@@ -77,6 +91,7 @@ class BrowserWebViewClient : AccompanistWebViewClient() {
                     "Found Video URL: $uri", false
                 )
             )
+            return true
         }
         //check if subtitle
         val subMimeType = getSubtitleMimeType(uri)
@@ -88,19 +103,19 @@ class BrowserWebViewClient : AccompanistWebViewClient() {
                     "Found Subtitle URL: $uri", false
                 )
             )
+            return true
         }
+        return false
     }
 
     @Deprecated("Deprecated in Java")
     override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
-        processURL(url, view)
-        return false
+        return processURL(url, view)
     }
 
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
         val url = request.url.toString()
-        processURL(url, view)
-        return false
+        return processURL(url, view)
     }
 
     @Deprecated("Deprecated in Java")
@@ -117,6 +132,11 @@ class BrowserWebViewClient : AccompanistWebViewClient() {
         processURL(url, view)
         return null
     }
+    override fun onPageFinished(view: WebView?, url: String?) {
+        if (url != null) {
+            callback(url)
+        }
+    }
 }
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -124,13 +144,31 @@ class BrowserWebViewClient : AccompanistWebViewClient() {
 fun PlayGroundPage(
     navController: NavController
 ) {
-    var url = "https://google.com/"
-    val state = rememberWebViewState(url = url)
-    Column {
+    var fieldUrl by remember { mutableStateOf("https://google.com/") }
+    val state = rememberWebViewState(url = fieldUrl)
+
+    val handler = Handler(Looper.getMainLooper())
+    var previousUrl: String? = null
+    var timerId: Runnable? = null
+
+    val updateCurrentUrl: (String) -> Unit = { url ->
+        if (url != previousUrl) {
+            timerId?.let { handler.removeCallbacks(it) } // Cancel any existing timer
+
+            timerId = Runnable {
+                fieldUrl = url
+                previousUrl = url
+            }
+
+            handler.postDelayed(timerId!!, 1000) // Set a new timer
+        }
+    }
+
+    Column (modifier = Modifier.statusBarsPadding()){
         OutlinedTextField(
-            value = url,
+            value = fieldUrl,
             onValueChange = {
-                url = it
+                fieldUrl = it
             },
             singleLine = true,
             modifier = Modifier
@@ -141,8 +179,10 @@ fun PlayGroundPage(
         WebView(
             state = state,
             captureBackPresses = true,
-            modifier = Modifier.fillMaxSize(),
-            client = BrowserWebViewClient(),
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+            client = BrowserWebViewClient(updateCurrentUrl),
             onCreated = {
                 it.settings.javaScriptEnabled = true
                 it.settings.mediaPlaybackRequiresUserGesture = true //TODO: make preference

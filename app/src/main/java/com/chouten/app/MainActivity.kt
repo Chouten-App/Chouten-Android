@@ -61,14 +61,14 @@ class MainActivity : ComponentActivity() {
                 else -> MaterialTheme.colorScheme.surface
             }
             LaunchedEffect(systemUiController, statusBarBackgroundColor) {
+                val isDarkTheme = isDarkTheme(App.applicationContext)
+                val luminance = statusBarBackgroundColor.luminance()
+                val darkIcons = if (isDarkTheme) luminance < 0.5 else luminance > 0.5
+
                 systemUiController.setStatusBarColor(
                     color = Color.Transparent,
-                    darkIcons = if (isDarkTheme(App.applicationContext)) {
-                        statusBarBackgroundColor.luminance() < 0.5
-                    } else {
-                        statusBarBackgroundColor.luminance() > 0.5
-                    },
-                    transformColorForLightContent = { Color.Black },
+                    darkIcons = darkIcons,
+                    transformColorForLightContent = { Color.Black }
                 )
             }
 
