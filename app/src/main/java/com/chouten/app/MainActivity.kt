@@ -20,6 +20,7 @@ import com.chouten.app.data.DataLayer
 import com.chouten.app.ui.components.DownloadedOnlyBannerBackgroundColor
 import com.chouten.app.ui.components.IncognitoModeBannerBackgroundColor
 import com.chouten.app.ui.theme.ChoutenTheme
+import com.chouten.app.ui.theme.isDarkTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -64,12 +65,14 @@ class MainActivity : ComponentActivity() {
                 else -> MaterialTheme.colorScheme.surface
             }
             LaunchedEffect(systemUiController, statusBarBackgroundColor) {
-                //systemUiController.isStatusBarVisible = false
+                val isDarkTheme = isDarkTheme(App.applicationContext)
+                val luminance = statusBarBackgroundColor.luminance()
+                val darkIcons = if (isDarkTheme) luminance < 0.5 else luminance > 0.5
 
                 systemUiController.setStatusBarColor(
                     color = Color.Transparent,
-                    darkIcons = statusBarBackgroundColor.luminance() > 0.5,
-                    transformColorForLightContent = { Color.Black },
+                    darkIcons = darkIcons,
+                    transformColorForLightContent = { Color.Black }
                 )
             }
 
