@@ -13,7 +13,7 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -124,6 +124,18 @@ fun ChoutenTheme(
                 colorScheme.surfaceColorAtElevation(3.dp)
                     .toArgb() // TODO: replace with new elevation system
             (view.context as Activity).window.statusBarColor = Color.Transparent.toArgb()
+            // Set statusbar icons color considering the top app state banner
+            val isIncognito = preferenceHandler.isIncognito
+            val isOfflineMode = preferenceHandler.isOfflineMode
+
+            val statusBarBackgroundColor = when {
+                isOfflineMode -> colorScheme.tertiary
+                isIncognito -> colorScheme.primary
+                else -> colorScheme.surface
+            }
+
+            val isLightStatusBar = statusBarBackgroundColor.luminance() > 0.5
+            ViewCompat.getWindowInsetsController(view)?.isAppearanceLightStatusBars = isLightStatusBar
         }
     }
 
