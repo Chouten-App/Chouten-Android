@@ -12,6 +12,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -122,11 +123,7 @@ fun ChoutenTheme(
             (view.context as Activity).window.navigationBarColor =
                 colorScheme.surfaceColorAtElevation(3.dp)
                     .toArgb() // TODO: replace with new elevation system
-            (view.context as Activity).window.statusBarColor =
-                colorScheme.primary.copy(alpha = 0.4f)
-                    .compositeOver(colorScheme.surface.copy()).toArgb()
-            ViewCompat.getWindowInsetsController(view)?.isAppearanceLightStatusBars =
-                darkTheme
+            (view.context as Activity).window.statusBarColor = Color.Transparent.toArgb()
         }
     }
 
