@@ -35,9 +35,9 @@ data class ModuleModel(
     }
 
     override fun toString(): String {
-        return "{\"id\": \"$id\", \"type\": \"$type\", \"subtypes\": ${
+        return "{\"id\": \"$id\", \"type\": \"${type.name}\", \"subtypes\": ${
             subtypes.map {
-                "\"$it\""
+                "\"${it}\""
             }
         }, \"name\": \"$name\", \"version\": \"$version\", \"formatVersion\": $formatVersion, \"updateUrl\": \"$updateUrl\", \"general\": $meta}"
     }
@@ -96,7 +96,7 @@ data class ModuleModel(
     }
 
     @Serializable
-    enum class ModuleType() {
+    enum class ModuleType {
         @SerialName("source") SOURCE,
         @SerialName("meta") META
     }
@@ -179,7 +179,7 @@ data class InfoResult(
     val totalMediaCount: Int?,
     val mediaType: String,
     val seasons: List<Season>?,
-    val mediaList: List<MediaListItem>
+    val mediaList: List<MediaListItem>?,
 ) {
     @Serializable
     data class MediaListItem(

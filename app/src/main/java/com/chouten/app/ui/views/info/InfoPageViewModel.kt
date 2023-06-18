@@ -138,6 +138,7 @@ class InfoPageViewModel(
                                         false
                                     )
                                 )
+                                println("Parsing error: $e")
                                 throw Exception("Error parsing results for $title")
                             }
                         }

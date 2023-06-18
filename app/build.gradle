@@ -75,7 +75,7 @@ dependencies {
     implementation "com.github.skydoves:landscapist-glide:2.1.9"
 
     def lifecycle_version = "2.6.1"
-    def nav_version = "2.5.3"
+    def nav_version = "2.6.0"
     def exo_version = "1.0.2"
 
     implementation 'androidx.core:core-ktx:1.10.1'
@@ -104,14 +104,14 @@ dependencies {
     implementation "androidx.media3:media3-common:$exo_version"
     implementation "androidx.media3:media3-database:$exo_version"
 
-
-
+    // Compose Testing
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
+
     implementation 'androidx.core:core-splashscreen:1.0.1'
 
     // Material UI
