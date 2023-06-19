@@ -1,7 +1,5 @@
 package com.chouten.app
 
-import android.view.Window
-import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -17,8 +15,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import com.chouten.app.data.DataLayer
 import com.chouten.app.data.LogDataLayer
@@ -57,34 +53,34 @@ fun ChoutenApp() {
     },
         contentWindowInsets = scaffoldInsets,
         bottomBar = {
-        AnimatedVisibility(
-            visible = PrimaryDataLayer.isNavigationShown,
-            enter = expandVertically(),
-            exit = shrinkVertically()
-        ) {
-            BottomNavigationBar(navController = navController, items = listOf(
-                NavigationItems.HomePage,
-                NavigationItems.SearchPage,
-                NavigationItems.MorePage,
-            ), onItemClick = {
-                navController.navigate(route = it.route)
-            })
-        }
-    }, snackbarHost = { Snackbar() }, content = { padding ->
-        Box(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize()
+            AnimatedVisibility(
+                visible = PrimaryDataLayer.isNavigationShown,
+                enter = expandVertically(),
+                exit = shrinkVertically()
             ) {
-                alerts.collectAsState().value.forEach {
-                    ChoutenAlert(alert = it)
-                }
+                BottomNavigationBar(navController = navController, items = listOf(
+                    NavigationItems.HomePage,
+                    NavigationItems.SearchPage,
+                    NavigationItems.MorePage,
+                ), onItemClick = {
+                    navController.navigate(route = it.route)
+                })
             }
+        }, snackbarHost = { Snackbar() }, content = { padding ->
+            Box(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    alerts.collectAsState().value.forEach {
+                        ChoutenAlert(alert = it)
+                    }
+                }
 
-            Navigation(navController)
-        }
-    })
+                Navigation(navController)
+            }
+        })
 }

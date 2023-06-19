@@ -10,7 +10,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.chouten.app.LogLayer
 import com.chouten.app.ModuleLayer
-import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.client
 import kotlinx.coroutines.sync.Mutex
 import java.net.URLDecoder

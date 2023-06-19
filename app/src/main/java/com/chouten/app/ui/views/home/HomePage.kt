@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -61,13 +60,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.chouten.app.ModuleLayer
 import com.chouten.app.data.HomeResult
-import com.chouten.app.data.ModuleDataLayer
 import com.chouten.app.data.WebviewHandler
 import com.chouten.app.ui.components.ModuleSelectorContainer
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import com.valentinilk.shimmer.shimmer
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
 import java.util.Locale
@@ -287,7 +284,11 @@ fun HomePage(
                                             }
 
                                             if (result.data[pagerState.currentPage].subtitleValue.isNotEmpty()) {
-                                                Text(result.data[pagerState.currentPage].subtitleValue.joinToString(" * "))
+                                                Text(
+                                                    result.data[pagerState.currentPage].subtitleValue.joinToString(
+                                                        " * "
+                                                    )
+                                                )
                                             }
                                         }
 
@@ -364,6 +365,7 @@ fun HomePage(
                             }
 
                         }
+
                         "list" -> {
                             Box(
                                 modifier = Modifier
@@ -395,6 +397,7 @@ fun HomePage(
                                 }
                             }
                         }
+
                         "grid_2x" -> {
                             Box(
                                 modifier = Modifier

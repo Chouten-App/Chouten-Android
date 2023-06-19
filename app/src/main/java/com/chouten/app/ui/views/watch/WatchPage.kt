@@ -1,4 +1,4 @@
- package com.chouten.app.ui.views.watch
+package com.chouten.app.ui.views.watch
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
@@ -55,7 +55,7 @@ fun WatchPage(
 
 
         LaunchedEffect((context as Activity).requestedOrientation) {
-            context.requestedOrientation =  ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            context.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
 
         DisposableEffect(
@@ -74,7 +74,7 @@ fun WatchPage(
         ) {
             // Restore the user's screen to
             // its original orientation.
-            (context as Activity).requestedOrientation = orientationOnLoad
+            context.requestedOrientation = orientationOnLoad
 
             onDispose {
                 _player.release()

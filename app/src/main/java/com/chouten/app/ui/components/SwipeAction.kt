@@ -1,27 +1,20 @@
 package com.chouten.app.ui.components
 
-import android.view.MotionEvent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.with
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -49,29 +42,16 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.semantics.Role.Companion.Image
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
-import kotlin.math.sqrt
 
 
 data class SwipeActionsConfig(
@@ -82,6 +62,7 @@ data class SwipeActionsConfig(
     val stayDismissed: Boolean,
     val onDismiss: () -> Unit,
 )
+
 val DefaultSwipeActionsConfig = SwipeActionsConfig(
     threshold = 0.5f,
     icon = Icons.Default.Menu,
@@ -90,9 +71,11 @@ val DefaultSwipeActionsConfig = SwipeActionsConfig(
     stayDismissed = false,
     onDismiss = {},
 )
+
 @OptIn(
     ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class,
-    ExperimentalAnimationApi::class)
+    ExperimentalAnimationApi::class
+)
 @Composable
 fun SwipeActions(
     modifier: Modifier = Modifier,
@@ -162,7 +145,7 @@ fun SwipeActions(
                     fadeIn(
                         tween(0),
                         initialAlpha = if (targetState.second) 1f else 0f,
-                    ) with fadeOut(
+                    ) togetherWith fadeOut(
                         tween(0),
                         targetAlpha = if (targetState.second) .7f else 0f,
                     )
@@ -192,7 +175,8 @@ fun SwipeActions(
                     }
                 })
                 Box(
-                    modifier = Modifier.fillMaxWidth(1F)
+                    modifier = Modifier
+                        .fillMaxWidth(1F)
                         .height(65.dp)
                         .padding(vertical = 4.dp)
                         .clip(RoundedCornerShape(12.dp))
@@ -204,17 +188,23 @@ fun SwipeActions(
                             },
                         )
                 ) {
-                    Box(modifier = Modifier
-                        .align(
-                            when (direction) {
-                                DismissDirection.StartToEnd -> Alignment.CenterStart
-                                else -> Alignment.CenterEnd
-                            }
-                        )
-                        .fillMaxHeight()
-                        .aspectRatio(1f)
-                        .scale(iconSize.value)
-                        .offset { IntOffset(x = 0, y = (10 * (1f - iconSize.value)).roundToInt()) },
+                    Box(
+                        modifier = Modifier
+                            .align(
+                                when (direction) {
+                                    DismissDirection.StartToEnd -> Alignment.CenterStart
+                                    else -> Alignment.CenterEnd
+                                }
+                            )
+                            .fillMaxHeight()
+                            .aspectRatio(1f)
+                            .scale(iconSize.value)
+                            .offset {
+                                IntOffset(
+                                    x = 0,
+                                    y = (10 * (1f - iconSize.value)).roundToInt()
+                                )
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         when (direction) {
@@ -225,6 +215,7 @@ fun SwipeActions(
                                     contentDescription = null
                                 )
                             }
+
                             DismissDirection.EndToStart -> {
                                 Image(
                                     painter = rememberVectorPainter(image = endActionsConfig.icon),
@@ -232,6 +223,7 @@ fun SwipeActions(
                                     contentDescription = null
                                 )
                             }
+
                             else -> {}
                         }
                     }

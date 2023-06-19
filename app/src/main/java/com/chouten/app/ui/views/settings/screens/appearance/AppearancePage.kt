@@ -71,7 +71,8 @@ fun AppearancePage() {
             }, title = {
                 Text(text = stringResource(R.string.export_theme__title))
             }, text = {
-                OutlinedTextField(value = themeName.value,
+                OutlinedTextField(
+                    value = themeName.value,
                     onValueChange = { themeName.value = it },
                     label = {
                         Text(

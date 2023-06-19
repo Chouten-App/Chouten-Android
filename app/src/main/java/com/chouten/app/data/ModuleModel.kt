@@ -1,6 +1,5 @@
 package com.chouten.app.data
 
-import com.chouten.app.replaceLast
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -28,9 +27,11 @@ data class ModuleModel(
         @SerialName("fgColor") val foregroundColor: String,
     ) {
         override fun toString(): String {
-            return "{\"author\": \"$author\", \"description\": \"$description\", \"icon\": \"$icon\", \"lang\": ${lang.map { 
-                "\"$it\""
-            }}, \"baseURL\": \"$baseUrl\", \"bgColor\": \"$backgroundColor\", \"fgColor\": \"$foregroundColor\"}"
+            return "{\"author\": \"$author\", \"description\": \"$description\", \"icon\": \"$icon\", \"lang\": ${
+                lang.map {
+                    "\"$it\""
+                }
+            }, \"baseURL\": \"$baseUrl\", \"bgColor\": \"$backgroundColor\", \"fgColor\": \"$foregroundColor\"}"
         }
     }
 
@@ -118,9 +119,7 @@ data class ModuleModel(
         if (name != other.name) return false
         if (version != other.version) return false
         if (updateUrl != other.updateUrl) return false
-        if (meta != other.meta) return false
-
-        return true
+        return meta == other.meta
     }
 }
 

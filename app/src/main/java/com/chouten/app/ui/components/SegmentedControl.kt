@@ -7,10 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -63,10 +60,11 @@ fun SegmentedControl(
     }
 
     Row(
-        modifier = modifier.onGloballyPositioned { coordinates ->
-            // Set column height using the LayoutCoordinates
-            rowWidthDp = with(localDensity) { coordinates.size.width.toDp() }
-        }
+        modifier = modifier
+            .onGloballyPositioned { coordinates ->
+                // Set column height using the LayoutCoordinates
+                rowWidthDp = with(localDensity) { coordinates.size.width.toDp() }
+            }
             .padding(horizontal = 5.dp)
             .fillMaxWidth(),
     ) {

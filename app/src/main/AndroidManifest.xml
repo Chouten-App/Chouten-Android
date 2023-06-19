@@ -3,10 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="30" />
 
     <application
         android:allowBackup="true"
@@ -33,10 +36,12 @@
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="content"/>
-                <data android:scheme="file"/>
+
+                <data android:scheme="content" />
+                <data android:scheme="file" />
                 <data android:pathPattern=".*\\.module" />
                 <data android:mimeType="*/*" />
             </intent-filter>
@@ -48,6 +53,10 @@
                 android:name="android.service.chooser.chooser_target_service"
                 android:value="androidx.sharetarget.ChooserTargetServiceCompat" />
         </activity>
-        <activity android:name=".ui.views.watch.PlayerActivity" android:screenOrientation="landscape" android:configChanges="keyboardHidden" android:theme="@style/Theme.AppCompat.NoActionBar"/>
+        <activity
+            android:name=".ui.views.watch.PlayerActivity"
+            android:screenOrientation="landscape"
+            android:configChanges="keyboardHidden"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
     </application>
 </manifest>

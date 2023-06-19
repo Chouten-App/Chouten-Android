@@ -1,11 +1,8 @@
 package com.chouten.app.data
 
-import android.content.ClipData
-import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.media.MediaScannerConnection
-import android.net.Uri
 import android.util.Log
 import android.webkit.URLUtil
 import androidx.compose.runtime.getValue
@@ -18,8 +15,8 @@ import com.chouten.app.App
 import com.chouten.app.Mapper
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.UnzipUtils
-import com.chouten.app.get
 import com.chouten.app.client
+import com.chouten.app.get
 import com.chouten.app.preferenceHandler
 import com.google.common.hash.BloomFilter
 import com.google.common.hash.Funnels
@@ -29,11 +26,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedOutputStream
-import java.io.BufferedReader
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.io.InputStreamReader
 import java.util.Locale
 
 class ModuleDataLayer {
@@ -93,7 +88,6 @@ class ModuleDataLayer {
             }
 
             // Check if the module folder was nested
-
             // in a folder
             var moduleFolder = File(modulePath)
             val moduleFolderContents = moduleFolder.listFiles()
@@ -167,7 +161,10 @@ class ModuleDataLayer {
      * @param subFolder The subfolder to read the code from (e.g. "Search", "Info", "Media")
      * @return A list of codeblocks
      */
-    private suspend fun getModuleCode(module: ModuleModel, subFolder: String): List<ModuleModel.ModuleCode.ModuleCodeblock> {
+    private suspend fun getModuleCode(
+        module: ModuleModel,
+        subFolder: String
+    ): List<ModuleModel.ModuleCode.ModuleCodeblock> {
         val moduleDir =
             (AppPaths.addedDirs["Modules"]?.absolutePath + "/" + (module.name)) + "/$subFolder"
 
@@ -176,8 +173,10 @@ class ModuleDataLayer {
         // get files that end with .js and sor them by the number in the file name. (e.g. code.js, code1.js, code2.js)
         val files = File(moduleDir).listFiles { _, name -> name.endsWith(".js") }
             ?.sortedWith { o1, o2 -> // sortedBy somehow doesn't work on android 9 which causes episodes to be empty
-                val o1Number = o1.name.substringAfter("code").substringBefore(".js").toIntOrNull() ?: 0
-                val o2Number = o2.name.substringAfter("code").substringBefore(".js").toIntOrNull() ?: 0
+                val o1Number =
+                    o1.name.substringAfter("code").substringBefore(".js").toIntOrNull() ?: 0
+                val o2Number =
+                    o2.name.substringAfter("code").substringBefore(".js").toIntOrNull() ?: 0
                 o1Number.compareTo(o2Number)
             }
             ?: throw IOException("No Search files found")
@@ -362,8 +361,8 @@ class ModuleDataLayer {
             getModuleCode(module, "Search")
         }
 
-       val moduleInfo = App.lifecycleScope.async {
-           getModuleCode(module, "Info")
+        val moduleInfo = App.lifecycleScope.async {
+            getModuleCode(module, "Info")
         }
 
         val moduleMediaConsume = App.lifecycleScope.async {
@@ -374,7 +373,14 @@ class ModuleDataLayer {
         val search = moduleSearch.await()
         val info = moduleInfo.await()
         val mediaConsume = moduleMediaConsume.await()
-        module.code = mapOf("anime" to ModuleModel.ModuleCode(search = search, home = home, info = info, mediaConsume = mediaConsume))
+        module.code = mapOf(
+            "anime" to ModuleModel.ModuleCode(
+                search = search,
+                home = home,
+                info = info,
+                mediaConsume = mediaConsume
+            )
+        )
 
         selectedModule = module
     }
@@ -401,6 +407,7 @@ class ModuleDataLayer {
                     }
 
                     val metadata = metadataFile.readText()
+                    Log.d("METADATA", "loadModules: $metadata")
                     val decoded = Mapper.parse<ModuleModel>(metadata)
                     decoded.meta.icon = "${file.absolutePath}/icon.png"
 

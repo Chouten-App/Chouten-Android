@@ -68,14 +68,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import com.chouten.app.Mapper
 import com.chouten.app.ui.components.EpisodeItem
 import com.chouten.app.ui.components.ShimmerEpisodes
 import com.chouten.app.ui.components.ShimmerInfo
 import com.chouten.app.ui.views.watch.PlayerActivity
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
-import kotlinx.serialization.json.encodeToJsonElement
 
 @SuppressLint("RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -111,7 +109,8 @@ fun InfoPage(
             leftOffset,
             0
         ) else IntOffset(-(LocalConfiguration.current.screenWidthDp * 4), 0),
-        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing), label = "topBarOffset"
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        label = "topBarOffset"
     )
 
     ShimmerInfo(
@@ -124,7 +123,10 @@ fun InfoPage(
                     .verticalScroll(scrollState)
                     .fillMaxSize()
             ) {
-                Box(Modifier.fillMaxSize().navigationBarsPadding()) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .navigationBarsPadding()) {
                     Box(
                         Modifier
                             .fillMaxWidth()
@@ -332,7 +334,10 @@ fun InfoPage(
                                                         }.toString()
                                                     )
 
-                                                    intent.putExtra("currentEpisodeIndex", provider.infoResults[0].list.indexOf(item))
+                                                    intent.putExtra(
+                                                        "currentEpisodeIndex",
+                                                        provider.infoResults[0].list.indexOf(item)
+                                                    )
                                                     ContextCompat.startActivity(
                                                         navController.context,
                                                         intent,
@@ -400,7 +405,12 @@ fun InfoPage(
         }
     )
 
-    Box(modifier = Modifier.fillMaxSize().padding(top = systemBarsPadding.calculateTopPadding() * 2, end = 16.dp), contentAlignment = Alignment.TopEnd) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = systemBarsPadding.calculateTopPadding() * 2, end = 16.dp),
+        contentAlignment = Alignment.TopEnd
+    ) {
         IconButton(
             onClick = {
                 navController.popBackStack()

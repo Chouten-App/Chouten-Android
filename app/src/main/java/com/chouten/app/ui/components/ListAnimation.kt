@@ -47,6 +47,7 @@ inline fun <T> LazyListScope.animatedItemsIndexed(
         }
     }
 }
+
 @Composable
 fun <T> updateAnimatedItemsState(
     newList: List<T>
@@ -62,6 +63,7 @@ fun <T> updateAnimatedItemsState(
             override fun getNewListSize(): Int = newList.size
             override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
                 oldList[oldItemPosition].item == newList[newItemPosition]
+
             override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
                 oldList[oldItemPosition].item == newList[newItemPosition]
         }
@@ -70,19 +72,25 @@ fun <T> updateAnimatedItemsState(
         diffResult.dispatchUpdatesTo(object : ListUpdateCallback {
             override fun onInserted(position: Int, count: Int) {
                 for (i in 0 until count) {
-                    val newItem = AnimatedItem(visibility = MutableTransitionState(false), newList[position + i])
+                    val newItem = AnimatedItem(
+                        visibility = MutableTransitionState(false),
+                        newList[position + i]
+                    )
                     newItem.visibility.targetState = true
                     compositeList.add(position + i, newItem)
                 }
             }
+
             override fun onRemoved(position: Int, count: Int) {
                 for (i in 0 until count) {
                     compositeList[position + i].visibility.targetState = false
                 }
             }
+
             override fun onMoved(fromPosition: Int, toPosition: Int) {
                 // not detecting moves.
             }
+
             override fun onChanged(position: Int, count: Int, payload: Any?) {
                 // irrelevant with compose.
             }
@@ -95,6 +103,7 @@ fun <T> updateAnimatedItemsState(
     }
     return state
 }
+
 data class AnimatedItem<T>(
     val visibility: MutableTransitionState<Boolean>,
     val item: T,
@@ -102,14 +111,15 @@ data class AnimatedItem<T>(
     override fun hashCode(): Int {
         return item?.hashCode() ?: 0
     }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
         other as AnimatedItem<*>
-        if (item != other.item) return false
-        return true
+        return item == other.item
     }
 }
+
 suspend fun calculateDiff(
     detectMoves: Boolean = true,
     diffCb: DiffUtil.Callback

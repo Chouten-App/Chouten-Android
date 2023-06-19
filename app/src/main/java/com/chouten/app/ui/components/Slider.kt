@@ -7,7 +7,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.minimumInteractiveComponentSize
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,18 +26,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import kotlin.math.abs
-import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.compositeOver
 import com.chouten.app.calculateFraction
 import com.chouten.app.scale
-import com.google.common.math.Quantiles.scale
+import kotlin.math.abs
 
 
 /* source: https://github.com/SmartToolFactory/Compose-Colorful-Sliders */
@@ -705,9 +696,7 @@ object MaterialSliderDefaults {
             if (activeTrackColor != other.activeTrackColor) return false
             if (inactiveTrackColor != other.inactiveTrackColor) return false
             if (disabledActiveTrackColor != other.disabledActiveTrackColor) return false
-            if (disabledInactiveTrackColor != other.disabledInactiveTrackColor) return false
-
-            return true
+            return disabledInactiveTrackColor == other.disabledInactiveTrackColor
         }
 
         override fun hashCode(): Int {

@@ -46,6 +46,7 @@ class HomePageViewModel(
             loadHomePage()
         }
     }
+
     private suspend fun loadHomePage() {
         _loadedModule.value = ModuleLayer.selectedModule
         val homeModule = ModuleLayer.selectedModule ?: return

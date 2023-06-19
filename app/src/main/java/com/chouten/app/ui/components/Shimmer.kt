@@ -35,7 +35,7 @@ fun ShimmerInfo(
         0.6f to MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
         1f to MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
     )
-    
+
     if (isLoading) {
         Column(
             modifier = modifier
@@ -64,12 +64,13 @@ fun ShimmerInfo(
                             .padding(top = 180.dp, bottom = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Box(modifier = Modifier
-                            .width(120.dp)
-                            .height(180.dp)
-                            .clip(MaterialTheme.shapes.medium)
-                            .shimmerEffect(),
-                            )
+                        Box(
+                            modifier = Modifier
+                                .width(120.dp)
+                                .height(180.dp)
+                                .clip(MaterialTheme.shapes.medium)
+                                .shimmerEffect(),
+                        )
                         Column(
                             Modifier.align(Alignment.Bottom),
                             verticalArrangement = Arrangement.spacedBy(0.dp)
@@ -159,7 +160,8 @@ fun ShimmerInfo(
                                 modifier = Modifier
                                     .width(160.dp)
                                     .height(90.dp)
-                                    .clip(MaterialTheme.shapes.medium).shimmerEffect(),
+                                    .clip(MaterialTheme.shapes.medium)
+                                    .shimmerEffect(),
                             )
                             Column(Modifier.heightIn(max = 90.dp)) {
                                 Column(
@@ -254,7 +256,8 @@ fun ShimmerEpisodes(
                     modifier = Modifier
                         .width(160.dp)
                         .height(90.dp)
-                        .clip(MaterialTheme.shapes.medium).shimmerEffect(),
+                        .clip(MaterialTheme.shapes.medium)
+                        .shimmerEffect(),
                 )
                 Column(Modifier.heightIn(max = 90.dp)) {
                     Column(

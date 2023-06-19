@@ -13,33 +13,22 @@ import android.util.Log
 import android.view.*
 import android.view.animation.*
 import android.widget.*
-import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
@@ -48,7 +37,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntSize
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.view.*
 import com.chouten.app.data.AlertData
@@ -225,6 +213,7 @@ object UnzipUtils {
 operator fun SnapshotStateList<ModuleModel>.get(moduleId: String): ModuleModel {
     return this.first { it.id == moduleId }
 }
+
 fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
@@ -256,11 +245,13 @@ fun Long.formatMinSec(): String {
 internal fun lerp(start: Float, end: Float, amount: Float): Float {
     return (1 - amount) * start + amount * end
 }
+
 /**
  * Scale x1 from start1..end1 range to start2..end2 range
  */
 internal fun scale(start1: Float, end1: Float, pos: Float, start2: Float, end2: Float) =
     lerp(start2, end2, calculateFraction(start1, end1, pos))
+
 /**
  * Scale x.start, x.endInclusive from a1..b1 range to a2..b2 range
  */
@@ -278,6 +269,7 @@ internal fun scale(
         start2,
         end2
     )
+
 /**
  * Calculate fraction for value between a range [end] and [start] coerced into 0f-1f range
  */

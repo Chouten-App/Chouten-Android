@@ -2,7 +2,6 @@ package com.chouten.app
 
 import android.content.ClipData
 import android.content.Intent
-import android.content.Intent.ACTION_SEND
 import android.content.Intent.ACTION_VIEW
 import android.os.Bundle
 import android.util.Log
@@ -16,7 +15,6 @@ import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
-import com.chouten.app.data.DataLayer
 import com.chouten.app.ui.components.DownloadedOnlyBannerBackgroundColor
 import com.chouten.app.ui.components.IncognitoModeBannerBackgroundColor
 import com.chouten.app.ui.theme.ChoutenTheme

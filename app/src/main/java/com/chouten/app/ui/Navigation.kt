@@ -1,15 +1,16 @@
 package com.chouten.app.ui
 
 import androidx.annotation.StringRes
-import androidx.compose.animation.*
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
-import androidx.compose.material.*
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.material3.*
+import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment

@@ -135,7 +135,8 @@ fun ChoutenTheme(
             }
 
             val isLightStatusBar = statusBarBackgroundColor.luminance() > 0.5
-            ViewCompat.getWindowInsetsController(view)?.isAppearanceLightStatusBars = isLightStatusBar
+            ViewCompat.getWindowInsetsController(view)?.isAppearanceLightStatusBars =
+                isLightStatusBar
         }
     }
 

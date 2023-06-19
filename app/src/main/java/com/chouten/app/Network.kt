@@ -7,8 +7,9 @@ import com.chouten.app.data.CustomDNS
 import dev.brahmkshatriya.nicehttp.Requests
 import dev.brahmkshatriya.nicehttp.ResponseParser
 import dev.brahmkshatriya.nicehttp.addGenericDns
-import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.decodeFromString
@@ -20,7 +21,7 @@ import java.io.File
 import java.io.PrintWriter
 import java.io.Serializable
 import java.io.StringWriter
-import java.util.concurrent.*
+import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 
