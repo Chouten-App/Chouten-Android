@@ -4,20 +4,22 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.unit.dp
 import androidx.core.view.ViewCompat
 import com.chouten.app.data.AppThemeType
 import com.chouten.app.preferenceHandler
@@ -120,14 +122,14 @@ fun ChoutenTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            (view.context as Activity).window.navigationBarColor =
-                colorScheme.surfaceColorAtElevation(3.dp)
-                    .toArgb() // TODO: replace with new elevation system
-            (view.context as Activity).window.statusBarColor = Color.Transparent.toArgb()
+            val activity = view.context as? Activity
+            activity?.window?.apply {
+                navigationBarColor = Color.Transparent.toArgb()
+                statusBarColor = Color.Transparent.toArgb()
+            }
             // Set statusbar icons color considering the top app state banner
             val isIncognito = preferenceHandler.isIncognito
             val isOfflineMode = preferenceHandler.isOfflineMode
-
             val statusBarBackgroundColor = when {
                 isOfflineMode -> colorScheme.tertiary
                 isIncognito -> colorScheme.primary
@@ -141,8 +143,51 @@ fun ChoutenTheme(
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = animate(colorScheme),
         typography = Typography,
         content = content
+    )
+}
+
+@Composable
+private fun animate(colors: ColorScheme): ColorScheme {
+    val animSpec = remember {
+        spring<Color>(stiffness = 500f)
+    }
+
+    @Composable
+    fun animateColor(color: Color): Color =
+        animateColorAsState(targetValue = color, animationSpec = animSpec, label = "Theme Color Transition").value
+
+    return ColorScheme(
+        primary = animateColor(colors.primary),
+        onPrimary = animateColor(colors.onPrimary),
+        primaryContainer = animateColor(colors.primaryContainer),
+        onPrimaryContainer = animateColor(colors.onPrimaryContainer),
+        inversePrimary = animateColor(colors.inversePrimary),
+        secondary = animateColor(colors.secondary),
+        onSecondary = animateColor(colors.onSecondary),
+        secondaryContainer = animateColor(colors.secondaryContainer),
+        onSecondaryContainer = animateColor(colors.onSecondaryContainer),
+        tertiary = animateColor(colors.tertiary),
+        onTertiary = animateColor(colors.onTertiary),
+        tertiaryContainer = animateColor(colors.tertiaryContainer),
+        onTertiaryContainer = animateColor(colors.onTertiaryContainer),
+        background = animateColor(colors.background),
+        onBackground = animateColor(colors.onBackground),
+        surface = animateColor(colors.surface),
+        onSurface = animateColor(colors.onSurface),
+        surfaceVariant = animateColor(colors.surfaceVariant),
+        onSurfaceVariant = animateColor(colors.onSurfaceVariant),
+        surfaceTint = animateColor(colors.surfaceTint),
+        inverseSurface = animateColor(colors.inverseSurface),
+        inverseOnSurface = animateColor(colors.inverseOnSurface),
+        error = animateColor(colors.error),
+        onError = animateColor(colors.onError),
+        errorContainer = animateColor(colors.errorContainer),
+        onErrorContainer = animateColor(colors.onErrorContainer),
+        outline = animateColor(colors.outline),
+        outlineVariant = animateColor(colors.outlineVariant),
+        scrim = animateColor(colors.scrim)
     )
 }
