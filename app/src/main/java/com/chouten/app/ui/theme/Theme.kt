@@ -5,7 +5,8 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -152,12 +153,16 @@ fun ChoutenTheme(
 @Composable
 private fun animate(colors: ColorScheme): ColorScheme {
     val animSpec = remember {
-        spring<Color>(stiffness = 500f)
+        tween<Color>(durationMillis = 300, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f))
     }
 
     @Composable
     fun animateColor(color: Color): Color =
-        animateColorAsState(targetValue = color, animationSpec = animSpec, label = "Theme Color Transition").value
+        animateColorAsState(
+            targetValue = color,
+            animationSpec = animSpec,
+            label = "Theme Color Transition"
+        ).value
 
     return ColorScheme(
         primary = animateColor(colors.primary),
