@@ -114,6 +114,13 @@ fun AppearancePage() {
             onCheckedChange = { toggle ->
                 preferenceHandler.isDynamicColor = toggle
             })
+        SettingsToggle(preference = Preferences.Settings.oledTheme,
+            defaultValue = preferenceHandler.getBoolean(
+                Preferences.Settings.oledTheme.preference.first, false
+            ),
+            onCheckedChange = { toggle ->
+                preferenceHandler.isOledTheme = toggle
+            })
         SettingsItem(modifier = Modifier.clickable {
             isNamePromptVisible.value = true
         },

@@ -104,6 +104,7 @@ fun isDarkTheme(context: Context): Boolean {
 @Composable
 fun ChoutenTheme(
     darkTheme: Boolean = isDarkTheme(LocalContext.current),
+    oledTheme: Boolean = preferenceHandler.isOledTheme,
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
     content: @Composable () -> Unit
@@ -119,6 +120,8 @@ fun ChoutenTheme(
 
             darkTheme -> darkColorScheme
             else -> lightColorScheme
+        }.let {
+            if (darkTheme && oledTheme) it.toOled() else it
         }
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -196,3 +199,8 @@ private fun animate(colors: ColorScheme): ColorScheme {
         scrim = animateColor(colors.scrim)
     )
 }
+
+private fun ColorScheme.toOled() = this.copy(
+    surface = Color.Black,
+    background = Color.Black
+)

@@ -19,6 +19,10 @@ class PreferenceManager(context: Context) :
             Context.MODE_PRIVATE
         )
     ) {
+        var isOledTheme: Boolean by booleanPreference(
+        Preferences.Settings.oledTheme.preference.first,
+        false
+    )
     var isDynamicColor: Boolean by booleanPreference(
         Preferences.Settings.dynamicColor.preference.first,
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S

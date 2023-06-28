@@ -28,6 +28,11 @@ object Preferences {
     const val SelectedModule = "SelectedModule"
 
     object Settings {
+        val oledTheme = ChoutenSetting(
+            R.string.oled_theme_toggle__title,
+            R.string.oled_theme_toggle__desc,
+            preference = Pair("oledMode", Boolean)
+        )
         val downloadedOnly = ChoutenSetting(
             R.string.downloaded_only_toggle__title,
             R.string.downloaded_only_toggle__desc,
