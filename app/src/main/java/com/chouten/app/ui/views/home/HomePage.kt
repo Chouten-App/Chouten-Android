@@ -165,10 +165,6 @@ fun HomePage(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(start = 10.dp, end = 10.dp, top = 200.dp)
-                                        .shadow(
-                                            elevation = 10.dp,
-                                            shape = MaterialTheme.shapes.large
-                                        )
                                         .wrapContentHeight(Alignment.CenterVertically)
                                         .align(Alignment.Center)
                                         .clip(MaterialTheme.shapes.large)
