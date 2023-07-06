@@ -82,7 +82,8 @@ inline fun <reified T : Enum<T>> SettingsChoice(
     modifier: Modifier = Modifier,
     crossinline onPreferenceChange: (T) -> Unit,
     crossinline onPreviewSelectionChange: (T) -> Unit = {},
-    defaultValue: T
+    defaultValue: T,
+    crossinline trailing:  @Composable () -> Unit = { }
 ) {
     var isOpen by rememberSaveable {
         mutableStateOf(false)
@@ -93,7 +94,9 @@ inline fun <reified T : Enum<T>> SettingsChoice(
     },
         { preference.icon?.let { Icon(it, stringResource(preference.text)) } },
         { Text(stringResource(preference.text)) },
-        { preference.secondaryText?.let { Text(stringResource(it)) } }) {
+        { preference.secondaryText?.let { Text(stringResource(it)) } }
+    ) {
+        trailing()
         SettingsChoicePopup(visible = isOpen,
             title = { Text(text = stringResource(preference.text)) },
             defaultValue = defaultValue,

@@ -2,7 +2,11 @@ package com.chouten.app.ui.views.settings.screens.appearance
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -11,16 +15,19 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.R
 import com.chouten.app.data.AppThemeType
@@ -30,6 +37,7 @@ import com.chouten.app.preferenceHandler
 import com.chouten.app.ui.components.SettingsChoice
 import com.chouten.app.ui.components.SettingsItem
 import com.chouten.app.ui.components.SettingsToggle
+import com.chouten.app.ui.components.VerticalDivider
 
 
 @Composable
@@ -140,6 +148,29 @@ fun AppearancePage() {
             ),
             onPreviewSelectionChange = { theme ->
                 preferenceHandler.themeType = theme
-            })
+            },
+            trailing = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    VerticalDivider(height = 32.0.dp, modifier = Modifier.padding(end = 16.dp))
+                    Switch(
+                        checked = when (preferenceHandler.getEnum(
+                            Preferences.Settings.themeType.preference.first, AppThemeType.SYSTEM
+                        )) {
+                            AppThemeType.SYSTEM -> isSystemInDarkTheme()
+                            AppThemeType.LIGHT -> false
+                            AppThemeType.DARK -> true
+                        }, onCheckedChange = {
+                            preferenceHandler.themeType = when (it) {
+                                true -> AppThemeType.DARK
+                                false -> AppThemeType.LIGHT
+                            }
+                        }
+                    )
+                }
+            }
+        )
     }
 }
