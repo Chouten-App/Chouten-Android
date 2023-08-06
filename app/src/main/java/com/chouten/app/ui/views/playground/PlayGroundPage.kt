@@ -1,11 +1,11 @@
 package com.chouten.app.ui.views.playground
 
 import android.annotation.SuppressLint
-import android.graphics.drawable.shapes.RoundRectShape
-import android.graphics.drawable.shapes.Shape
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.webkit.ConsoleMessage
+import android.webkit.PermissionRequest
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -28,12 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.chouten.app.PrimaryDataLayer
 import com.chouten.app.data.SnackbarVisualsWithError
+import com.google.accompanist.web.AccompanistWebChromeClient
 import com.google.accompanist.web.AccompanistWebViewClient
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
-import okhttp3.Headers.Companion.toHeaders
-import okhttp3.OkHttpClient
-import okhttp3.Request
 
 class BrowserWebViewClient(private val callback: (String) -> Unit) : AccompanistWebViewClient() {
     private val videoRegex =
@@ -132,10 +130,37 @@ class BrowserWebViewClient(private val callback: (String) -> Unit) : Accompanist
         processURL(url, view)
         return null
     }
+
     override fun onPageFinished(view: WebView?, url: String?) {
         if (url != null) {
             callback(url)
         }
+    }
+}
+
+class BrowserWebChromeClient : AccompanistWebChromeClient() {
+    override fun onProgressChanged(view: WebView?, newProgress: Int) {
+        super.onProgressChanged(view, newProgress)
+        Log.d("WebChromeClient", "Progress: $newProgress")
+    }
+
+    override fun onPermissionRequest(request: PermissionRequest) {
+        val resources = request.resources
+        for (i in resources.indices) {
+            if (PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID == resources[i]) {
+                request.grant(resources)
+                return
+            }
+        }
+        super.onPermissionRequest(request)
+    }
+
+    override fun onConsoleMessage(message: ConsoleMessage): Boolean {
+        Log.d(
+            "Console",
+            "${message.message()} -- From line " + "${message.lineNumber()} of ${message.sourceId()}"
+        )
+        return true
     }
 }
 
@@ -164,7 +189,7 @@ fun PlayGroundPage(
         }
     }
 
-    Column (modifier = Modifier.statusBarsPadding()){
+    Column(modifier = Modifier.statusBarsPadding()) {
         OutlinedTextField(
             value = fieldUrl,
             onValueChange = {
@@ -183,6 +208,7 @@ fun PlayGroundPage(
                 .fillMaxSize()
                 .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
             client = BrowserWebViewClient(updateCurrentUrl),
+            chromeClient = BrowserWebChromeClient(),
             onCreated = {
                 it.settings.javaScriptEnabled = true
                 it.settings.mediaPlaybackRequiresUserGesture = true //TODO: make preference
