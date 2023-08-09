@@ -1,6 +1,7 @@
 package com.chouten.app.ui.views.search
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -16,7 +17,8 @@ import com.chouten.app.data.ModuleResponse
 import com.chouten.app.data.SearchResult
 import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.data.WebviewHandler
-import kotlinx.coroutines.Dispatchers
+import com.chouten.app.data.ModuleAction
+import com.chouten.app.data.ErrorAction
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,12 +26,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.net.URLEncoder
+import org.json.JSONObject
 
 class SearchPageViewModel(
-    context: Context,
-    private val webview: WebviewHandler = WebviewHandler()
+        context: Context,
+        private val webview: WebviewHandler = WebviewHandler()
 ) : ViewModel() {
     var isSearching by mutableStateOf(false)
         private set
@@ -50,20 +51,20 @@ class SearchPageViewModel(
             field = value
             _searchQuery.value = value
             searchJob?.cancel()
-            searchJob = viewModelScope.launch {
-                _searchQuery.debounce(500).distinctUntilChanged()
-                    .collectLatest {
-                        isSearching = true
-                        if (it.isBlank()) {
-                            _searchResults.clear()
-                            isSearching = false
-                            return@collectLatest
+            searchJob =
+                    viewModelScope.launch {
+                        _searchQuery.debounce(500).distinctUntilChanged().collectLatest {
+                            isSearching = true
+                            if (it.isBlank()) {
+                                _searchResults.clear()
+                                isSearching = false
+                                return@collectLatest
+                            }
+                            println("Searching for $it")
+                            _searchQuery.value = it
+                            search(it)
                         }
-                        println("Searching for $it")
-                        _searchQuery.value = it
-                        search(it)
                     }
-            }
         }
 
     var previousSearchQuery by mutableStateOf("")
@@ -71,6 +72,69 @@ class SearchPageViewModel(
 
     init {
         webview.initialize(context)
+        webview.dontCloseOnError()
+        webview.setCallback(this::callback)
+    }
+
+    fun getCode(): String{
+        val currentModule = ModuleLayer.selectedModule;
+        val subtype = currentModule?.subtypes?.getOrNull(0);
+        var code: String;
+
+        if(subtype == null){
+            throw Exception("Subtype not found");
+        }else{
+            val tempCode = currentModule.code?.get(subtype)?.search?.getOrNull(0)?.code;
+
+            if(tempCode == null){
+                throw Exception("code not found");
+            }else{
+                code = tempCode;
+            }
+        }   
+        return code;
+    }
+
+    // This is called by the webview
+    // when it's done calling the logic function
+    fun callback(message: String) {
+
+        if (message.isBlank()) {
+            PrimaryDataLayer.enqueueSnackbar(
+                    SnackbarVisualsWithError("No results found ", false)
+            )
+            isSearching = false
+        }
+
+        _searchResults.clear();
+
+        val action = Mapper.parse<ModuleAction>(message).action;
+
+        try {
+            if(action == "error"){
+                val error = Mapper.parse<ErrorAction>(message);
+                throw Exception(error.result);
+            }
+            
+            val results = Mapper.parse<ModuleResponse<List<SearchResult>>>(message)
+            _searchResults.addAll(results.result)
+            isSearching = false
+        } catch (e: Exception) {
+            PrimaryDataLayer.enqueueSnackbar(
+                    SnackbarVisualsWithError("Error parsing search results: " + e.message, true)
+            )
+            e.printStackTrace()
+            e.localizedMessage
+                    ?.let {
+                        LogEntry(
+                                title = "Error parsing search results",
+                                message = it,
+                                isError = true,
+                        )
+                    }
+                    ?.let { LogLayer.addLogEntry(it) }
+            isSearching = false
+        }
     }
 
     private val _searchResults = mutableStateListOf<SearchResult>()
@@ -86,76 +150,15 @@ class SearchPageViewModel(
         // We want to get the currently selected module and then
         // search for the query within that module.
         isSearching = true
-        val searchModule = ModuleLayer.selectedModule ?: return
-        searchModule.subtypes.forEach { subtype ->
-            val searchFns = searchModule.code?.get(subtype)?.search
 
-            searchFns?.forEach { searchFn ->
-                // We need the search function to
-                // be executed synchronously.
-                viewModelScope.launch {
-                    if (!webview.load(
-                            searchFn.copy(
-                                request = searchFn.request?.url?.let {
-                                    searchFn.request.copy(
-                                        url = it.replace(
-                                            "<query>",
-                                            withContext(Dispatchers.IO) {
-                                                URLEncoder.encode(query, "UTF-8")
-                                            }
-                                        )
-                                    )
-                                }
-                            )
-                        )
-                    ) {
-                        isSearching = false
-                        return@launch
-                    }
+        val code = this.getCode();
 
-                    val res = webview.inject(searchFn)
-                    if (res.isBlank()) {
-                        PrimaryDataLayer.enqueueSnackbar(
-                            SnackbarVisualsWithError(
-                                "No results found for $query",
-                                false
-                            )
-                        )
-                        isSearching = false
-                        return@launch
-                    }
-
-                    _searchResults.clear()
-                    try {
-                        val results =
-                            Mapper.parse<ModuleResponse<List<SearchResult>>>(
-                                res
-                            )
-                        _searchResults.addAll(results.result)
-                        isSearching = false
-                        webview.updateNextUrl(results.nextUrl)
-                    } catch (e: Exception) {
-                        PrimaryDataLayer.enqueueSnackbar(
-                            SnackbarVisualsWithError(
-                                "Error parsing search results for $query", true
-                            )
-                        )
-                        e.printStackTrace()
-                        e.localizedMessage?.let {
-                            LogEntry(
-                                title = "Error parsing search results for $query",
-                                message = it,
-                                isError = true,
-                            )
-                        }?.let {
-                            LogLayer.addLogEntry(
-                                it
-                            )
-                        }
-                        isSearching = false
-                    }
-                }
-            }
+        if(!code.isEmpty()){
+            val webviewPayload = mapOf<String, String>(
+                                    "query" to query,
+                                    "action" to "search"
+                                );
+            webview.load(code, JSONObject(webviewPayload).toString());
         }
     }
 }

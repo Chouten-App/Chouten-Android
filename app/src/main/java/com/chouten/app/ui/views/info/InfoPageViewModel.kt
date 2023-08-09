@@ -14,15 +14,16 @@ import com.chouten.app.data.InfoResult
 import com.chouten.app.data.ModuleResponse
 import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.data.WebviewHandler
+import com.chouten.app.data.ModuleAction
+import com.chouten.app.data.ErrorAction
+import java.net.URLDecoder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
-import java.net.URLDecoder
+import org.json.JSONObject
+import kotlin.collections.getOrNull
 
-class InfoPageViewModel(
-    context: Context,
-    private val url: String,
-    private var title: String
-) : ViewModel() {
+class InfoPageViewModel(context: Context, private val url: String, private var title: String) :
+        ViewModel() {
 
     private val webview = WebviewHandler()
 
@@ -35,7 +36,6 @@ class InfoPageViewModel(
     private var hasLoadedMediaEpisodes by mutableStateOf(false)
     val hasLoadedEpisodes: Boolean
         get() = hasLoadedMediaEpisodes
-
 
     private var altTitles by mutableStateOf(listOf<String>())
     val altTitlesText: List<String>
@@ -69,95 +69,126 @@ class InfoPageViewModel(
     val infoResults: List<InfoResult.MediaListItem>
         get() = infoResult
 
+    fun getCode(): String{
+        val currentModule = ModuleLayer.selectedModule;
+        val subtype = currentModule?.subtypes?.getOrNull(0);
+        var code: String;
+
+        if(subtype == null){
+            throw Exception("Subtype not found");
+        }else{
+            val tempCode = currentModule.code?.get(subtype)?.info?.getOrNull(0)?.code;
+
+            if(tempCode == null){
+                throw Exception("code not found");
+            }else{
+                code = tempCode;
+            }
+        }   
+        return code;
+    }
+
+    fun callback(message: String) {
+        val title = ""
+
+        if (message.isBlank()) {
+            PrimaryDataLayer.enqueueSnackbar(
+                SnackbarVisualsWithError("No results found for $title", false)
+            )
+        }
+
+        val action = Mapper.parse<ModuleAction>(message).action;
+
+        try{
+            if(action == "error"){
+                val error = Mapper.parse<ErrorAction>(message);
+                throw Exception(error.result);
+            }
+
+            when(action){
+                "metadata" -> {
+                    try {
+                        val results = Mapper.parse<ModuleResponse<InfoResult>>(message)
+        
+                        val result = results.result
+                        altTitles = result.altTitles!!
+                        description = result.description
+                        thumbnail = result.poster
+                        banner = result.banner ?: ""
+                        status = result.status ?: ""
+                        mediaCount = result.totalMediaCount ?: 0
+                        mediaType = result.mediaType
+                        hasLoadedInfo = true
+        
+                        val epListURL = result.epListURLs[0];
+                        val webviewPayload = mapOf<String, String>(
+                            "query" to epListURL,
+                            "action" to "eplist"
+                        );
+                        val code = this.getCode();
+                        
+                        viewModelScope.launch {
+                            webview.load(code, JSONObject(webviewPayload).toString());
+                        };
+        
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        PrimaryDataLayer.enqueueSnackbar(
+                                SnackbarVisualsWithError("Error parsing results for $title", false)
+                        )
+                    }
+                }
+                "eplist" -> {
+                    try {
+                        val results = Mapper.parse<ModuleResponse<List<InfoResult.MediaListItem>>>(message)
+                        infoResult = results.result
+                        hasLoadedMediaEpisodes = true
+                    } catch (e: Exception) {
+                        PrimaryDataLayer.enqueueSnackbar(
+                                SnackbarVisualsWithError(
+                                        "Error parsing second results for $title",
+                                        false
+                                )
+                        )
+                        println("Parsing error: $e")
+                        throw Exception("Error parsing results for $title")
+                    }
+                }
+                else -> {
+                    throw Exception("Action not found. The action must be either set to 'eplist' or 'metadata'")
+                }
+            }
+        }catch(e: Exception){
+            PrimaryDataLayer.enqueueSnackbar(
+                    SnackbarVisualsWithError(
+                            e.localizedMessage ?: "Error parsing home page results.",
+                            isError = true
+                    )
+            )
+            e.printStackTrace()
+        }
+    }
+    
     init {
         // Both title and url are url-encoded.
         title = URLDecoder.decode(title, "UTF-8")
         val decodedUrl = URLDecoder.decode(url, "UTF-8")
-
+        
         // We want to get the info code from the webview handler
         // and then load the page with that code.
-        val currentModule = ModuleLayer.selectedModule
         webview.initialize(context)
-        webview.updateNextUrl(decodedUrl)
-        currentModule?.subtypes?.forEach { subtype ->
-            println("InfoPageViewModel: subtype is $subtype")
-            val infoFns = currentModule.code?.get(subtype)?.info
-            if (infoFns != null) {
-                println("The info functions are ${infoFns.size}")
-            }
-            infoFns?.forEachIndexed { index, infoFn ->
-                // We need the info function to
-                // be executed synchronously
-                viewModelScope.launch {
-                    syncLock.lock()
-                    if (!webview.load(infoFn)) {
-                        return@launch
-                    }
+        webview.setCallback(this::callback);
 
-                    val res = webview.inject(infoFn)
-                    if (res.isBlank()) {
-                        PrimaryDataLayer.enqueueSnackbar(
-                            SnackbarVisualsWithError(
-                                "No results found for $title",
-                                false
-                            )
-                        )
-                        return@launch
-                    }
+        val code = this.getCode();
+        val webviewPayload = mapOf<String, String>(
+            "query" to decodedUrl,
+            "action" to "metadata"
+        );
+            
+        viewModelScope.launch {
+            webview.load(code, JSONObject(webviewPayload).toString());
+        };
 
-                    try {
-                        println("The JSON received on $index was $res")
-                        try {
-                            val results =
-                                Mapper.parse<ModuleResponse<InfoResult>>(res)
-                            if (results.nextUrl?.isNotBlank()!!) webview.updateNextUrl(results.nextUrl)
-                            println("Results for info are ${results.result}")
-
-                            val result = results.result
-                            altTitles = result.altTitles!!
-                            description = result.description
-                            thumbnail = result.poster
-                            banner = result.banner ?: ""
-                            status = result.status ?: ""
-                            mediaCount = result.totalMediaCount ?: 0
-                            mediaType = result.mediaType
-                            hasLoadedInfo = true
-                        } catch (e: Exception) {
-                            println("EPISODES: $res")
-                            try {
-                                val results =
-                                    Mapper.parse<ModuleResponse<List<InfoResult.MediaListItem>>>(
-                                        res
-                                    )
-                                infoResult = results.result
-                                hasLoadedMediaEpisodes = true
-                            } catch (e: Exception) {
-                                PrimaryDataLayer.enqueueSnackbar(
-                                    SnackbarVisualsWithError(
-                                        "Error parsing second results for $title",
-                                        false
-                                    )
-                                )
-                                println("Parsing error: $e")
-                                throw Exception("Error parsing results for $title")
-                            }
-                        }
-
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        PrimaryDataLayer.enqueueSnackbar(
-                            SnackbarVisualsWithError(
-                                "Error parsing results for $title",
-                                false
-                            )
-                        )
-                        syncLock.unlock()
-                        return@launch
-                    }
-                    syncLock.unlock()
-                }
-            }
-        }
     }
 
     fun getTitle(): String {

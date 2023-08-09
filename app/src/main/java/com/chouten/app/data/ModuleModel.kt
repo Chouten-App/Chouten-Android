@@ -2,6 +2,7 @@ package com.chouten.app.data
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.json.*
 
 @Serializable
 data class ModuleModel(
@@ -52,44 +53,10 @@ data class ModuleModel(
     ) {
         @Serializable
         data class ModuleCodeblock(
-            val request: ModuleRequest? = ModuleRequest("", "", listOf(), ""),
-            val removeScripts: Boolean,
-            val allowExternalScripts: Boolean,
-            val usesApi: Boolean? = false,
             val imports: List<String>? = listOf(),
             // not set within the JSON
-            var code: String? = null,
-        ) {
-            @Serializable
-            data class ModuleRequest(
-                var url: String, // Left blank if we wish to reuse the last url
-                var method: String, // "POST", "GET", "PUT" and "DELETE"
-                val headers: List<ModuleKVPair>,
-                val body: String? // The body of the Request
-            ) {
-                override fun toString(): String {
-                    return "{\"url\": \"$url\", \"method\": \"$method\", \"headers\": $headers, \"body\": \"$body\"}"
-                }
-            }
-
-            @Serializable
-            data class ModuleKVPair(
-                val key: String,
-                val value: String
-            ) {
-                override fun toString(): String {
-                    return "{\"key\": \"$key\", \"value\": \"$value\"}"
-                }
-            }
-
-            override fun toString(): String {
-                return "{\"request\": ${request.toString()}, \"removeScripts\": $removeScripts, \"allowExternalScripts\": $allowExternalScripts, \"usesApi\": $usesApi, \"imports\": ${
-                    imports?.map {
-                        "\"$it\""
-                    }
-                }, \"code\": \"$code\"}"
-            }
-        }
+            var code: String,
+        )
 
         override fun toString(): String {
             return "{\"home\": $home, \"search\": $search, \"info\": $info, \"mediaConsume\": $mediaConsume}"
@@ -125,7 +92,18 @@ data class ModuleModel(
 
 @Serializable
 data class ModuleResponse<T>(
-    val result: T, val nextUrl: String? = ""
+    val result: T, val action: String? = ""
+)
+
+@Serializable
+data class ErrorAction(
+    val action: String = "error",
+    val result: String
+)
+
+@Serializable
+data class ModuleAction(
+    val action: String? = ""
 )
 
 @Serializable
@@ -164,6 +142,7 @@ data class SearchResult(
 data class InfoResult(
     val id: String?,
     val titles: Titles,
+    val epListURLs: List<String>,
     val altTitles: List<String>?,
     val description: String,
     val poster: String,
@@ -194,8 +173,25 @@ data class InfoResult(
         val description: String?,
         val image: String?,
     ) {
-        override fun toString() =
-            "{\"url\": \"$url\", \"number\": $number, \"title\": \"$title\", \"description\": \"$description\", \"image\": \"$image\"}"
+        override fun toString(): String{
+            val map = mutableMapOf<String, Any?>()
+            map["url"] = url;
+            map["number"] = number;
+
+            if(title != null){
+                map["title"] = title;
+            }
+
+            if(description != null){
+                map["description"] = description;
+            }
+
+            if(image != null){
+                map["image"] = image;
+            }
+
+            return JSONObject(map).toString();
+        }
     }
 
     @Serializable

@@ -105,6 +105,7 @@ import com.chouten.app.data.ModuleResponse
 import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.data.WatchResult
 import com.chouten.app.data.WebviewHandler
+import com.chouten.app.data.ModuleAction
 import com.chouten.app.formatMinSec
 import com.chouten.app.ui.components.CustomSlider
 import com.chouten.app.ui.components.MaterialSliderDefaults
@@ -112,6 +113,7 @@ import com.chouten.app.ui.components.SliderBrushColor
 import com.chouten.app.ui.theme.ChoutenTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import org.json.JSONObject
 
 class PlayerActivity : ComponentActivity() {
 
@@ -217,10 +219,86 @@ class PlayerActivity : ComponentActivity() {
 
         // hide navigation bar
         window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        or View.SYSTEM_UI_FLAG_FULLSCREEN
-                )
+			View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+				or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+				or View.SYSTEM_UI_FLAG_FULLSCREEN
+			)
+    }
+
+    fun getCode(): String {
+        val currentModule = ModuleLayer.selectedModule
+        val subtype = currentModule?.subtypes?.getOrNull(0)
+        var code: String
+
+        if (subtype == null) {
+            throw Exception("Subtype not found")
+        } else {
+            val tempCode = currentModule.code?.get(subtype)?.mediaConsume?.getOrNull(0)?.code
+
+            if (tempCode == null) {
+                throw Exception("code not found")
+            } else {
+                code = tempCode
+            }
+        }
+        return code
+    }
+
+	private fun callback(message: String) {
+        val res = message
+
+		if (res.isBlank()) {
+            PrimaryDataLayer.enqueueSnackbar(
+                    SnackbarVisualsWithError("No results found for $title", false)
+            )
+            // return@launch
+        }
+
+        val action = Mapper.parse<ModuleAction>(message).action
+
+        when (action) {
+            "server" -> {
+                try {
+                    val results = Mapper.parse<ModuleResponse<List<WatchResult.ServerData>>>(res)
+                    _servers = results.result
+
+                    val webviewPayload =
+                            mapOf<String, String>(
+                                    "query" to results.result[0].list[0].url,
+                                    "action" to "video"
+                            )
+
+                    val code = this.getCode()
+                    this.lifecycleScope.launch {
+                        _webview.load(code, JSONObject(webviewPayload).toString())
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    PrimaryDataLayer.enqueueSnackbar(
+                            SnackbarVisualsWithError("Error parsing results for $title", false)
+                    )
+                }
+                // syncLock.unlock()
+            }
+            "video" -> {
+                try {
+                    val results = Mapper.parse<ModuleResponse<WatchResult>>(res)
+                    println("Results for watch are ${results.result}")
+
+                    _sources = results.result.sources
+                    _subtitles = results.result.subtitles
+                    _skips = results.result.skips
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    PrimaryDataLayer.enqueueSnackbar(
+                            SnackbarVisualsWithError("Error parsing results for $title", false)
+                    )
+                    // return@launch
+                }
+
+                // syncLock.unlock()
+            }
+        }
     }
 
     private fun initialize() {
@@ -228,84 +306,31 @@ class PlayerActivity : ComponentActivity() {
         currentModule = ModuleLayer.selectedModule ?: throw Exception("No module selected")
 
         // Both title and url are url-encoded.
-        val title = this.intent.getStringExtra("title").also {
-            _mediaTitle = it
-        }
-        this.intent.getStringExtra("episode").also {
-            _episodeTitle = it
-        }
-        this.intent.getFloatExtra("episodeNumber", -1f).also {
-            _episodeNumber = it
-        }
+        val title = this.intent.getStringExtra("title").also { _mediaTitle = it }
+        this.intent.getStringExtra("episode").also { _episodeTitle = it }
+        this.intent.getFloatExtra("episodeNumber", -1f).also { _episodeNumber = it }
         this.intent.getStringExtra("episodes").also {
             episodesLists = Mapper.parse(it ?: throw Exception("No episodes found"))
         }
 
-        this.intent.getIntExtra("currentEpisodeIndex", -1).also {
-            _currentEpisodeIndex = it
-        }
+        this.intent.getIntExtra("currentEpisodeIndex", -1).also { _currentEpisodeIndex = it }
         val url = this.intent.getStringExtra("url")
 
         // We want to get the info code from the webview handler
         // and then load the page with that code.
         _webview.initialize(this)
-        _webview.updateNextUrl(url)
-        currentModule?.subtypes?.forEach { subtype ->
-            currentModule!!.code?.get(subtype)?.mediaConsume?.forEach { watchFn ->
-                // We need the info function to
-                // be executed synchronously
-                this.lifecycleScope.launch {
-                    syncLock.lock()
-                    if (!_webview.load(watchFn)) {
-                        return@launch
-                    }
+        _webview.setCallback(this::callback)
 
-                    val res = _webview.inject(watchFn)
-                    if (res.isBlank()) {
-                        PrimaryDataLayer.enqueueSnackbar(
-                            SnackbarVisualsWithError(
-                                "No results found for $title", false
-                            )
-                        )
-                        return@launch
-                    }
+        if (url != null) {
+            val webviewPayload = mapOf<String, String>("query" to url, "action" to "server")
+            val code = this.getCode()
 
-                    try {
-                        val results =
-                            Mapper.parse<ModuleResponse<List<WatchResult.ServerData>>>(
-                                res
-                            )
-                        _webview.updateNextUrl(results.nextUrl)
-                        println("Results for servers are ${results.result}")
-
-                        _servers = results.result
-                    } catch (e: Exception) {
-                        try {
-                            val results =
-                                Mapper.parse<ModuleResponse<WatchResult>>(
-                                    res
-                                )
-                            _webview.updateNextUrl(results.nextUrl)
-                            println("Results for watch are ${results.result}")
-
-                            _sources = results.result.sources
-                            _subtitles = results.result.subtitles
-                            _skips = results.result.skips
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            PrimaryDataLayer.enqueueSnackbar(
-                                SnackbarVisualsWithError(
-                                    "Error parsing results for $title",
-                                    false
-                                )
-                            )
-                            syncLock.unlock()
-                            return@launch
-                        }
-                    }
-                    syncLock.unlock()
-                }
+            this.lifecycleScope.launch {
+                _webview.load(code, JSONObject(webviewPayload).toString())
             }
+        } else {
+            // todo
+            // throw error
         }
     }
 
@@ -321,26 +346,26 @@ class PlayerActivity : ComponentActivity() {
 
         if (watchResult.sources.isNotEmpty() && _player != null) {
             _player?.apply {
-                val subtitle = watchResult.subtitles.find {
-                    it.language == "English"
+                var subtitle = watchResult.subtitles.find { it.language == "English" }
+
+                if (subtitle == null) {
+                    subtitle = watchResult.subtitles?.getOrNull(0)
                 }
-                if (subtitle == null) watchResult.subtitles[0]
 
-                setMediaItem(
-                    MediaItem.Builder()
-                        .setUri(watchResult.sources[0].file)
-                        .setSubtitleConfigurations(
-                            listOf(
-                                SubtitleConfiguration.Builder(Uri.parse(subtitle?.url))
-                                    .setMimeType(MimeTypes.TEXT_VTT)
-                                    .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
-                                    .build()
-                            )
-                        )
-                        .build()
+                val mediaBuilder = MediaItem.Builder().setUri(watchResult.sources[0].file)
 
-                )
+                if (subtitle != null) {
+                    mediaBuilder.setSubtitleConfigurations(
+						listOf(
+							SubtitleConfiguration.Builder(Uri.parse(subtitle.url))
+								.setMimeType(MimeTypes.TEXT_VTT)
+								.setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+								.build()
+						)
+                    )
+                }
 
+                setMediaItem(mediaBuilder.build())
                 prepare()
             }
         }
