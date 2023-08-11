@@ -51,68 +51,8 @@ class WatchPageViewModel(
     val skips: List<WatchResult.SkipTimes>
         get() = _skips
 
-    fun callback(message: String) {
-
-        val res = message
-
-        if (res.isBlank()) {
-            PrimaryDataLayer.enqueueSnackbar(
-                    SnackbarVisualsWithError("No results found for $title", false)
-            )
-            // return@launch
-        }
-
-        try {
-            val results = Mapper.parse<ModuleResponse<List<WatchResult.Server>>>(res)
-            // webview.updateNextUrl(results.nextUrl)
-            println("Results for servers are ${results.result}")
-
-            _servers = results.result
-        } catch (e: Exception) {
-            try {
-                val results = Mapper.parse<ModuleResponse<WatchResult>>(res)
-                // webview.updateNextUrl(results.nextUrl)
-                println("Results for watch are ${results.result}")
-
-                _sources = results.result.sources
-                _subtitles = results.result.subtitles
-                _skips = results.result.skips
-            } catch (e: Exception) {
-                e.printStackTrace()
-                PrimaryDataLayer.enqueueSnackbar(
-                        SnackbarVisualsWithError("Error parsing results for $title", false)
-                )
-                syncLock.unlock()
-                // return@launch
-            }
-        }
-        syncLock.unlock()
-    }
 
     init {
-        // Both title and url are url-encoded.
-        title = URLDecoder.decode(title, "UTF-8")
-        name = URLDecoder.decode(name, "UTF-8")
-        val decodedUrl = URLDecoder.decode(_url, "UTF-8")
-        url = _url
-
-        // We want to get the info code from the webview handler
-        // and then load the page with that code.
-        val currentModule = ModuleLayer.selectedModule
-        // webview.initialize(context)
-        // webview.setCallback(this::callback)
-
-        currentModule?.subtypes?.forEach { subtype ->
-            currentModule.code?.get(subtype)?.mediaConsume?.forEach { watchFn ->
-                // We need the info function to
-                // be executed synchronously
-                viewModelScope.launch {
-                    syncLock.lock()
-                    if (!webview.load(watchFn.code, decodedUrl)) {
-                        return@launch
-                    }
-                }
-            }
-        }
+      
     }
 }

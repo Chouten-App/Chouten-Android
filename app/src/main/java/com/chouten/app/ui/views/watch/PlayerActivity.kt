@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.TypedValue
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -353,7 +354,6 @@ class PlayerActivity : ComponentActivity() {
                 }
 
                 val mediaBuilder = MediaItem.Builder().setUri(watchResult.sources[0].file)
-
                 if (subtitle != null) {
                     mediaBuilder.setSubtitleConfigurations(
 						listOf(

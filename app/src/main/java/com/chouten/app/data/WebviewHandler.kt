@@ -15,6 +15,7 @@ import com.chouten.app.LogLayer
 import com.chouten.app.Mapper
 import com.chouten.app.ModuleLayer
 import com.chouten.app.client
+import com.chouten.app.preferenceHandler
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import kotlinx.coroutines.Dispatchers
@@ -255,8 +256,10 @@ class WebviewHandler {
             return;
         }
         
-        // webview.destroy()
-        // initialize(context)
+        if(!preferenceHandler.isDevMode){
+            webview.destroy()
+            initialize(context)
+        }
     }
 
     fun destroy() {
@@ -264,8 +267,10 @@ class WebviewHandler {
             return;
         }
 
-        // webview.clearCache(true)
-        // webview.destroy()
+        if(!preferenceHandler.isDevMode){
+            webview.clearCache(true)
+            webview.destroy()
+        }
     }
 
     /** Load the webview with data from the given url */

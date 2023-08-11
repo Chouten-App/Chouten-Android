@@ -45,6 +45,12 @@ object Preferences {
             preference = Pair("incognito", Boolean)
         )
 
+        val devMode = ChoutenSetting(
+            R.string.dev_mode_toggle__title,
+            R.string.dev_mode_toggle__desc,
+            preference = Pair("devMode", Boolean)
+        )
+
         val dynamicColor = ChoutenSetting(
             R.string.dynamic_colour_toggle__title,
             R.string.dynamic_colour_toggle__desc,

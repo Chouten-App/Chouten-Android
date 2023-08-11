@@ -108,6 +108,16 @@ fun MorePage(
                     )
                 },
             )
+            SettingsToggle(
+                preference = Preferences.Settings.devMode,
+                defaultValue = preferenceHandler.getBoolean(
+                    Preferences.Settings.devMode.preference.first,
+                    false
+                ),
+                onCheckedChange = { toggle ->
+                    preferenceHandler.isDevMode = toggle
+                }
+            )
         }
     }
 }
