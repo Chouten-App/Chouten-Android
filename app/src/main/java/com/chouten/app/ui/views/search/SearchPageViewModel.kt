@@ -77,22 +77,9 @@ class SearchPageViewModel(
     }
 
     fun getCode(): String{
-        val currentModule = ModuleLayer.selectedModule;
-        val subtype = currentModule?.subtypes?.getOrNull(0);
-        var code: String;
-
-        if(subtype == null){
-            throw Exception("Subtype not found");
-        }else{
-            val tempCode = currentModule.code?.get(subtype)?.search?.getOrNull(0)?.code;
-
-            if(tempCode == null){
-                throw Exception("code not found");
-            }else{
-                code = tempCode;
-            }
-        }   
-        return code;
+        val currentModule = ModuleLayer.selectedModule ?: throw Exception("No module selected")
+        val subtype = currentModule.subtypes.getOrNull(0) ?: throw Exception("Subtype not found");
+        return currentModule.code?.get(subtype)?.search?.getOrNull(0)?.code ?: throw Exception("Code not found")
     }
 
     // This is called by the webview
@@ -151,9 +138,10 @@ class SearchPageViewModel(
         // search for the query within that module.
         isSearching = true
 
-        val code = this.getCode();
+        val code = getCode();
 
         if(!code.isEmpty()){
+            // TODO: add a model
             val webviewPayload = mapOf<String, String>(
                                     "query" to query,
                                     "action" to "search"

@@ -29,7 +29,7 @@ import org.json.JSONStringer
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.MediaType
-import okhttp3.RequestBody.Companion.toRequestBody;
+import okhttp3.RequestBody.Companion.toRequestBody
 
 
 @Serializable
@@ -45,7 +45,7 @@ data class RequestOption(
 )
 
 class WebviewHandler {
-    private var commonCode = """
+    private val commonCode = """
         let reqId = 0;
         let resolveFunctions = {};
 
@@ -132,12 +132,12 @@ class WebviewHandler {
 
         """;
         
-    private lateinit var callback: (String) -> Unit;
+    private lateinit var callback: (String) -> Unit
     
     /**
      * We don't want the webview to close on error when it's the search page
      */
-    private var closeOnError = true;
+    private var closeOnError = true
 
     private lateinit var webview: WebView
 
@@ -163,8 +163,11 @@ class WebviewHandler {
     @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
     fun initialize(context: Context) {
         if (this::webview.isInitialized) return
+        
+        if(preferenceHandler.isDevMode){
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
 
-        WebView.setWebContentsDebuggingEnabled(true)
         webview = WebView(context)
         webview.settings.javaScriptEnabled = true
         webview.settings.domStorageEnabled = true
@@ -172,75 +175,75 @@ class WebviewHandler {
     }
 
     fun setCallback(callback: (String) -> (Unit)){
-        this.callback = callback;
+        this.callback = callback
     }
 
     fun dontCloseOnError(){
-        this.closeOnError = false;
+        closeOnError = false
     }
     
     @JavascriptInterface
     fun sendHTTPRequest(data: String) {
-        val self = this
-
         runBlocking {
             try{ 
-                self.postMessage(data) 
+                postMessage(data) 
             }catch(error: Exception){
-                val message = error.message;
+                val message = error.message
 
                 if(message != null){
+                    // TODO: use ErrorAction
                     val errorJSON = mapOf<String, String>(
                         "result" to (message),
                         "action" to "error"
-                    );
-                    self.callback(JSONObject(errorJSON).toString());
+                    )
+                    
+                    // TODO: don't use JSONObject
+                    callback(JSONObject(errorJSON).toString())
                 }else{
-                    self.callback("{'action': 'error', 'message': 'Error'}");
+                    callback("{'action': 'error', 'message': 'Error'}")
                 }
             }
         }
     }
 
     suspend fun postMessage(message: String) {
-        val req = Mapper.parse<RequestOption>(message);
-        var self = this;
+        val req = Mapper.parse<RequestOption>(message)
 
         if(req.action == "HTTPRequest" && req.url != null && req.headers != null){
             
-            var responseText = "";
+            val responseText: String;
 
             if(req.method == "POST"){
-                responseText = client.post(url=req.url, headers=req.headers, requestBody=req.body?.toRequestBody()).body.string();
+                responseText = client.post(url=req.url, headers=req.headers, requestBody=req.body?.toRequestBody()).body.string()
             }else{
-                responseText = client.get(req.url, req.headers).body.string();
+                responseText = client.get(req.url, req.headers).body.string()
             }
 
-            val myWebView = this.webview;
             val response: Map<String, String> = mapOf(
                 "reqId" to req.reqId,
                 "responseText" to responseText
-            );
+            )
             
             withContext(Dispatchers.Main) {
-                myWebView.postWebMessage(WebMessage(JSONObject(response).toString()), Uri.parse("*"))
+                // TODO: don't use JSONObject
+                webview.postWebMessage(WebMessage(JSONObject(response).toString()), Uri.parse("*"))
             }
 
         }else if(req.action == "result" && req.result != null){
-            this.callback(req.result)
+            callback(req.result)
         }else if(req.action == "error"){
             withContext(Dispatchers.Main) {
-                self.destroy();
+                destroy()
             }
 
-            throw Exception(req.result);
+            throw Exception(req.result)
         }else{
-            throw Exception("Action not found.");
+            throw Exception("Action not found.")
         }
 
         if(req.shouldExit == true){
             withContext(Dispatchers.Main) {
-                self.destroy();
+                destroy()
             }
         }
     }
@@ -252,8 +255,8 @@ class WebviewHandler {
 
     /** destroy the webview. And reinstantiate it. */
     fun reset(context: Context) {
-        if(this.closeOnError == false){
-            return;
+        if(closeOnError == false){
+            return
         }
         
         if(!preferenceHandler.isDevMode){
@@ -263,8 +266,8 @@ class WebviewHandler {
     }
 
     fun destroy() {
-        if(this.closeOnError == false){
-            return;
+        if(closeOnError == false){
+            return
         }
 
         if(!preferenceHandler.isDevMode){
@@ -285,13 +288,14 @@ class WebviewHandler {
                     "reqId" to "-1",
                     "action" to "logic",
                     "payload" to payload
-                );
-    
+                )
+                
+                // TODO: refactor
                 webview.postWebMessage(WebMessage(JSONObject(response).toString()), Uri.parse("*"))
             }
         }
 
-        webview.loadDataWithBaseURL(null, "<script>" + this.commonCode + code + "</script>", "text/html; charset=utf-8", "br", null)
+        webview.loadDataWithBaseURL(null, "<script>" + commonCode + code + "</script>", "text/html; charset=utf-8", "br", null)
         return true
     }
 }

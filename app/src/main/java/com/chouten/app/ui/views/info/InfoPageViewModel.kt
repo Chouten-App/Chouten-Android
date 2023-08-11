@@ -70,22 +70,9 @@ class InfoPageViewModel(context: Context, private val url: String, private var t
         get() = infoResult
 
     fun getCode(): String{
-        val currentModule = ModuleLayer.selectedModule;
-        val subtype = currentModule?.subtypes?.getOrNull(0);
-        var code: String;
-
-        if(subtype == null){
-            throw Exception("Subtype not found");
-        }else{
-            val tempCode = currentModule.code?.get(subtype)?.info?.getOrNull(0)?.code;
-
-            if(tempCode == null){
-                throw Exception("code not found");
-            }else{
-                code = tempCode;
-            }
-        }   
-        return code;
+        val currentModule = ModuleLayer.selectedModule ?: throw Exception("No module selected")
+        val subtype = currentModule.subtypes.getOrNull(0) ?: throw Exception("Subtype not found");
+        return currentModule.code?.get(subtype)?.info?.getOrNull(0)?.code ?: throw Exception("Code not found")
     }
 
     fun callback(message: String) {
@@ -125,7 +112,7 @@ class InfoPageViewModel(context: Context, private val url: String, private var t
                             "query" to epListURL,
                             "action" to "eplist"
                         );
-                        val code = this.getCode();
+                        val code = getCode();
                         
                         viewModelScope.launch {
                             webview.load(code, JSONObject(webviewPayload).toString());

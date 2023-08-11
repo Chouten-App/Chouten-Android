@@ -174,23 +174,24 @@ data class InfoResult(
         val image: String?,
     ) {
         override fun toString(): String{
+            // TODO: refactor
             val map = mutableMapOf<String, Any?>()
-            map["url"] = url;
-            map["number"] = number;
+            map["url"] = url
+            map["number"] = number
 
             if(title != null){
-                map["title"] = title;
+                map["title"] = title
             }
 
             if(description != null){
-                map["description"] = description;
+                map["description"] = description
             }
 
             if(image != null){
-                map["image"] = image;
+                map["image"] = image
             }
 
-            return JSONObject(map).toString();
+            return JSONObject(map).toString()
         }
     }
 

@@ -220,39 +220,25 @@ class PlayerActivity : ComponentActivity() {
 
         // hide navigation bar
         window.decorView.systemUiVisibility = (
-			View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-				or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-				or View.SYSTEM_UI_FLAG_FULLSCREEN
-			)
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_FULLSCREEN
+            )
     }
 
-    fun getCode(): String {
-        val currentModule = ModuleLayer.selectedModule
-        val subtype = currentModule?.subtypes?.getOrNull(0)
-        var code: String
-
-        if (subtype == null) {
-            throw Exception("Subtype not found")
-        } else {
-            val tempCode = currentModule.code?.get(subtype)?.mediaConsume?.getOrNull(0)?.code
-
-            if (tempCode == null) {
-                throw Exception("code not found")
-            } else {
-                code = tempCode
-            }
-        }
-        return code
+    fun getCode(): String{
+        val currentModule = ModuleLayer.selectedModule ?: throw Exception("No module selected")
+        val subtype = currentModule.subtypes.getOrNull(0) ?: throw Exception("Subtype not found");
+        return currentModule.code?.get(subtype)?.mediaConsume?.getOrNull(0)?.code ?: throw Exception("Code not found")
     }
 
-	private fun callback(message: String) {
+    private fun callback(message: String) {
         val res = message
 
-		if (res.isBlank()) {
+        if (res.isBlank()) {
             PrimaryDataLayer.enqueueSnackbar(
                     SnackbarVisualsWithError("No results found for $title", false)
             )
-            // return@launch
         }
 
         val action = Mapper.parse<ModuleAction>(message).action
@@ -269,7 +255,7 @@ class PlayerActivity : ComponentActivity() {
                                     "action" to "video"
                             )
 
-                    val code = this.getCode()
+                    val code = getCode()
                     this.lifecycleScope.launch {
                         _webview.load(code, JSONObject(webviewPayload).toString())
                     }
@@ -294,10 +280,7 @@ class PlayerActivity : ComponentActivity() {
                     PrimaryDataLayer.enqueueSnackbar(
                             SnackbarVisualsWithError("Error parsing results for $title", false)
                     )
-                    // return@launch
                 }
-
-                // syncLock.unlock()
             }
         }
     }
@@ -324,7 +307,7 @@ class PlayerActivity : ComponentActivity() {
 
         if (url != null) {
             val webviewPayload = mapOf<String, String>("query" to url, "action" to "server")
-            val code = this.getCode()
+            val code = getCode()
 
             this.lifecycleScope.launch {
                 _webview.load(code, JSONObject(webviewPayload).toString())
@@ -356,12 +339,12 @@ class PlayerActivity : ComponentActivity() {
                 val mediaBuilder = MediaItem.Builder().setUri(watchResult.sources[0].file)
                 if (subtitle != null) {
                     mediaBuilder.setSubtitleConfigurations(
-						listOf(
-							SubtitleConfiguration.Builder(Uri.parse(subtitle.url))
-								.setMimeType(MimeTypes.TEXT_VTT)
-								.setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
-								.build()
-						)
+                        listOf(
+                            SubtitleConfiguration.Builder(Uri.parse(subtitle.url))
+                                .setMimeType(MimeTypes.TEXT_VTT)
+                                .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+                                .build()
+                        )
                     )
                 }
 
