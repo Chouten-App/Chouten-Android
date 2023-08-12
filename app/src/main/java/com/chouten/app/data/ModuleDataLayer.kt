@@ -185,45 +185,14 @@ class ModuleDataLayer {
 
         files.forEach {
             val code = it.readText()
-            val requestData = getRequestData(code)
             codeblocks.add(
                 element = ModuleModel.ModuleCode.ModuleCodeblock(
-                    code = "function logic() ${code.substringAfter("function logic()")}; logic();",
-                    removeScripts = requestData.removeScripts,
-                    allowExternalScripts = requestData.allowExternalScripts,
-                    usesApi = requestData.usesApi,
-                    request = requestData.request,
-                    imports = requestData.imports
+                    code = code
                 )
             )
         }
         return codeblocks
     }
-
-    private suspend fun getRequestData(code: String): ModuleModel.ModuleCode.ModuleCodeblock {
-        val request = webviewHandler.inject(
-            ModuleModel.ModuleCode.ModuleCodeblock(
-                code = code.substringBefore("function logic()") + "requestData();",
-                removeScripts = false,
-                allowExternalScripts = false,
-                usesApi = false
-            ),
-            true
-        )
-
-        // the request data is returned as a stringified json object that looks like this:
-        // "{\"request\":{\"url\": ...}}"
-        // replace the escaped quotes with normal quotes and parse the json
-        return Mapper.parse(request.replace("\\\\\"|\"\\{|\\}\"".toRegex()) {
-            when (it.value) {
-                "\\\"" -> "\""
-                "\"{" -> "{"
-                "}\"" -> "}"
-                else -> it.value
-            }
-        })
-    }
-
 
     suspend fun enqueueRemoteInstall(context: Context, intent: Intent) {
         val url = intent.getStringExtra(Intent.EXTRA_TEXT)

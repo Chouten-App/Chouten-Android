@@ -81,10 +81,10 @@ fun HomePage(
 ) {
     val scrollState = rememberScrollState()
 
-    if ((provider.homeResults.isEmpty() && !provider.isLoading) || (provider.loadedModule?.name != ModuleLayer.selectedModule?.name)) {
+    if ((provider.homeResults.isEmpty() && !provider.isLoading && provider.errors < 5) || (provider.loadedModule?.name != ModuleLayer.selectedModule?.name)) {
         println("loading home page")
         provider.viewModelScope.launch {
-            provider.initialize()
+            provider.initialize(provider.loadedModule?.name != ModuleLayer.selectedModule?.name)
         }
     }
     println(provider.isLoading)

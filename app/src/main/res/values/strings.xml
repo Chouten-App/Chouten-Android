@@ -42,6 +42,9 @@
     <string name="incognito_toggle__title">Toggle Incognito</string>
     <string name="incognito_toggle__desc">For the naughty naughty</string>
 
+    <string name="dev_mode_toggle__title">Toggle dev mode</string>
+    <string name="dev_mode_toggle__desc">Do not toggle, unless you know what you are doing</string>
+
     <string name="export_theme__title">Export Theme</string>
     <string name="export_theme__desc">Export Theme as File</string>
     <string name="export_theme__success">Theme Exported Successfully</string>

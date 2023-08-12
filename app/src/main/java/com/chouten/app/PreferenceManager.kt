@@ -32,8 +32,14 @@ class PreferenceManager(context: Context) :
         Preferences.Settings.downloadedOnly.preference.first,
         false
     )
+    
     var isIncognito: Boolean by booleanPreference(
         Preferences.Settings.incognito.preference.first,
+        false
+    )
+
+    var isDevMode: Boolean by booleanPreference(
+        Preferences.Settings.devMode.preference.first,
         false
     )
 
