@@ -19,6 +19,7 @@ import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.data.WebviewHandler
 import com.chouten.app.data.ModuleAction
 import com.chouten.app.data.ErrorAction
+import com.chouten.app.data.WebviewPayload
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 
 class SearchPageViewModel(
         context: Context,
@@ -141,12 +141,12 @@ class SearchPageViewModel(
         val code = getCode();
 
         if(!code.isEmpty()){
-            // TODO: add a model
-            val webviewPayload = mapOf<String, String>(
-                                    "query" to query,
-                                    "action" to "search"
+            val webviewPayload = WebviewPayload(
+                                    query = query,
+                                    action = "search"
                                 );
-            webview.load(code, JSONObject(webviewPayload).toString());
+
+            webview.load(code, Mapper.json.encodeToString(WebviewPayload.serializer(), webviewPayload));
         }
     }
 }

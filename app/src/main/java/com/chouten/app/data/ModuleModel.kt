@@ -1,5 +1,6 @@
 package com.chouten.app.data
 
+import com.chouten.app.Mapper
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.json.*
@@ -95,10 +96,18 @@ data class ModuleResponse<T>(
     val result: T, val action: String? = ""
 )
 
+// TODO: make the action field static (should be action = "error")
+// it doesn't stringify correctly when that's the case
 @Serializable
 data class ErrorAction(
-    val action: String = "error",
+    val action: String,
     val result: String
+)
+
+@Serializable
+data class HTTPAction(
+    val reqId: String,
+    val responseText: String
 )
 
 @Serializable
@@ -139,6 +148,24 @@ data class SearchResult(
 )
 
 @Serializable
+data class WebviewPayload(
+    val query: String,
+    val action: String
+)
+
+@Serializable
+data class BasePayload(
+    val reqId: String?,
+    val action: String,
+    val payload: String
+)
+
+@Serializable
+data class HomepagePayload(
+    val action: String,
+)
+
+@Serializable
 data class InfoResult(
     val id: String?,
     val titles: Titles,
@@ -175,23 +202,15 @@ data class InfoResult(
     ) {
         override fun toString(): String{
             // TODO: refactor
-            val map = mutableMapOf<String, Any?>()
-            map["url"] = url
-            map["number"] = number
+            val map = MediaItem(
+                url = url,
+                number = number,
+                title = title,
+                description = description,
+                image = image
+            )
 
-            if(title != null){
-                map["title"] = title
-            }
-
-            if(description != null){
-                map["description"] = description
-            }
-
-            if(image != null){
-                map["image"] = image
-            }
-
-            return JSONObject(map).toString()
+            return Mapper.json.encodeToString(MediaItem.serializer(), map);
         }
     }
 

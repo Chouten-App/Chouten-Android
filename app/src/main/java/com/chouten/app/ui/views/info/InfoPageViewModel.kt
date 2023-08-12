@@ -16,10 +16,11 @@ import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.data.WebviewHandler
 import com.chouten.app.data.ModuleAction
 import com.chouten.app.data.ErrorAction
+import com.chouten.app.data.WebviewPayload
+import com.chouten.app.data.BasePayload
 import java.net.URLDecoder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
-import org.json.JSONObject
 import kotlin.collections.getOrNull
 
 class InfoPageViewModel(context: Context, private val url: String, private var title: String) :
@@ -108,14 +109,18 @@ class InfoPageViewModel(context: Context, private val url: String, private var t
                         hasLoadedInfo = true
         
                         val epListURL = result.epListURLs[0];
-                        val webviewPayload = mapOf<String, String>(
-                            "query" to epListURL,
-                            "action" to "eplist"
+                        val webviewPayload = WebviewPayload(
+                            query = epListURL,
+                            action = "eplist"
                         );
+
                         val code = getCode();
                         
                         viewModelScope.launch {
-                            webview.load(code, JSONObject(webviewPayload).toString());
+                            webview.load(
+                                code, 
+                                Mapper.json.encodeToString(WebviewPayload.serializer(), webviewPayload)
+                            );
                         };
         
                     } catch (e: Exception) {
@@ -167,13 +172,13 @@ class InfoPageViewModel(context: Context, private val url: String, private var t
         webview.setCallback(this::callback);
 
         val code = this.getCode();
-        val webviewPayload = mapOf<String, String>(
-            "query" to decodedUrl,
-            "action" to "metadata"
+        val webviewPayload = WebviewPayload(
+            query = decodedUrl,
+            action = "metadata"
         );
             
         viewModelScope.launch {
-            webview.load(code, JSONObject(webviewPayload).toString());
+            webview.load(code, Mapper.json.encodeToString(WebviewPayload.serializer(), webviewPayload));
         };
 
     }

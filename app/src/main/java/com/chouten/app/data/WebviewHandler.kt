@@ -24,7 +24,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.*
 import kotlinx.serialization.Serializable
-import org.json.JSONObject
 import org.json.JSONStringer
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -191,14 +190,12 @@ class WebviewHandler {
                 val message = error.message
 
                 if(message != null){
-                    // TODO: use ErrorAction
-                    val errorJSON = mapOf<String, String>(
-                        "result" to (message),
-                        "action" to "error"
+                    val errorJSON = ErrorAction(
+                        action = "error",
+                        result = message
                     )
                     
-                    // TODO: don't use JSONObject
-                    callback(JSONObject(errorJSON).toString())
+                    callback(Mapper.json.encodeToString(ErrorAction.serializer(), errorJSON))
                 }else{
                     callback("{'action': 'error', 'message': 'Error'}")
                 }
@@ -219,14 +216,18 @@ class WebviewHandler {
                 responseText = client.get(req.url, req.headers).body.string()
             }
 
-            val response: Map<String, String> = mapOf(
-                "reqId" to req.reqId,
-                "responseText" to responseText
-            )
+            val response = HTTPAction(
+                reqId = req.reqId,
+                responseText = responseText
+            );
             
             withContext(Dispatchers.Main) {
-                // TODO: don't use JSONObject
-                webview.postWebMessage(WebMessage(JSONObject(response).toString()), Uri.parse("*"))
+                webview.postWebMessage(
+                    WebMessage(
+                        Mapper.json.encodeToString(HTTPAction.serializer(), response)
+                    ), 
+                    Uri.parse("*")
+                )
             }
 
         }else if(req.action == "result" && req.result != null){
@@ -284,14 +285,18 @@ class WebviewHandler {
              *  has been injected
              */
             override fun onPageFinished(view: WebView?, url: String?) {
-                val response: Map<String, String> = mapOf(
-                    "reqId" to "-1",
-                    "action" to "logic",
-                    "payload" to payload
+                val response = BasePayload(
+                    reqId = "-1",
+                    action = "logic",
+                    payload = payload
                 )
                 
-                // TODO: refactor
-                webview.postWebMessage(WebMessage(JSONObject(response).toString()), Uri.parse("*"))
+                webview.postWebMessage(
+                    WebMessage(
+                        Mapper.json.encodeToString(BasePayload.serializer(), response)
+                    ), 
+                    Uri.parse("*")
+                )
             }
         }
 

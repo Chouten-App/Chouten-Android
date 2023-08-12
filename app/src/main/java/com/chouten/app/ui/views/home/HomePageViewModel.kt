@@ -21,7 +21,7 @@ import com.chouten.app.data.WebviewHandler
 import com.chouten.app.data.ErrorAction
 import com.chouten.app.data.ModuleAction
 import kotlinx.coroutines.launch
-import org.json.JSONObject
+import com.chouten.app.data.HomepagePayload
 
 class HomePageViewModel(context: Context, private val webview: WebviewHandler = WebviewHandler()) :
         ViewModel() {
@@ -99,12 +99,14 @@ class HomePageViewModel(context: Context, private val webview: WebviewHandler = 
         isLoading = true
         val code = this.getCode()
 
-        val webviewPayload = mapOf<String, String>(
-            "action" to "homepage"
+        val webviewPayload = HomepagePayload(
+            action = "homepage"
         )
 
-        // TODO: don't use JSONObject
-        webview.load(code, JSONObject(webviewPayload).toString())
+        webview.load(
+            code, 
+            Mapper.json.encodeToString(HomepagePayload.serializer(), webviewPayload)
+        )
         
     }
 }

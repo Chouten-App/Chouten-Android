@@ -107,6 +107,7 @@ import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.data.WatchResult
 import com.chouten.app.data.WebviewHandler
 import com.chouten.app.data.ModuleAction
+import com.chouten.app.data.WebviewPayload
 import com.chouten.app.formatMinSec
 import com.chouten.app.ui.components.CustomSlider
 import com.chouten.app.ui.components.MaterialSliderDefaults
@@ -114,7 +115,6 @@ import com.chouten.app.ui.components.SliderBrushColor
 import com.chouten.app.ui.theme.ChoutenTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
-import org.json.JSONObject
 
 class PlayerActivity : ComponentActivity() {
 
@@ -249,15 +249,17 @@ class PlayerActivity : ComponentActivity() {
                     val results = Mapper.parse<ModuleResponse<List<WatchResult.ServerData>>>(res)
                     _servers = results.result
 
-                    val webviewPayload =
-                            mapOf<String, String>(
-                                    "query" to results.result[0].list[0].url,
-                                    "action" to "video"
-                            )
+                    val webviewPayload = WebviewPayload(
+                                            query = results.result[0].list[0].url,
+                                            action = "video"
+                                        )
 
                     val code = getCode()
                     this.lifecycleScope.launch {
-                        _webview.load(code, JSONObject(webviewPayload).toString())
+                        _webview.load(
+                            code, 
+                            Mapper.json.encodeToString(WebviewPayload.serializer(), webviewPayload)
+                        )
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -306,11 +308,18 @@ class PlayerActivity : ComponentActivity() {
         _webview.setCallback(this::callback)
 
         if (url != null) {
-            val webviewPayload = mapOf<String, String>("query" to url, "action" to "server")
+            val webviewPayload = WebviewPayload(
+                                    query = url, 
+                                    action = "server"
+                                )
+
             val code = getCode()
 
             this.lifecycleScope.launch {
-                _webview.load(code, JSONObject(webviewPayload).toString())
+                _webview.load(
+                    code,
+                    Mapper.json.encodeToString(WebviewPayload.serializer(), webviewPayload)
+                )
             }
         } else {
             // todo
