@@ -208,7 +208,7 @@ class WebviewHandler {
 
         if(req.action == "HTTPRequest" && req.url != null && req.headers != null){
             
-            val responseText: String;
+            val responseText: String
 
             if(req.method == "POST"){
                 responseText = client.post(url=req.url, headers=req.headers, requestBody=req.body?.toRequestBody()).body.string()
@@ -219,7 +219,7 @@ class WebviewHandler {
             val response = HTTPAction(
                 reqId = req.reqId,
                 responseText = responseText
-            );
+            )
             
             withContext(Dispatchers.Main) {
                 webview.postWebMessage(

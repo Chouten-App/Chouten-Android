@@ -89,7 +89,7 @@ class HomePageViewModel(context: Context, private val webview: WebviewHandler = 
 
     fun getCode(): String{
         val currentModule = ModuleLayer.selectedModule ?: throw Exception("No module selected")
-        val subtype = currentModule.subtypes.getOrNull(0) ?: throw Exception("Subtype not found");
+        val subtype = currentModule.subtypes.getOrNull(0) ?: throw Exception("Subtype not found")
         return currentModule.code?.get(subtype)?.home?.getOrNull(0)?.code ?: throw Exception("Code not found")
     }
 

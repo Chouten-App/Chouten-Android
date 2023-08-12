@@ -72,7 +72,7 @@ class InfoPageViewModel(context: Context, private val url: String, private var t
 
     fun getCode(): String{
         val currentModule = ModuleLayer.selectedModule ?: throw Exception("No module selected")
-        val subtype = currentModule.subtypes.getOrNull(0) ?: throw Exception("Subtype not found");
+        val subtype = currentModule.subtypes.getOrNull(0) ?: throw Exception("Subtype not found")
         return currentModule.code?.get(subtype)?.info?.getOrNull(0)?.code ?: throw Exception("Code not found")
     }
 
@@ -85,12 +85,12 @@ class InfoPageViewModel(context: Context, private val url: String, private var t
             )
         }
 
-        val action = Mapper.parse<ModuleAction>(message).action;
+        val action = Mapper.parse<ModuleAction>(message).action
 
         try{
             if(action == "error"){
-                val error = Mapper.parse<ErrorAction>(message);
-                throw Exception(error.result);
+                val error = Mapper.parse<ErrorAction>(message)
+                throw Exception(error.result)
             }
 
             when(action){
@@ -108,20 +108,20 @@ class InfoPageViewModel(context: Context, private val url: String, private var t
                         mediaType = result.mediaType
                         hasLoadedInfo = true
         
-                        val epListURL = result.epListURLs[0];
+                        val epListURL = result.epListURLs[0]
                         val webviewPayload = WebviewPayload(
                             query = epListURL,
                             action = "eplist"
-                        );
+                        )
 
-                        val code = getCode();
+                        val code = getCode()
                         
                         viewModelScope.launch {
                             webview.load(
                                 code, 
                                 Mapper.json.encodeToString(WebviewPayload.serializer(), webviewPayload)
-                            );
-                        };
+                            )
+                        }
         
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -169,17 +169,17 @@ class InfoPageViewModel(context: Context, private val url: String, private var t
         // We want to get the info code from the webview handler
         // and then load the page with that code.
         webview.initialize(context)
-        webview.setCallback(this::callback);
+        webview.setCallback(this::callback)
 
-        val code = this.getCode();
+        val code = getCode()
         val webviewPayload = WebviewPayload(
             query = decodedUrl,
             action = "metadata"
-        );
+        )
             
         viewModelScope.launch {
-            webview.load(code, Mapper.json.encodeToString(WebviewPayload.serializer(), webviewPayload));
-        };
+            webview.load(code, Mapper.json.encodeToString(WebviewPayload.serializer(), webviewPayload))
+        }
 
     }
 

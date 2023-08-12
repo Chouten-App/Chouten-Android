@@ -228,7 +228,7 @@ class PlayerActivity : ComponentActivity() {
 
     fun getCode(): String{
         val currentModule = ModuleLayer.selectedModule ?: throw Exception("No module selected")
-        val subtype = currentModule.subtypes.getOrNull(0) ?: throw Exception("Subtype not found");
+        val subtype = currentModule.subtypes.getOrNull(0) ?: throw Exception("Subtype not found")
         return currentModule.code?.get(subtype)?.mediaConsume?.getOrNull(0)?.code ?: throw Exception("Code not found")
     }
 

@@ -78,7 +78,7 @@ class SearchPageViewModel(
 
     fun getCode(): String{
         val currentModule = ModuleLayer.selectedModule ?: throw Exception("No module selected")
-        val subtype = currentModule.subtypes.getOrNull(0) ?: throw Exception("Subtype not found");
+        val subtype = currentModule.subtypes.getOrNull(0) ?: throw Exception("Subtype not found")
         return currentModule.code?.get(subtype)?.search?.getOrNull(0)?.code ?: throw Exception("Code not found")
     }
 
@@ -93,14 +93,14 @@ class SearchPageViewModel(
             isSearching = false
         }
 
-        _searchResults.clear();
+        _searchResults.clear()
 
-        val action = Mapper.parse<ModuleAction>(message).action;
+        val action = Mapper.parse<ModuleAction>(message).action
 
         try {
             if(action == "error"){
-                val error = Mapper.parse<ErrorAction>(message);
-                throw Exception(error.result);
+                val error = Mapper.parse<ErrorAction>(message)
+                throw Exception(error.result)
             }
             
             val results = Mapper.parse<ModuleResponse<List<SearchResult>>>(message)
@@ -138,15 +138,15 @@ class SearchPageViewModel(
         // search for the query within that module.
         isSearching = true
 
-        val code = getCode();
+        val code = getCode()
 
         if(!code.isEmpty()){
             val webviewPayload = WebviewPayload(
                                     query = query,
                                     action = "search"
-                                );
+                                )
 
-            webview.load(code, Mapper.json.encodeToString(WebviewPayload.serializer(), webviewPayload));
+            webview.load(code, Mapper.json.encodeToString(WebviewPayload.serializer(), webviewPayload))
         }
     }
 }
