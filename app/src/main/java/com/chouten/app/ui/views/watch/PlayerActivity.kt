@@ -35,6 +35,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -532,10 +533,8 @@ class PlayerActivity : ComponentActivity() {
                         .background(MaterialTheme.colorScheme.surface)
                         .padding(start = 16.dp, end = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
                 ) {
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
                     items(mediaList) { media ->
                         EpisodeItem(
                             item = media, imageAlternative = "",
@@ -558,9 +557,6 @@ class PlayerActivity : ComponentActivity() {
                                     }
                                 )
                         )
-                    }
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             },
