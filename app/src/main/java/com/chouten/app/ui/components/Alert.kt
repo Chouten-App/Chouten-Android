@@ -2,7 +2,7 @@ package com.chouten.app.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,7 +45,7 @@ fun ChoutenAlert(alert: AlertData) {
             }, text = {
                 Text(text = alert.message)
             }, confirmButton = {
-                FilledTonalButton(
+                Button(
                     onClick = {
                         alert.confirmButtonAction?.invoke()
                         defaultDismiss()
