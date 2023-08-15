@@ -9,6 +9,7 @@ import android.webkit.PermissionRequest
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
+import android.webkit.WebView.setWebContentsDebuggingEnabled
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -215,6 +216,7 @@ fun PlayGroundPage(
                 it.settings.domStorageEnabled = true
                 it.settings.builtInZoomControls = true
                 it.settings.displayZoomControls = false
+                setWebContentsDebuggingEnabled(true)
             }
         )
     }
