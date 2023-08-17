@@ -18,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import com.chouten.app.ui.components.DownloadedOnlyBannerBackgroundColor
 import com.chouten.app.ui.components.IncognitoModeBannerBackgroundColor
 import com.chouten.app.ui.theme.ChoutenTheme
+import com.chouten.app.ui.theme.statusBarTransparency
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -67,7 +68,9 @@ class MainActivity : ComponentActivity() {
                     val darkIcons = luminance > 0.5
 
                     systemUiController.setStatusBarColor(
-                        color = Color.Transparent,
+                        color = if (!(incognito || downloadOnly)) statusBarBackgroundColor.copy(
+                            statusBarTransparency
+                        ) else Color.Transparent,
                         darkIcons = darkIcons,
                         transformColorForLightContent = { Color.Black }
                     )

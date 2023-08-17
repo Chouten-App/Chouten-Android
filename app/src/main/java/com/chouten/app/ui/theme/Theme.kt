@@ -101,6 +101,8 @@ fun isDarkTheme(context: Context): Boolean {
     }
 }
 
+const val statusBarTransparency = 0.5F
+
 @Composable
 fun ChoutenTheme(
     darkTheme: Boolean = isDarkTheme(LocalContext.current),
@@ -129,7 +131,7 @@ fun ChoutenTheme(
             val activity = view.context as? Activity
             activity?.window?.apply {
                 navigationBarColor = Color.Transparent.toArgb()
-                statusBarColor = Color.Transparent.toArgb()
+                statusBarColor = colorScheme.surface.copy(statusBarTransparency).toArgb()
             }
             // Set statusbar icons color considering the top app state banner
             val isIncognito = preferenceHandler.isIncognito
