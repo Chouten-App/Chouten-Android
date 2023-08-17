@@ -18,7 +18,6 @@ import androidx.lifecycle.lifecycleScope
 import com.chouten.app.ui.components.DownloadedOnlyBannerBackgroundColor
 import com.chouten.app.ui.components.IncognitoModeBannerBackgroundColor
 import com.chouten.app.ui.theme.ChoutenTheme
-import com.chouten.app.ui.theme.isDarkTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -57,24 +56,22 @@ class MainActivity : ComponentActivity() {
             val downloadOnly = preferenceHandler.isOfflineMode
             // Set statusbar color considering the top app state banner
             val systemUiController = rememberSystemUiController()
-            val statusBarBackgroundColor = when {
-                downloadOnly -> DownloadedOnlyBannerBackgroundColor
-                incognito -> IncognitoModeBannerBackgroundColor
-                else -> MaterialTheme.colorScheme.surface
-            }
-            LaunchedEffect(systemUiController, statusBarBackgroundColor) {
-                val isDarkTheme = isDarkTheme(App.applicationContext)
-                val luminance = statusBarBackgroundColor.luminance()
-                val darkIcons = if (isDarkTheme) luminance < 0.5 else luminance > 0.5
-
-                systemUiController.setStatusBarColor(
-                    color = Color.Transparent,
-                    darkIcons = darkIcons,
-                    transformColorForLightContent = { Color.Black }
-                )
-            }
-
             ChoutenTheme {
+                val statusBarBackgroundColor = when {
+                    downloadOnly -> DownloadedOnlyBannerBackgroundColor
+                    incognito -> IncognitoModeBannerBackgroundColor
+                    else -> MaterialTheme.colorScheme.surface
+                }
+                LaunchedEffect(systemUiController, statusBarBackgroundColor) {
+                    val luminance = statusBarBackgroundColor.luminance()
+                    val darkIcons = luminance > 0.5
+
+                    systemUiController.setStatusBarColor(
+                        color = Color.Transparent,
+                        darkIcons = darkIcons,
+                        transformColorForLightContent = { Color.Black }
+                    )
+                }
                 ChoutenApp()
             }
         }
