@@ -62,7 +62,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -136,7 +135,7 @@ fun InfoPage(
                             }
                     ) {
                         GlideImage(
-                            modifier = Modifier.blur((provider.bannerUrl.ifBlank { 2.dp } as Dp)),
+                            modifier = if (provider.bannerUrl.isEmpty()) Modifier.blur(2.dp) else Modifier,
                             imageModel = {
                                 provider.bannerUrl.ifBlank { provider.thumbnailUrl }
                             },
