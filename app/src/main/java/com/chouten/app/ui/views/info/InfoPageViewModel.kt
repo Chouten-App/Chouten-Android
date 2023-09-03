@@ -10,18 +10,16 @@ import androidx.lifecycle.viewModelScope
 import com.chouten.app.Mapper
 import com.chouten.app.ModuleLayer
 import com.chouten.app.PrimaryDataLayer
+import com.chouten.app.data.ErrorAction
 import com.chouten.app.data.InfoResult
+import com.chouten.app.data.ModuleAction
 import com.chouten.app.data.ModuleResponse
 import com.chouten.app.data.SnackbarVisualsWithError
 import com.chouten.app.data.WebviewHandler
-import com.chouten.app.data.ModuleAction
-import com.chouten.app.data.ErrorAction
 import com.chouten.app.data.WebviewPayload
-import com.chouten.app.data.BasePayload
-import java.net.URLDecoder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
-import kotlin.collections.getOrNull
+import java.net.URLDecoder
 
 class InfoPageViewModel(context: Context, private val url: String, private var title: String) :
         ViewModel() {
@@ -70,6 +68,14 @@ class InfoPageViewModel(context: Context, private val url: String, private var t
     val infoResults: List<InfoResult.MediaListItem>
         get() = infoResult
 
+    private var _seasons by mutableStateOf(listOf<InfoResult.Season>())
+    val seasons: List<InfoResult.Season>
+        get() = _seasons
+
+    private var selectedSeason by mutableIntStateOf(0)
+    val selectedSeasonText: Int
+        get() = selectedSeason
+
     fun getCode(): String{
         val currentModule = ModuleLayer.selectedModule ?: throw Exception("No module selected")
         val subtype = currentModule.subtypes.getOrNull(0) ?: throw Exception("Subtype not found")
@@ -108,7 +114,11 @@ class InfoPageViewModel(context: Context, private val url: String, private var t
                         mediaType = result.mediaType
                         hasLoadedInfo = true
         
-                        val epListURL = result.epListURLs[0]
+
+                        val epListURL = result.seasons?.getOrNull(
+                            selectedSeason
+                        )?.url ?: result.epListURLs.firstOrNull() ?: ""
+
                         val webviewPayload = WebviewPayload(
                             query = epListURL,
                             action = "eplist"
@@ -134,6 +144,12 @@ class InfoPageViewModel(context: Context, private val url: String, private var t
                     try {
                         val results = Mapper.parse<ModuleResponse<List<InfoResult.MediaListItem>>>(message)
                         infoResult = results.result
+                        _seasons = infoResult.map {
+                            InfoResult.Season(
+                                it.title,
+                                it.list.firstOrNull()?.url ?: ""
+                            )
+                        }.distinctBy { it.url }
                         hasLoadedMediaEpisodes = true
                     } catch (e: Exception) {
                         PrimaryDataLayer.enqueueSnackbar(
@@ -181,6 +197,25 @@ class InfoPageViewModel(context: Context, private val url: String, private var t
             webview.load(code, Mapper.json.encodeToString(WebviewPayload.serializer(), webviewPayload))
         }
 
+    }
+
+    suspend fun changeSeason(context: Context, season: InfoResult.Season) {
+        hasLoadedInfo = false
+        hasLoadedMediaEpisodes = false
+        selectedSeason = seasons.indexOfFirst { it == season }
+        webview.destroy()
+        webview.initialize(context)
+        webview.setCallback(::callback)
+
+        val code = getCode()
+        val metadataPayload = WebviewPayload(
+            query = url,
+            action = "metadata"
+        )
+
+        viewModelScope.launch {
+            webview.load(code, Mapper.json.encodeToString(WebviewPayload.serializer(),  metadataPayload))
+        }
     }
 
     fun getTitle(): String {

@@ -34,13 +34,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -48,6 +52,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,6 +63,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -73,6 +79,7 @@ import com.chouten.app.ui.components.ShimmerInfo
 import com.chouten.app.ui.views.watch.PlayerActivity
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
+import kotlinx.coroutines.launch
 
 @SuppressLint("RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -111,6 +118,11 @@ fun InfoPage(
         animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
         label = "topBarOffset"
     )
+
+    var isSeasonDropdown by rememberSaveable { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     ShimmerInfo(
         modifier = Modifier
@@ -289,6 +301,44 @@ fun InfoPage(
                                 )
                             )
                         }
+                        ExposedDropdownMenuBox(expanded = isSeasonDropdown, onExpandedChange = {
+                            isSeasonDropdown = it
+                        }, modifier = Modifier.fillMaxWidth()) {
+                            TextField(value = provider.seasons.getOrNull(provider.selectedSeasonText)?.name
+                                ?: "Season 1",
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isSeasonDropdown) },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth()
+                            )
+
+                            ExposedDropdownMenu(expanded = isSeasonDropdown,
+                                onDismissRequest = { isSeasonDropdown = false }, modifier = Modifier
+                                    .fillMaxWidth()) {
+                                provider.seasons.forEach { season ->
+                                    DropdownMenuItem(text = {
+                                        Text(
+                                            season.name
+                                        )
+                                    }, onClick = {
+                                        isSeasonDropdown = false
+                                        // reload the viewmodel with the new data
+                                        coroutineScope.launch {
+                                            provider.changeSeason(
+                                                context, season
+                                            )
+                                        }
+                                    },
+                                        modifier = Modifier
+                                            .align(Alignment.CenterHorizontally)
+                                            .fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+
                         Text(
                             provider.mediaTypeText,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -303,7 +353,10 @@ fun InfoPage(
                                     Modifier.heightIn(max = 600.dp),
                                     verticalArrangement = Arrangement.spacedBy(20.dp)
                                 ) {
-                                    itemsIndexed(items = provider.infoResults[0].list) { _, item ->
+                                    itemsIndexed(
+                                        items = provider.infoResults.getOrNull(provider.selectedSeasonText)?.list
+                                            ?: emptyList()
+                                    ) { _, item ->
                                         EpisodeItem(
                                             item,
                                             provider.thumbnailUrl,
