@@ -99,7 +99,7 @@ class InfoPageViewModel(context: Context, private val url: String, private var t
                         val results = Mapper.parse<ModuleResponse<InfoResult>>(message)
         
                         val result = results.result
-                        altTitles = result.altTitles!!
+                        altTitles = result.altTitles ?: listOf()
                         description = result.description
                         thumbnail = result.poster
                         banner = result.banner ?: ""
