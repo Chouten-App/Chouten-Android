@@ -91,7 +91,12 @@ import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.dash.DashMediaSource
+import androidx.media3.exoplayer.hls.HlsMediaSource
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
@@ -170,6 +175,8 @@ class PlayerActivity : ComponentActivity() {
     val skips: List<WatchResult.SkipTimes>
         get() = _skips
 
+    private var _headers by mutableStateOf(mapOf<String, String>())
+
     private val handler = Handler(Looper.getMainLooper())
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -194,7 +201,8 @@ class PlayerActivity : ComponentActivity() {
                                 WatchResult(
                                     sources = _sources,
                                     skips = _skips,
-                                    subtitles = _subtitles
+                                    subtitles = _subtitles,
+                                    headers = _headers
                                 ),
                                 context = this@PlayerActivity
                             )
@@ -277,6 +285,7 @@ class PlayerActivity : ComponentActivity() {
                     _sources = results.result.sources
                     _subtitles = results.result.subtitles
                     _skips = results.result.skips
+                    _headers = results.result.headers
                 } catch (e: Exception) {
                     e.printStackTrace()
                     PrimaryDataLayer.enqueueSnackbar(
@@ -341,23 +350,33 @@ class PlayerActivity : ComponentActivity() {
             _player?.apply {
                 var subtitle = watchResult.subtitles.find { it.language == "English" }
 
-                if (subtitle == null) {
-                    subtitle = watchResult.subtitles?.getOrNull(0)
-                }
-
-                val mediaBuilder = MediaItem.Builder().setUri(watchResult.sources[0].file)
-                if (subtitle != null) {
-                    mediaBuilder.setSubtitleConfigurations(
-                        listOf(
-                            SubtitleConfiguration.Builder(Uri.parse(subtitle.url))
-                                .setMimeType(MimeTypes.TEXT_VTT)
-                                .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
-                                .build()
+                val mediaBuilder = MediaItem.Builder().setUri(watchResult.sources[0].file).apply {
+                    if (subtitle != null) {
+                        setSubtitleConfigurations(
+                            listOf(
+                                SubtitleConfiguration.Builder(Uri.parse(subtitle.url))
+                                    .setMimeType(MimeTypes.TEXT_VTT)
+                                    .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
+                                    .build()
+                            )
                         )
-                    )
-                }
+                    }
+                }.build()
 
-                setMediaItem(mediaBuilder.build())
+                val mediaFactory = when (watchResult.sources[0].type) {
+                    "hls" -> HlsMediaSource.Factory::class.java
+                    "dash" -> DashMediaSource.Factory::class.java
+                    else -> ProgressiveMediaSource.Factory::class.java
+                }.getConstructor(DataSource.Factory::class.java)
+
+                val mediaSource = mediaFactory.newInstance(
+                    DefaultHttpDataSource.Factory()
+                        .setAllowCrossProtocolRedirects(true)
+                        .setDefaultRequestProperties(
+                            _headers
+                        )
+                ).createMediaSource(mediaBuilder)
+                setMediaSource(mediaSource)
                 prepare()
             }
         }

@@ -225,7 +225,8 @@ data class InfoResult(
 data class WatchResult(
     val sources: List<Source>,
     val subtitles: List<Subtitles>,
-    val skips: List<SkipTimes>
+    val skips: List<SkipTimes>,
+    val headers: Map<String, String>,
 ) {
 
     @Serializable
